@@ -33,3 +33,7 @@ These categories should be stored in the sqlite file.
     - hiking
 - story
 - advice
+
+# TESTING
+In order to run the unit tests, the server must first be running, and you must have Bun installed as the test runner.
+Simply navigate to the `/tests` folder and run `bun test`. All tests should pass.
