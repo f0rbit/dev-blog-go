@@ -2,38 +2,119 @@
 package main
 
 import (
-    "fmt"
-    "log"
-    "net/http"
+	"blog-server/routes"
+	"database/sql"
+	"io"
+	"log"
+	"net/http"
+	"os"
 
-    "github.com/gorilla/mux"
-    "gorm.io/driver/postgres"
-    "gorm.io/gorm"
+	"github.com/gorilla/mux"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-var db *gorm.DB
+var database = "../db/sqlite.db"
 
 func main() {
-    // Initialize the database connection
-    dsn := "user=postgres password=example dbname=mydb sslmode=disable"
-    var err error
-    db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	initLogging()
+	initDatabase()
+    seedDatabase()
+
+	// Initialize routes
+	r := mux.NewRouter()
+	// r.HandleFunc("/posts", GetPosts).Methods("GET")
+    // r.HandleFunc("/posts/{category}", GetPostsByCategory).Methods("GET")
+	// r.HandleFunc("/post/{id}", GetPostByID).Methods("GET")
+	// r.HandleFunc("/post/new", CreatePost).Methods("POST")
+	// r.HandleFunc("/post/edit", EditPost).Methods("PUT")
+	r.HandleFunc("/categories", routes.GetCategories).Methods("GET")
+
+	// Start the server
+	port := ":8080"
+	log.Printf("Server started on port %s", port)
+	log.Fatal(http.ListenAndServe(port, r))
+}
+
+func initLogging() {
+	// Create a log file
+	file, err := os.OpenFile("../logs/app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal("Error creating log file: ", err)
+	}
+	defer file.Close()
+
+	// Set log output to both console and file
+	log.SetOutput(io.MultiWriter(os.Stdout, file))
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+}
+
+func initDatabase() {
+	// TODO: Initialize SQLite database connection
+	// Example: db, err := sql.Open("sqlite3", "db/sqlite.db")
+	// Handle errors appropriately
+
+    db, err := sql.Open("sqlite3", database)
+
     if err != nil {
         log.Fatal(err)
     }
 
-    // Create a router using Gorilla Mux
-    r := mux.NewRouter()
+    defer db.Close()
 
-    // Define your routes and handlers
-    r.HandleFunc("/", YourHandler)
+    var version string
+    err = db.QueryRow("SELECT SQLITE_VERSION()").Scan(&version)
 
-    // Start the web server
-    fmt.Println("Server is running on port 8080...")
-    http.Handle("/", r)
-    log.Fatal(http.ListenAndServe(":8080", nil))
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    log.Printf("Database Version: %s", version)
 }
 
-func YourHandler(w http.ResponseWriter, r *http.Request) {
-    // Your route handler logic here
+func seedDatabase() {
+    // create "Categories" table
+    db, err := sql.Open("sqlite3", database)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer db.Close()
+
+    statement, err := db.Prepare("DROP TABLE IF EXISTS categories")
+    if err != nil {
+        log.Fatal(err)
+    } else {
+        log.Printf("Dropped categories table")
+    }
+    statement.Exec()
+
+    statement, err = db.Prepare("CREATE TABLE IF NOT EXISTS categories (name VARCHAR(15) PRIMARY KEY, parent VARCHAR(15))")
+    if err != nil {
+        log.Fatal(err)
+    } else {
+        log.Printf("Created categories table")
+    }
+    statement.Exec()
+
+
+    statement, _ = db.Prepare("INSERT INTO categories (name, parent) VALUES (?, ?)")
+    statement.Exec("coding", "root")
+    statement.Exec("learning", "coding")
+    statement.Exec("devlog", "coding")
+    statement.Exec("gamedev", "devlog")
+    statement.Exec("webdev", "devlog")
+    statement.Exec("code-story", "coding")
+    statement.Exec("hobbies", "root")
+    statement.Exec("photography", "hobbies")
+    statement.Exec("painting", "hobbies")
+    statement.Exec("hiking", "hobbies")
+    statement.Exec("story", "root")
+    statement.Exec("advice", "root")
+    log.Printf("Inserted categories");
+
+    rows, _ := db.Query("SELECT name, parent FROM categories")
+	var cat routes.Category
+	for rows.Next() {
+		rows.Scan(&cat.Name, &cat.Parent)
+        log.Printf("Name: %s, Parent: %s", cat.Name, cat.Parent)
+	}
 }
