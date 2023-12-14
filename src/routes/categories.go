@@ -6,13 +6,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+    "blog-server/types"
 )
-
-// Category struct represents a category in the system
-type Category struct {
-	Name   string `json:"name"`
-	Parent string `json:"parent"`
-}
 
 // GetCategories handles the GET /categories route
 func GetCategories(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +33,7 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonCategories)
 }
 
-func fetchCategories() ([]Category, error) {
+func fetchCategories() ([]types.Category, error) {
 	db, err := sql.Open("sqlite3", "../db/sqlite.db")
 	if err != nil {
 		log.Fatal(err)
@@ -51,9 +46,9 @@ func fetchCategories() ([]Category, error) {
 		log.Fatal(err)
 	}
 
-	var categories []Category
+	var categories []types.Category
 	for rows.Next() {
-		var category Category
+		var category types.Category
 		err := rows.Scan(&category.Name, &category.Parent)
 		if err != nil {
 			return nil, err

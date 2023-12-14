@@ -3,6 +3,7 @@ package main
 
 import (
 	"blog-server/routes"
+    "blog-server/types"
 	"database/sql"
 	"io"
 	"log"
@@ -18,7 +19,6 @@ var database = "../db/sqlite.db"
 func main() {
 	initLogging()
 	initDatabase()
-    seedDatabase()
 
 	// Initialize routes
 	r := mux.NewRouter()
@@ -49,10 +49,6 @@ func initLogging() {
 }
 
 func initDatabase() {
-	// TODO: Initialize SQLite database connection
-	// Example: db, err := sql.Open("sqlite3", "db/sqlite.db")
-	// Handle errors appropriately
-
     db, err := sql.Open("sqlite3", database)
 
     if err != nil {
@@ -69,6 +65,17 @@ func initDatabase() {
     }
 
     log.Printf("Database Version: %s", version)
+    if !tableExists(db, "categories") {
+        seedDatabase()
+    }
+}
+
+func tableExists(db *sql.DB, tableName string) bool {
+	// Query to check if a table exists in SQLite
+	query := "SELECT name FROM sqlite_master WHERE type='table' AND name=?"
+	var name string
+	err := db.QueryRow(query, tableName).Scan(&name)
+	return err == nil
 }
 
 func seedDatabase() {
@@ -112,7 +119,7 @@ func seedDatabase() {
     log.Printf("Inserted categories");
 
     rows, _ := db.Query("SELECT name, parent FROM categories")
-	var cat routes.Category
+	var cat types.Category
 	for rows.Next() {
 		rows.Scan(&cat.Name, &cat.Parent)
         log.Printf("Name: %s, Parent: %s", cat.Name, cat.Parent)
