@@ -20,7 +20,7 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Convert categories to JSON
-	jsonCategories, err := json.Marshal(categories)
+	encoded, err := json.Marshal(categories)
 	if err != nil {
 		log.Println("Error marshaling categories to JSON:", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -30,28 +30,25 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
 	// Send the response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(jsonCategories)
+	w.Write(encoded)
 }
 
 func fetchCategories() ([]types.Category, error) {
+	var categories []types.Category
 	db, err := sql.Open("sqlite3", "../db/sqlite.db")
 	if err != nil {
-		log.Fatal(err)
+		return categories, err
 	}
 	defer db.Close()
-	// TODO: Implement database query to fetch categories
 	rows, err := db.Query("SELECT name, parent FROM categories")
-	// Handle errors appropriately
 	if err != nil {
-		log.Fatal(err)
+		return categories, err
 	}
-
-	var categories []types.Category
 	for rows.Next() {
 		var category types.Category
 		err := rows.Scan(&category.Name, &category.Parent)
 		if err != nil {
-			return nil, err
+			return categories, err
 		}
 		categories = append(categories, category)
 	}
