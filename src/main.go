@@ -3,7 +3,6 @@ package main
 
 import (
 	"blog-server/routes"
-    "blog-server/types"
 	"database/sql"
 	"io"
 	"log"
@@ -22,7 +21,7 @@ func main() {
 
 	// Initialize routes
 	r := mux.NewRouter()
-	// r.HandleFunc("/posts", GetPosts).Methods("GET")
+	r.HandleFunc("/posts", routes.GetPosts).Methods("GET")
     // r.HandleFunc("/posts/{category}", GetPostsByCategory).Methods("GET")
 	// r.HandleFunc("/post/{id}", GetPostByID).Methods("GET")
 	// r.HandleFunc("/post/new", CreatePost).Methods("POST")
@@ -41,7 +40,7 @@ func initLogging() {
 	if err != nil {
 		log.Fatal("Error creating log file: ", err)
 	}
-	defer file.Close()
+    file.Write([]byte("## NEW INSTANCE ##\n"))
 
 	// Set log output to both console and file
 	log.SetOutput(io.MultiWriter(os.Stdout, file))
@@ -66,7 +65,10 @@ func initDatabase() {
 
     log.Printf("Database Version: %s", version)
     if !tableExists(db, "categories") {
-        seedDatabase()
+        createCategories(db)
+    }
+    if !tableExists(db, "posts") {
+        createPosts(db)
     }
 }
 
@@ -78,14 +80,8 @@ func tableExists(db *sql.DB, tableName string) bool {
 	return err == nil
 }
 
-func seedDatabase() {
+func createCategories(db *sql.DB) {
     // create "Categories" table
-    db, err := sql.Open("sqlite3", database)
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer db.Close()
-
     statement, err := db.Prepare("DROP TABLE IF EXISTS categories")
     if err != nil {
         log.Fatal(err)
@@ -117,11 +113,31 @@ func seedDatabase() {
     statement.Exec("story", "root")
     statement.Exec("advice", "root")
     log.Printf("Inserted categories");
+}
 
-    rows, _ := db.Query("SELECT name, parent FROM categories")
-	var cat types.Category
-	for rows.Next() {
-		rows.Scan(&cat.Name, &cat.Parent)
-        log.Printf("Name: %s, Parent: %s", cat.Name, cat.Parent)
-	}
+func createPosts(db *sql.DB) {
+    statement, err := db.Prepare("DROP TABLE IF EXISTS posts")
+    if err != nil {
+        log.Fatal(err)
+    } else {
+        log.Printf("Dropped posts table")
+    }
+    statement.Exec()
+
+    statement, err = db.Prepare("CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, slug TEXT NOT NULL, title TEXT NOT NULL, content TEXT NOT NULL, category TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
+    if err != nil {
+        log.Fatal(err)
+    } else {
+        statement.Exec()
+        log.Printf("Created posts table")
+    }
+
+    statement, err = db.Prepare("INSERT INTO posts (slug, title, content, category) VALUES (?,?,?,?)")
+    if err != nil {
+        log.Fatal(err)
+    } else {
+        statement.Exec("test-post", "test", "this is a test post, first post.", "coding")
+        log.Printf("Inserted 'test-post'")
+    }
+
 }
