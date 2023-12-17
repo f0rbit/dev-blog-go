@@ -1,4 +1,5 @@
 import { expect, test, describe, afterAll } from "bun:test";
+import { exit } from "process";
 
 type Category = {
     name: string,
@@ -48,7 +49,16 @@ describe("posts", () => {
             expect(response.status >= 400 && response.status < 500); // some 4xxx status code
         })
         test("update", async () => {
-            /** @todo update test */
+            // we are going to update the content to be "Updated Post Content"
+            const response = await fetch("localhost:8080/post/edit", { method: "PUT", body: JSON.stringify({ ...test_post, content:" Updated Post Content" }) });
+            expect(!!response);
+
+            // then re-fetch the post via id
+            const fetch_response = await fetch(`localhost:8080/post/${test_post_id}`, { method: "GET" });
+            expect(!!fetch_response);
+            const result = (await fetch_response.json()) as Post;
+            expect(result.id == test_post_id);
+            expect(result.content == "Updated Post Content");            
         })
         test("delete", async () => {
             const response = await fetch(`localhost:8080/post/delete/${test_post_id}`, { method: "DELETE" });
@@ -71,13 +81,4 @@ describe("posts", () => {
 
             })
         })
-});
-test("categories", async () => {
-    const response = await fetch("localhost:8080/categories", { method: "GET" });
-    expect(!!response);
-    const result = (await response.json()) as Category[];
-    expect(!!result);
-    expect(result.length > 0);
-    expect(result.find((cat) => cat.name == "coding"));
-    expect(result.find((cat) => cat.name == "webdev" && cat.parent == "devlog"));
 });

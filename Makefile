@@ -1,7 +1,7 @@
 BINARY_NAME=server.out
 COVERAGE_DIR=src/coverage
 
-all: 
+all: clean build run
 
 build: 
 	cd src && go build -o ${BINARY_NAME} && mv ${BINARY_NAME} ../
