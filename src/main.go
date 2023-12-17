@@ -26,6 +26,7 @@ func main() {
 	r.HandleFunc("/post/{id}", routes.GetPostByID).Methods("GET")
 	r.HandleFunc("/post/new", routes.CreatePost).Methods("POST")
 	r.HandleFunc("/post/edit", routes.EditPost).Methods("PUT")
+    r.HandleFunc("/post/delete/{id}", routes.DeletePost).Methods("DELETE")
 	r.HandleFunc("/categories", routes.GetCategories).Methods("GET")
 
 	// Start the server
@@ -124,7 +125,7 @@ func createPosts(db *sql.DB) {
     }
     statement.Exec()
 
-    statement, err = db.Prepare("CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, slug TEXT NOT NULL, title TEXT NOT NULL, content TEXT NOT NULL, category TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
+    statement, err = db.Prepare("CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, slug TEXT NOT NULL UNIQUE, title TEXT NOT NULL, content TEXT NOT NULL, category TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
     if err != nil {
         log.Fatal(err)
     } else {
