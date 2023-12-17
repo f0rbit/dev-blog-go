@@ -1,10 +1,10 @@
 # v0.1
-- [ ] `GET /posts`
-- [ ] `GET /posts/:cateogry`
+- [x] `GET /posts`
+- [x] `GET /posts/:cateogry`
 - [ ] `GET /post/:id`
 - [ ] `POST /post/new`
 - [ ] `PUT /post/edit`
-- [ ] `GET /categories`
+- [x] `GET /categories`
 
 # v0.2
 - [ ] `GET /tags`
