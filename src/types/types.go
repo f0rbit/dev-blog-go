@@ -8,7 +8,7 @@ type Category struct {
 }
 
 type Post struct {
-	Id        uint64    `json:"id"`
+	Id        int       `json:"id"`
 	Slug      string    `json:"slug"`
 	Title     string    `json:"title"`
 	Content   string    `json:"string"`
