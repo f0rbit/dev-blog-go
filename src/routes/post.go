@@ -60,8 +60,25 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+    // Fetch the complete post with the new ID
+	createdPost, err := fetchPostByID(newPost.Id)
+	if err != nil {
+		log.Println("Error fetching created post:", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 
+	// Encode the complete post to JSON
+	encoded, err := json.Marshal(createdPost)
+	if err != nil {
+		log.Println("Error converting created post to JSON:", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	w.Write(encoded)
 }
 
 func EditPost(w http.ResponseWriter, r *http.Request) {
@@ -136,6 +153,21 @@ func insertPost(newPost *types.Post) error {
 	// Insert the new post into the database
 	_, err = db.Exec("INSERT INTO posts (slug, title, content, category) VALUES (?, ?, ?, ?)",
 		newPost.Slug, newPost.Title, newPost.Content, newPost.Category)
+
+    if err != nil {
+        return err;
+    }
+
+    // Assuming your database is configured to auto-increment the ID,
+	// retrieve the last inserted ID using the LastInsertId method
+	row := db.QueryRow("SELECT last_insert_rowid()")
+
+	err = row.Scan(&newPost.Id)
+	if err != nil {
+		return err
+	}
+
+    log.Printf("Inserted new post '%s' with ID: %d", newPost.Slug, newPost.Id);
 
 	return err
 }
