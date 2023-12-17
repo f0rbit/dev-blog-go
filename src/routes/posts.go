@@ -96,7 +96,7 @@ func fetchPostsByCategory(category string, limit, offset int) ([]types.Post, int
 	var posts []types.Post
 	var totalPosts int
 
-	db, err := sql.Open("sqlite3", "../db/sqlite.db")
+	db, err := sql.Open("sqlite3", database)
 	if err != nil {
 		return posts, totalPosts, err
 	}
@@ -130,7 +130,7 @@ func fetchPosts(limit, offset int) ([]types.Post, int, error) {
 	var posts []types.Post
 	var totalPosts int
 
-	db, err := sql.Open("sqlite3", "../db/sqlite.db")
+	db, err := sql.Open("sqlite3", database)
 	if err != nil {
 		return posts, totalPosts, err
 	}

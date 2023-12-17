@@ -123,10 +123,12 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+const database string = "db/sqlite.db"
+
 func fetchPostByID(postID int) (types.Post, error) {
 	var post types.Post
 
-	db, err := sql.Open("sqlite3", "../db/sqlite.db")
+	db, err := sql.Open("sqlite3", database)
 	if err != nil {
 		return post, err
 	}
@@ -144,7 +146,7 @@ func fetchPostByID(postID int) (types.Post, error) {
 }
 
 func insertPost(newPost *types.Post) error {
-	db, err := sql.Open("sqlite3", "../db/sqlite.db")
+	db, err := sql.Open("sqlite3", database)
 	if err != nil {
 		return err
 	}
@@ -173,7 +175,7 @@ func insertPost(newPost *types.Post) error {
 }
 
 func updatePost(updatedPost *types.Post) error {
-	db, err := sql.Open("sqlite3", "../db/sqlite.db")
+	db, err := sql.Open("sqlite3", database)
 	if err != nil {
 		return err
 	}
@@ -187,7 +189,7 @@ func updatePost(updatedPost *types.Post) error {
 }
 
 func deletePost(postID int) error {
-	db, err := sql.Open("sqlite3", "../db/sqlite.db")
+	db, err := sql.Open("sqlite3", database)
 	if err != nil {
 		return err
 	}

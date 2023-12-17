@@ -8,12 +8,17 @@ import (
 	"log"
 	"net/http"
 	"os"
+    "errors"
+    "os/signal"
+    "syscall"
+    "context"
+    "time"
 
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var database = "../db/sqlite.db"
+var database = "db/sqlite.db"
 
 func main() {
 	initLogging()
@@ -32,12 +37,35 @@ func main() {
 	// Start the server
 	port := ":8080"
 	log.Printf("Server started on port %s", port)
-	log.Fatal(http.ListenAndServe(port, r))
+    server := &http.Server{
+        Addr: ":8080",
+    }
+	//log.Fatal(http.ListenAndServe(port, r))
+
+    go func() {
+        server.Handler = r
+        if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+            log.Fatalf("HTTP server error: %v", err)
+        }
+        log.Println("Stopped serving new connections.")
+    }()
+
+    sigChan := make(chan os.Signal, 1)
+    signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+    <-sigChan
+
+    shutdownCtx, shutdownRelease := context.WithTimeout(context.Background(), 10*time.Second)
+    defer shutdownRelease()
+
+    if err := server.Shutdown(shutdownCtx); err != nil {
+        log.Fatalf("HTTP shutdown error: %v", err)
+    }
+    log.Println("Graceful shutdown complete.")
 }
 
 func initLogging() {
 	// Create a log file
-	file, err := os.OpenFile("../logs/app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	file, err := os.OpenFile("logs/app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatal("Error creating log file: ", err)
 	}

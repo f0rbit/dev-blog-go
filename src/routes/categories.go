@@ -35,7 +35,7 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
 
 func fetchCategories() ([]types.Category, error) {
 	var categories []types.Category
-	db, err := sql.Open("sqlite3", "../db/sqlite.db")
+	db, err := sql.Open("sqlite3", "db/sqlite.db")
 	if err != nil {
 		return categories, err
 	}
