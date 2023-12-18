@@ -24,4 +24,6 @@ jobs:
           curl -fsSL https://bun.sh/install | bash
 
       - name: Build and Run Tests
-        run: ./test.sh
+        run: |
+          go version
+          ./test.sh
