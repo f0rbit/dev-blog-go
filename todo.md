@@ -11,8 +11,8 @@
 # v0.2
 - [ ] `GET /tags`
 - [ ] `GET /posts` (with tag param)
-- [ ] Move all SQL setup & seeding queries into .sql files
-    - [ ] setup a migrations folder
+- [x] Move all SQL setup & seeding queries into .sql files
+- [ ] setup a migrations folder (for tags)
 - [x] Replace logging with Charm's Go logging library
 
 # v0.3
