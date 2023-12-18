@@ -2,11 +2,11 @@
 package routes
 
 import (
+	"blog-server/types"
 	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
-    "blog-server/types"
 )
 
 // GetCategories handles the GET /categories route
@@ -54,4 +54,21 @@ func fetchCategories() ([]types.Category, error) {
 	}
 
 	return categories, nil
+}
+
+func getChildrenCateogires(categories []types.Category, parent string) []types.Category {
+    var cats []types.Category;
+
+    for i := 0; i < len(categories); i++ {
+        if categories[i].Parent == parent {
+            cats = append(cats, categories[i])
+            // add all the children as well
+            var children = getChildrenCateogires(categories, categories[i].Name)
+            for j := 0; j < len(children); j++ {
+                cats = append(cats, children[j]);
+            }
+        }
+    }
+
+    return cats;
 }
