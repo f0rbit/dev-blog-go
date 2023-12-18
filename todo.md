@@ -12,7 +12,7 @@
 - [x] `GET /tags`
 - [x] `PUT /post/tag`
 - [x] `DELETE /post/tag`
-- [ ] `GET /posts` (with tag param)
+- [x] `GET /posts` (with tag param)
 - [x] Move all SQL setup & seeding queries into .sql files
 - [x] setup a migrations folder (for tags)
 - [x] Replace logging with Charm's Go logging library
