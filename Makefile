@@ -5,34 +5,41 @@ DATABASE_DIR=db/sqlite.db
 all: clean build run
 
 build:
-	cd src && go build -o ${BINARY_NAME} && mv ${BINARY_NAME} ../
+	@cd src && go build -o ${BINARY_NAME} && mv ${BINARY_NAME} ../
+	@echo "Built binary"
 
 build-coverage:
-	cd src && go build -o ${BINARY_NAME} -cover && mv ${BINARY_NAME} ../
+	@cd src && go build -o ${BINARY_NAME} -cover && mv ${BINARY_NAME} ../
+	@echo "Built binary with coverage"
 
 clean:
-	rm -f src/${BINARY_NAME}
-	rm -f ${BINARY_NAME}
-	rm -f logs/app.log
-	rm -rf ${COVERAGE_DIR}
-	rm -f server.log
+	@rm -f src/${BINARY_NAME}
+	@rm -f ${BINARY_NAME}
+	@rm -f logs/app.log
+	@rm -rf ${COVERAGE_DIR}
+	@rm -f server.log
+	@echo "Cleaned files"
 
 run: clean build
-	DATABASE=${DATABASE_DIR} ./${BINARY_NAME}
+	@echo "Running..."
+	@DATABASE=${DATABASE_DIR} ./${BINARY_NAME}
 
 run-coverage: clean build-coverage
-	mkdir -p ${COVERAGE_DIR}
-	GOCOVERDIR=${COVERAGE_DIR} DATABASE=${DATABASE_DIR} ./${BINARY_NAME}
+	@echo "Runnnig with coverage"
+	@mkdir -p ${COVERAGE_DIR}
+	@GOCOVERDIR=${COVERAGE_DIR} DATABASE=${DATABASE_DIR} ./${BINARY_NAME}
 
 test: clean
-	./test.sh
+	@./test.sh
 
 database:
-	mkdir -p db
-	touch ${DATABASE_DIR}
-	sqlite3 ${DATABASE_DIR} < sql/setup.sql
-	./apply_migrations.sh ${DATABASE_DIR}
-	sqlite3 ${DATABASE_DIR} < sql/base_seed.sql
+	@mkdir -p db
+	@touch ${DATABASE_DIR}
+	@sqlite3 ${DATABASE_DIR} < sql/setup.sql
+	@echo "Setup SQL"
+	@./apply_migrations.sh ${DATABASE_DIR}
+	@sqlite3 ${DATABASE_DIR} < sql/base_seed.sql
+	@echo "Executed base_seed.sql"
 
 reset-database:
 	rm -rf db
@@ -42,4 +49,6 @@ reset-database:
 	./apply_migrations.sh ${DATABASE_DIR}
 	sqlite3 ${DATABASE_DIR} < sql/base_seed.sql
 
-
+coverage: 
+	@./test.sh > /dev/null 2> /dev/null
+	@go tool covdata func -i=${COVERAGE_DIR} | grep total | awk '{print $$3}'
