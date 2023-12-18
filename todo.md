@@ -22,7 +22,7 @@
 - [x] Github actions for testing
 - [x] Figure out how to get code coverage over the two completely different codebases
 - [x] Add authentication middleware for endpoints
-- [ ] Update README for server
+- [x] Update README for server
 
 # v0.4
 - [ ] Front end implementation
