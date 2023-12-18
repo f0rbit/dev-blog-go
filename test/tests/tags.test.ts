@@ -9,10 +9,11 @@ const test_post = {
 let test_id = null as number | null;
 
 const tags = ["tag-1", "tag-2", "tag-3"] as const;
+const headers = { 'Auth-Token': process.env.AUTH_TOKEN } as any as Headers;
 
 beforeAll(async () => {
     // insert a fresh post so we have something to test against
-    const response = await fetch("localhost:8080/post/new", { method: "POST", body: JSON.stringify(test_post) });
+    const response = await fetch("localhost:8080/post/new", { method: "POST", body: JSON.stringify(test_post), headers });
     expect(response).toBeTruthy();
     const result = (await response.json()) as any;
     expect(result.id).toBeTruthy();
@@ -23,18 +24,18 @@ beforeAll(async () => {
 
 describe("tags", () => {
     test("add", async () => {
-        const response = await fetch(`localhost:8080/post/tag?id=${test_id}&tag=test-tag`, { method: "PUT" });
+        const response = await fetch(`localhost:8080/post/tag?id=${test_id}&tag=test-tag`, { method: "PUT", headers });
         expect(response).toBeTruthy();
         expect(response.ok).toBeTrue();
     })
     test("add duplicate", async () => {
-        const response = await fetch(`localhost:8080/post/tag?id=${test_id}&tag=test-tag`, { method: "PUT" });
+        const response = await fetch(`localhost:8080/post/tag?id=${test_id}&tag=test-tag`, { method: "PUT", headers });
         expect(response).toBeTruthy();
         expect(response.ok).toBeFalse();
     })
     test("add multiple", async () => {
         for (const tag of tags) {
-            const response = await fetch(`localhost:8080/post/tag?id=${test_id}&tag=${tag}`, { method: "PUT" });
+            const response = await fetch(`localhost:8080/post/tag?id=${test_id}&tag=${tag}`, { method: "PUT", headers });
             expect(response).toBeTruthy();
             expect(response.ok).toBeTrue();
         }
@@ -59,7 +60,7 @@ describe("tags", () => {
         expect(result.posts[0].id).toBe(test_id);
     })
     test("delete tag", async () => {
-        const response = await fetch(`localhost:8080/post/tag?id=${test_id}&tag=test-tag`, { method: "DELETE" });
+        const response = await fetch(`localhost:8080/post/tag?id=${test_id}&tag=test-tag`, { method: "DELETE", headers });
         expect(response).toBeTruthy();
         expect(response.ok).toBeTrue();
         // there should no longer be a "test-tag" in the tags
