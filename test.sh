@@ -11,6 +11,7 @@ touch ${DATABASE_FILE}
 # setup the database
 sqlite3 ${DATABASE_FILE} < sql/setup.sql
 sqlite3 ${DATABASE_FILE} < sql/test_seed.sql
+${ROOT_DIR}/apply_migrations.sh ${DATABASE_FILE}
 
 # Check if server.out exists
 if [ ! -f "$BINARY_NAME" ]; then
