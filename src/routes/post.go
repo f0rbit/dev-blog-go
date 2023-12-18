@@ -16,18 +16,17 @@ import (
 
 var database string = os.Getenv("DATABASE")
 
-func GetPostByID(w http.ResponseWriter, r *http.Request) {
+func GetPostBySlug(w http.ResponseWriter, r *http.Request) {
 	// Extract post ID parameter from URL
-	postIDStr := mux.Vars(r)["id"]
-	postID, err := strconv.Atoi(postIDStr)
-	if err != nil {
-		log.Error("Error parsing post ID", "err", err)
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
+    var slug string = mux.Vars(r)["slug"]
+    if len(slug) == 0 {
+        log.Error("Called GetPostBySlug without slug specified!")
+        http.Error(w, "Bad Request", http.StatusBadRequest)
+        return
+    }
 
 	// Fetch the post by ID
-	post, err := fetchPostByID(postID)
+	post, err := fetchPostBySlug(slug)
 	if err != nil {
 		log.Error("Error fetching post by ID", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -127,6 +126,23 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func fetchPostBySlug(slug string) (types.Post, error) {
+    var post types.Post
+
+    db, err := sql.Open("sqlite3", database)
+    if err != nil {
+        return post, err
+    }
+    defer db.Close()
+
+    err = db.QueryRow("SELECT id, slug, title, content, category FROM posts WHERE slug = ?", slug).Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category)
+
+    if err != nil {
+        return post, err
+    }
+
+    return post, nil
+}
 
 func fetchPostByID(postID int) (types.Post, error) {
 	var post types.Post

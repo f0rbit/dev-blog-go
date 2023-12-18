@@ -23,7 +23,7 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/posts", routes.GetPosts).Methods("GET")
 	r.HandleFunc("/posts/{category}", routes.GetPostsByCategory).Methods("GET")
-	r.HandleFunc("/post/{id}", routes.GetPostByID).Methods("GET")
+	r.HandleFunc("/post/{slug}", routes.GetPostBySlug).Methods("GET")
 	r.HandleFunc("/post/new", routes.CreatePost).Methods("POST")
 	r.HandleFunc("/post/edit", routes.EditPost).Methods("PUT")
 	r.HandleFunc("/post/delete/{id}", routes.DeletePost).Methods("DELETE")

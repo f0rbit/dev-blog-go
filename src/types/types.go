@@ -11,7 +11,7 @@ type Post struct {
 	Id        int       `json:"id"`
 	Slug      string    `json:"slug"`
 	Title     string    `json:"title"`
-	Content   string    `json:"string"`
+	Content   string    `json:"content"`
 	Category  string    `json:"category"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
