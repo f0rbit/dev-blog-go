@@ -115,6 +115,7 @@ func fetchPosts(category string, limit, offset int, tag string) ([]types.Post, i
 	if err != nil {
 		return posts, totalPosts, err
 	}
+    search_categories = append(search_categories, category)
 	if category == "root" {
         // if we are searching at root, we can just append all the categories
         /** @todo in this case, remove the WHERE category from the search clause */
@@ -122,7 +123,6 @@ func fetchPosts(category string, limit, offset int, tag string) ([]types.Post, i
             search_categories = append(search_categories, categories[i].Name)
         }
 	} else {
-		search_categories = append(search_categories, category)
 		// go through categories here (they have properties .name and .parent)
 		children := getChildrenCateogires(categories, category)
 		for i := 0; i < len(children); i++ {

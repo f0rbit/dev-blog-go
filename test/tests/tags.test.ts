@@ -50,7 +50,13 @@ describe("tags", () => {
         expect(result).toContain("test-tag");
     })
     test("get tagged posts", async () => {
-        /** @todo implement after backend is done */
+        const response = await fetch("localhost:8080/posts?tag=test-tag", { method: "GET" });
+        expect(response).toBeTruthy();
+        expect(response.ok).toBeTrue();
+        const result = await response.json();
+        expect(result).toBeTruthy();
+        expect(result.total_posts).toBe(1);
+        expect(result.posts[0].id).toBe(test_id);
     })
     test("delete tag", async () => {
         const response = await fetch(`localhost:8080/post/tag?id=${test_id}&tag=test-tag`, { method: "DELETE" });
