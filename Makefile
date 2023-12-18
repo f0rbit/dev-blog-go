@@ -19,6 +19,7 @@ run: clean build
 	./${BINARY_NAME}
 
 run-coverage: clean build-coverage
+	mkdir -p ${COVERAGE_DIR}
 	GOCOVERDIR=${COVERAGE_DIR} ./${BINARY_NAME}
 
 test: build-coverage
