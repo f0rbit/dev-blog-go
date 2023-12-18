@@ -14,6 +14,7 @@ clean:
 	rm -f ${BINARY_NAME}
 	rm -f logs/app.log
 	rm -rf ${COVERAGE_DIR}
+	rm -f server.log
 
 run: clean build
 	./${BINARY_NAME}
