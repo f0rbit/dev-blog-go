@@ -1,6 +1,8 @@
 BINARY_NAME=server.out
 COVERAGE_DIR=src/coverage
 DATABASE_DIR=db/sqlite.db
+TEST_PORT=8080
+TEST_TOKEN=TEST_TOKEN_123
 
 all: clean build run
 
@@ -30,7 +32,7 @@ run-coverage: clean build-coverage
 	@GOCOVERDIR=${COVERAGE_DIR} DATABASE=${DATABASE_DIR} ./${BINARY_NAME}
 
 test: clean
-	@PORT=8080 ./test.sh
+	@PORT=${TEST_PORT} AUTH_TOKEN=${TEST_TOKEN} ./test.sh
 
 database:
 	@mkdir -p db
@@ -50,5 +52,5 @@ reset-database:
 	sqlite3 ${DATABASE_DIR} < sql/base_seed.sql
 
 coverage: 
-	@PORT=8080 ./test.sh > /dev/null 2> /dev/null
+	@PORT=${TEST_PORT} AUTH_TOKEN=${TEST_TOKEN} ./test.sh > /dev/null 2> /dev/null
 	@go tool covdata func -i=${COVERAGE_DIR} | grep total | awk '{print $$3}'

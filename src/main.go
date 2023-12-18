@@ -16,11 +16,29 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+var AUTH_TOKEN = os.Getenv("AUTH_TOKEN")
+
 func main() {
 	log.SetLevel(log.DebugLevel)
 
-	// Initialize routes
 	r := mux.NewRouter()
+    // Middleware for checking 'Auth-Token' header
+	authMiddleware := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodGet {
+				token := r.Header.Get("Auth-Token")
+				if token != AUTH_TOKEN {
+					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					return
+				}
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+
+	// Apply the middleware to all routes
+	r.Use(authMiddleware)
+
     // posts
 	r.HandleFunc("/posts", routes.GetPosts).Methods("GET")
 	r.HandleFunc("/posts/{category}", routes.GetPostsByCategory).Methods("GET")
@@ -41,11 +59,10 @@ func main() {
 	log.Infof("Server started on port %s", port)
 	server := &http.Server{
 		Addr: ":" + port,
+        Handler: r,
 	}
-	//log.Fatal(http.ListenAndServe(port, r))
 
 	go func() {
-		server.Handler = r
 		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("HTTP server error: %v", err)
 		}

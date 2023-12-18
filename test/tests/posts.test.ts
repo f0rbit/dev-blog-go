@@ -1,10 +1,5 @@
 import { expect, test, describe, afterAll } from "bun:test";
 
-type Category = {
-    name: string,
-    parent: string
-}
-
 type Post = {
     id: number,
     slug: string,
@@ -56,10 +51,12 @@ const pagination_posts = [
 ];
 const pagination_ids = new Map<string, number>();
 
+const headers = { 'Auth-Token': process.env.AUTH_TOKEN } as any as Headers;
+
 describe("posts", () => {
     describe("simple operations", () => {
         test("create", async () => {
-            const response = await fetch("localhost:8080/post/new", { method: "POST", body: JSON.stringify(test_post) });
+            const response = await fetch("localhost:8080/post/new", { method: "POST", body: JSON.stringify(test_post), headers });
             expect(!!response).toBeTrue();
             const result = (await response.json()) as Post;
             expect(result.id).toBeGreaterThan(0);
@@ -67,25 +64,25 @@ describe("posts", () => {
             test_post_id = result.id;
         })
         test("duplicate slug", async () => {
-            const response = await fetch("localhost:8080/post/new", { method: "POST", body: JSON.stringify({ ...test_post, title: "Duplicated Bun Post" }) })
+            const response = await fetch("localhost:8080/post/new", { method: "POST", body: JSON.stringify({ ...test_post, title: "Duplicated Bun Post" }), headers })
             expect(response).toBeTruthy();
             expect(response.ok).toBeFalse();
             expect(response.status).toBeGreaterThanOrEqual(500);
         })
         test("update", async () => {
             // we are going to update the content to be "Updated Post Content"
-            const response = await fetch("localhost:8080/post/edit", { method: "PUT", body: JSON.stringify({ ...test_post, content: " Updated Post Content" }) });
+            const response = await fetch("localhost:8080/post/edit", { method: "PUT", body: JSON.stringify({ ...test_post, content: " Updated Post Content" }), headers });
             expect(!!response).toBeTrue();
 
             // then re-fetch the post via id
-            const fetch_response = await fetch(`localhost:8080/post/${test_post.slug}`, { method: "GET" });
+            const fetch_response = await fetch(`localhost:8080/post/${test_post.slug}`, { method: "GET", headers });
             expect(!!fetch_response).toBeTrue();
             const result = (await fetch_response.json()) as Post;
             expect(result.id).toBe(test_post_id as number);
             expect(result.content == "Updated Post Content");
         })
         test("delete", async () => {
-            const response = await fetch(`localhost:8080/post/delete/${test_post_id}`, { method: "DELETE" });
+            const response = await fetch(`localhost:8080/post/delete/${test_post_id}`, { method: "DELETE", headers });
             expect(!!response).toBeTrue();
             expect(response.ok).toBeTrue();
         })
@@ -93,7 +90,7 @@ describe("posts", () => {
         describe("pagination", () => {
             test("mass-creation", async () => {
                 for (const post of pagination_posts) {
-                    const response = await fetch("localhost:8080/post/new", { method: "POST", body: JSON.stringify(post) });
+                    const response = await fetch("localhost:8080/post/new", { method: "POST", body: JSON.stringify(post), headers });
                     expect(!!response).toBeTrue();
                     expect(response.ok).toBeTrue();
                     const result = (await response.json()) as Post;
@@ -103,7 +100,7 @@ describe("posts", () => {
                 expect(pagination_ids.size == pagination_posts.length);
             })
             test("get", async () => {
-                const response = await fetch("localhost:8080/posts", { method: "GET" });
+                const response = await fetch("localhost:8080/posts", { method: "GET", headers });
                 expect(!!response).toBeTrue();
                 expect(response.ok).toBeTrue();
                 const result = (await response.json()) as PostsResponse;
@@ -112,7 +109,7 @@ describe("posts", () => {
                 expect(result.current_page).toBe(1);
                 expect(result.total_pages).toBeGreaterThan(1);
 
-                const page2_response = await fetch("localhost:8080/posts?offset=10", { method: "GET" });
+                const page2_response = await fetch("localhost:8080/posts?offset=10", { method: "GET", headers });
                 expect(!!page2_response).toBeTrue();
                 expect(page2_response.ok).toBeTrue();
                 const page2 = (await page2_response.json()) as PostsResponse;
@@ -121,7 +118,7 @@ describe("posts", () => {
             })
             test("get via category", async () => {
                 // there should only be 2 'learning' posts
-                const learning_response = await fetch("localhost:8080/posts/learning", { method: "GET" });
+                const learning_response = await fetch("localhost:8080/posts/learning", { method: "GET", headers });
                 expect(!!learning_response).toBeTrue();
                 expect(learning_response.ok).toBeTrue();
                 const learning = (await learning_response.json()) as PostsResponse;
@@ -131,7 +128,7 @@ describe("posts", () => {
 
                 // now we get all 'coding' posts
                 // these should include the child categories of coding
-                const coding_response = await fetch("localhost:8080/posts/coding", { method: "GET" });
+                const coding_response = await fetch("localhost:8080/posts/coding", { method: "GET", headers });
                 expect(!!coding_response).toBeTrue();
                 expect(coding_response.ok).toBeTrue();
                 const coding = (await coding_response.json()) as PostsResponse;
@@ -143,7 +140,7 @@ describe("posts", () => {
             })
             afterAll(async () => {
                 for (const [_, id] of pagination_ids) {
-                    const response = await fetch(`localhost:8080/post/delete/${id}`, { method: "DELETE" });
+                    const response = await fetch(`localhost:8080/post/delete/${id}`, { method: "DELETE", headers });
                     expect(!!response).toBeTrue();
                     expect(response.ok).toBeTrue();
                 }
