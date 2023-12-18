@@ -21,7 +21,9 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
-	posts, totalPosts, err := fetchPosts(limit, offset)
+	tag := r.URL.Query().Get("tag")
+
+	posts, totalPosts, err := fetchPosts("root", limit, offset, tag)
 	if err != nil {
 		log.Error("Error fetching posts", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -62,8 +64,9 @@ func GetPostsByCategory(w http.ResponseWriter, r *http.Request) {
 
 	// Extract category parameter from URL
 	category := mux.Vars(r)["category"]
+	tag := r.URL.Query().Get("tag")
 
-	posts, totalPosts, err := fetchPostsByCategory(category, limit, offset)
+	posts, totalPosts, err := fetchPosts(category, limit, offset, tag)
 	if err != nil {
 		log.Error("Error fetching posts by category", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -94,7 +97,7 @@ func GetPostsByCategory(w http.ResponseWriter, r *http.Request) {
 	w.Write(encoded)
 }
 
-func fetchPostsByCategory(category string, limit, offset int) ([]types.Post, int, error) {
+func fetchPosts(category string, limit, offset int, tag string) ([]types.Post, int, error) {
 	var posts []types.Post
 	var totalPosts int
 
@@ -104,7 +107,7 @@ func fetchPostsByCategory(category string, limit, offset int) ([]types.Post, int
 	}
 	defer db.Close()
 
-	log.Infof("Searching for posts under category %s", category)
+	log.Info("Searching for posts", "category", category, "tag", tag)
 
 	// given a category, we want to get all the children category and include those in our select post query as an 'IN (<array of categories>)'
 	var search_categories []any
@@ -112,13 +115,21 @@ func fetchPostsByCategory(category string, limit, offset int) ([]types.Post, int
 	if err != nil {
 		return posts, totalPosts, err
 	}
-	search_categories = append(search_categories, category)
-	// go through categories here (they have properties .name and .parent)
-	children := getChildrenCateogires(categories, category)
-	for i := 0; i < len(children); i++ {
-		search_categories = append(search_categories, children[i].Name)
+	if category == "root" {
+        // if we are searching at root, we can just append all the categories
+        /** @todo in this case, remove the WHERE category from the search clause */
+        for i := 0; i < len(categories); i++ {
+            search_categories = append(search_categories, categories[i].Name)
+        }
+	} else {
+		search_categories = append(search_categories, category)
+		// go through categories here (they have properties .name and .parent)
+		children := getChildrenCateogires(categories, category)
+		for i := 0; i < len(children); i++ {
+			search_categories = append(search_categories, children[i].Name)
+		}
 	}
-	log.Infof("Searching through categories: %v", search_categories)
+	log.Info("Searching through categories", "search_categories", search_categories)
 
 	// Build the IN clause with placeholders
 	placeholders := make([]string, len(search_categories))
@@ -127,7 +138,14 @@ func fetchPostsByCategory(category string, limit, offset int) ([]types.Post, int
 	}
 	inClause := strings.Join(placeholders, ",")
 
-	err = db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM posts WHERE category IN (%s)", inClause), search_categories...).Scan(&totalPosts)
+	var params []any
+	if tag == "" {
+		err = db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM posts WHERE category IN (%s)", inClause), search_categories...).Scan(&totalPosts)
+	} else {
+		params = append(params, tag)
+		params = append(params, search_categories...)
+		err = db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM posts LEFT JOIN tags ON tags.post_id = posts.id WHERE tags.tag = ? AND posts.category IN (%s)", inClause), params...).Scan(&totalPosts)
+	}
 	if err != nil {
 		return posts, totalPosts, err
 	}
@@ -162,40 +180,6 @@ func buildPreparedParams(length int) string {
 		placeholders = append(placeholders, "?")
 	}
 	return "(" + strings.Join(placeholders, ",") + ")"
-}
-
-func fetchPosts(limit, offset int) ([]types.Post, int, error) {
-	var posts []types.Post
-	var totalPosts int
-
-	db, err := sql.Open("sqlite3", database)
-	if err != nil {
-		return posts, totalPosts, err
-	}
-	defer db.Close()
-
-	// Query to get total number of posts
-	err = db.QueryRow("SELECT COUNT(*) FROM posts").Scan(&totalPosts)
-	if err != nil {
-		return posts, totalPosts, err
-	}
-
-	// Query to fetch paginated posts
-	rows, err := db.Query("SELECT id, slug, title, content, category FROM posts LIMIT ? OFFSET ?", limit, offset)
-	if err != nil {
-		return posts, totalPosts, err
-	}
-
-	for rows.Next() {
-		var post types.Post
-		err := rows.Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category)
-		if err != nil {
-			return posts, totalPosts, err
-		}
-		posts = append(posts, post)
-	}
-
-	return posts, totalPosts, nil
 }
 
 func parsePaginationParams(r *http.Request) (int, int, error) {
