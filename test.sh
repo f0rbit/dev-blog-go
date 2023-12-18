@@ -30,7 +30,7 @@ GOCOVERDIR=${COVERAGE_DIR} DATABASE=${DATABASE_FILE} ./${BINARY_NAME} 2> server.
 server_pid=$!
 
 # Run the tests using "bun test"
-cd test && bun test
+cd test && ~/.bun/bin/bun test
 
 # Capture the exit code of "bun test"
 test_exit_code=$?
