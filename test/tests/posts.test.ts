@@ -78,7 +78,7 @@ describe("posts", () => {
             expect(!!response).toBeTrue();
 
             // then re-fetch the post via id
-            const fetch_response = await fetch(`localhost:8080/post/${test_post_id}`, { method: "GET" });
+            const fetch_response = await fetch(`localhost:8080/post/${test_post.slug}`, { method: "GET" });
             expect(!!fetch_response).toBeTrue();
             const result = (await fetch_response.json()) as Post;
             expect(result.id).toBe(test_post_id as number);
