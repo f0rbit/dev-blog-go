@@ -6,14 +6,13 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"io"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -21,7 +20,7 @@ import (
 var database = "db/sqlite.db"
 
 func main() {
-	initLogging()
+	log.SetLevel(log.DebugLevel)
 	initDatabase()
 
 	// Initialize routes
@@ -36,7 +35,7 @@ func main() {
 
 	// Start the server
 	port := ":8080"
-	log.Printf("Server started on port %s", port)
+	log.Infof("Server started on port %s", port)
 	server := &http.Server{
 		Addr: ":8080",
 	}
@@ -47,7 +46,7 @@ func main() {
 		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("HTTP server error: %v", err)
 		}
-		log.Println("Stopped serving new connections.")
+		log.Info("Stopped serving new connections.")
 	}()
 
 	sigChan := make(chan os.Signal, 1)
@@ -60,20 +59,7 @@ func main() {
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		log.Fatalf("HTTP shutdown error: %v", err)
 	}
-	log.Println("Graceful shutdown complete.")
-}
-
-func initLogging() {
-	// Create a log file
-	file, err := os.OpenFile("logs/app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatal("Error creating log file: ", err)
-	}
-	file.Write([]byte("## NEW INSTANCE ##\n"))
-
-	// Set log output to both console and file
-	log.SetOutput(io.MultiWriter(os.Stdout, file))
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	log.Info("Graceful shutdown complete.")
 }
 
 func initDatabase() {
@@ -92,7 +78,7 @@ func initDatabase() {
 		log.Fatal(err)
 	}
 
-	log.Printf("Database Version: %s", version)
+	log.Debugf("Database Version: %s", version)
 	if !tableExists(db, "categories") {
 		createCategories(db)
 	}
@@ -115,7 +101,7 @@ func createCategories(db *sql.DB) {
 	if err != nil {
 		log.Fatal(err)
 	} else {
-		log.Printf("Dropped categories table")
+		log.Info("Dropped categories table")
 	}
 	statement.Exec()
 
@@ -123,7 +109,7 @@ func createCategories(db *sql.DB) {
 	if err != nil {
 		log.Fatal(err)
 	} else {
-		log.Printf("Created categories table")
+		log.Info("Created categories table")
 	}
 	statement.Exec()
 
@@ -148,7 +134,7 @@ func createPosts(db *sql.DB) {
 	if err != nil {
 		log.Fatal(err)
 	} else {
-		log.Printf("Dropped posts table")
+		log.Info("Dropped posts table")
 	}
 	statement.Exec()
 
@@ -157,7 +143,7 @@ func createPosts(db *sql.DB) {
 		log.Fatal(err)
 	} else {
 		statement.Exec()
-		log.Printf("Created posts table")
+		log.Info("Created posts table")
 	}
 
 	statement, err = db.Prepare("INSERT INTO posts (slug, title, content, category) VALUES (?,?,?,?)")
@@ -165,7 +151,7 @@ func createPosts(db *sql.DB) {
 		log.Fatal(err)
 	} else {
 		statement.Exec("test-post", "test", "this is a test post, first post.", "coding")
-		log.Printf("Inserted 'test-post'")
+		log.Info("Inserted 'test-post'")
 	}
 
 }

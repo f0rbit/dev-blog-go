@@ -5,7 +5,7 @@ import (
 	"blog-server/types"
 	"database/sql"
 	"encoding/json"
-	"log"
+	"github.com/charmbracelet/log"
 	"net/http"
 )
 
@@ -14,7 +14,7 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
 	// Fetch categories from the database
 	categories, err := fetchCategories()
 	if err != nil {
-		log.Println("Error fetching categories:", err)
+		log.Error("Error fetching categories", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -22,7 +22,7 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
 	// Convert categories to JSON
 	encoded, err := json.Marshal(categories)
 	if err != nil {
-		log.Println("Error marshaling categories to JSON:", err)
+		log.Error("Error marshaling categories to JSON", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -57,18 +57,18 @@ func fetchCategories() ([]types.Category, error) {
 }
 
 func getChildrenCateogires(categories []types.Category, parent string) []types.Category {
-    var cats []types.Category;
+	var cats []types.Category
 
-    for i := 0; i < len(categories); i++ {
-        if categories[i].Parent == parent {
-            cats = append(cats, categories[i])
-            // add all the children as well
-            var children = getChildrenCateogires(categories, categories[i].Name)
-            for j := 0; j < len(children); j++ {
-                cats = append(cats, children[j]);
-            }
-        }
-    }
+	for i := 0; i < len(categories); i++ {
+		if categories[i].Parent == parent {
+			cats = append(cats, categories[i])
+			// add all the children as well
+			var children = getChildrenCateogires(categories, categories[i].Name)
+			for j := 0; j < len(children); j++ {
+				cats = append(cats, children[j])
+			}
+		}
+	}
 
-    return cats;
+	return cats
 }

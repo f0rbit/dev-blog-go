@@ -6,24 +6,24 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/charmbracelet/log"
 	"github.com/gorilla/mux"
 )
 
 func GetPosts(w http.ResponseWriter, r *http.Request) {
 	limit, offset, err := parsePaginationParams(r)
 	if err != nil {
-		log.Println("Error parsing params:", err)
+		log.Error("Error parsing params", "err", err)
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 	posts, totalPosts, err := fetchPosts(limit, offset)
 	if err != nil {
-		log.Println("Error fetching posts:", err)
+		log.Error("Error fetching posts", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -43,7 +43,7 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 
 	encoded, err := json.Marshal(response)
 	if err != nil {
-		log.Println("Error converting posts to JSON:", err)
+		log.Error("Error converting posts to JSON", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -55,7 +55,7 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 func GetPostsByCategory(w http.ResponseWriter, r *http.Request) {
 	limit, offset, err := parsePaginationParams(r)
 	if err != nil {
-		log.Println("Error parsing params:", err)
+		log.Error("Error parsing params", "err", err)
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
@@ -65,7 +65,7 @@ func GetPostsByCategory(w http.ResponseWriter, r *http.Request) {
 
 	posts, totalPosts, err := fetchPostsByCategory(category, limit, offset)
 	if err != nil {
-		log.Println("Error fetching posts by category:", err)
+		log.Error("Error fetching posts by category", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -85,7 +85,7 @@ func GetPostsByCategory(w http.ResponseWriter, r *http.Request) {
 
 	encoded, err := json.Marshal(response)
 	if err != nil {
-		log.Println("Error converting posts to JSON:", err)
+		log.Error("Error converting posts to JSON", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -104,7 +104,7 @@ func fetchPostsByCategory(category string, limit, offset int) ([]types.Post, int
 	}
 	defer db.Close()
 
-	log.Printf("Searching for posts under category %s", category)
+	log.Infof("Searching for posts under category %s", category)
 
 	// given a category, we want to get all the children category and include those in our select post query as an 'IN (<array of categories>)'
 	var search_categories []any
@@ -118,7 +118,7 @@ func fetchPostsByCategory(category string, limit, offset int) ([]types.Post, int
 	for i := 0; i < len(children); i++ {
 		search_categories = append(search_categories, children[i].Name)
 	}
-	log.Printf("Searching through categories: %v", search_categories)
+	log.Infof("Searching through categories: %v", search_categories)
 
 	// Build the IN clause with placeholders
 	placeholders := make([]string, len(search_categories))
@@ -131,11 +131,10 @@ func fetchPostsByCategory(category string, limit, offset int) ([]types.Post, int
 	if err != nil {
 		return posts, totalPosts, err
 	}
-	log.Printf("Found %d posts", totalPosts)
+	log.Infof("Found %d posts", totalPosts)
 
 	// Query to fetch paginated posts for the given category
 	query := fmt.Sprintf("SELECT id, slug, title, content, category FROM posts WHERE category IN (%s) LIMIT ? OFFSET ?", inClause)
-	log.Printf("DB Query: %s", query)
 
 	search_categories = append(search_categories, limit)
 	search_categories = append(search_categories, offset)

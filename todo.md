@@ -13,7 +13,7 @@
 - [ ] `GET /posts` (with tag param)
 - [ ] Move all SQL setup & seeding queries into .sql files
     - [ ] setup a migrations folder
-- [ ] Replace logging with Charm's Go logging library
+- [x] Replace logging with Charm's Go logging library
 
 # v0.3
 - [ ] Deployment scripts & setup

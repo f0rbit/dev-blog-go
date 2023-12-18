@@ -5,7 +5,7 @@ import (
 	"blog-server/types"
 	"database/sql"
 	"encoding/json"
-	"log"
+	"github.com/charmbracelet/log"
 	"net/http"
 	"strconv"
 
@@ -17,7 +17,7 @@ func GetPostByID(w http.ResponseWriter, r *http.Request) {
 	postIDStr := mux.Vars(r)["id"]
 	postID, err := strconv.Atoi(postIDStr)
 	if err != nil {
-		log.Println("Error parsing post ID:", err)
+		log.Error("Error parsing post ID", "err", err)
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
@@ -25,7 +25,7 @@ func GetPostByID(w http.ResponseWriter, r *http.Request) {
 	// Fetch the post by ID
 	post, err := fetchPostByID(postID)
 	if err != nil {
-		log.Println("Error fetching post by ID:", err)
+		log.Error("Error fetching post by ID", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -33,7 +33,7 @@ func GetPostByID(w http.ResponseWriter, r *http.Request) {
 	// Encode the post to JSON
 	encoded, err := json.Marshal(post)
 	if err != nil {
-		log.Println("Error converting post to JSON:", err)
+		log.Error("Error converting post to JSON", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -48,7 +48,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	var newPost types.Post
 	err := json.NewDecoder(r.Body).Decode(&newPost)
 	if err != nil {
-		log.Println("Error decoding new post:", err)
+		log.Error("Error decoding new post", "err", err)
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
@@ -56,14 +56,14 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	// Insert the new post into the database
 	err = insertPost(&newPost)
 	if err != nil {
-		log.Println("Error creating new post:", err)
+		log.Error("Error creating new post", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-    // Fetch the complete post with the new ID
+	// Fetch the complete post with the new ID
 	createdPost, err := fetchPostByID(newPost.Id)
 	if err != nil {
-		log.Println("Error fetching created post:", err)
+		log.Error("Error fetching created post", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -71,7 +71,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	// Encode the complete post to JSON
 	encoded, err := json.Marshal(createdPost)
 	if err != nil {
-		log.Println("Error converting created post to JSON:", err)
+		log.Error("Error converting created post to JSON", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -86,7 +86,7 @@ func EditPost(w http.ResponseWriter, r *http.Request) {
 	var updatedPost types.Post
 	err := json.NewDecoder(r.Body).Decode(&updatedPost)
 	if err != nil {
-		log.Println("Error decoding updated post:", err)
+		log.Error("Error decoding updated post", "err", err)
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
@@ -94,7 +94,7 @@ func EditPost(w http.ResponseWriter, r *http.Request) {
 	// Update the post in the database
 	err = updatePost(&updatedPost)
 	if err != nil {
-		log.Println("Error updating post:", err)
+		log.Error("Error updating post", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -107,7 +107,7 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 	postIDStr := mux.Vars(r)["id"]
 	postID, err := strconv.Atoi(postIDStr)
 	if err != nil {
-		log.Println("Error parsing post ID:", err)
+		log.Error("Error parsing post ID", "err", err)
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
@@ -115,7 +115,7 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 	// Delete the post by ID
 	err = deletePost(postID)
 	if err != nil {
-		log.Println("Error deleting post:", err)
+		log.Error("Error deleting post", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -156,11 +156,11 @@ func insertPost(newPost *types.Post) error {
 	_, err = db.Exec("INSERT INTO posts (slug, title, content, category) VALUES (?, ?, ?, ?)",
 		newPost.Slug, newPost.Title, newPost.Content, newPost.Category)
 
-    if err != nil {
-        return err;
-    }
+	if err != nil {
+		return err
+	}
 
-    // Assuming your database is configured to auto-increment the ID,
+	// Assuming your database is configured to auto-increment the ID,
 	// retrieve the last inserted ID using the LastInsertId method
 	row := db.QueryRow("SELECT last_insert_rowid()")
 
@@ -169,7 +169,7 @@ func insertPost(newPost *types.Post) error {
 		return err
 	}
 
-    log.Printf("Inserted new post '%s' with ID: %d", newPost.Slug, newPost.Id);
+	log.Infof("Inserted new post '%s' with ID: %d", newPost.Slug, newPost.Id)
 
 	return err
 }
