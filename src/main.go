@@ -4,7 +4,6 @@ package main
 import (
 	"blog-server/routes"
 	"context"
-	"database/sql"
 	"errors"
 	"net/http"
 	"os"
@@ -17,11 +16,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var database = "db/sqlite.db"
-
 func main() {
 	log.SetLevel(log.DebugLevel)
-	initDatabase()
 
 	// Initialize routes
 	r := mux.NewRouter()
@@ -60,98 +56,4 @@ func main() {
 		log.Fatalf("HTTP shutdown error: %v", err)
 	}
 	log.Info("Graceful shutdown complete.")
-}
-
-func initDatabase() {
-	db, err := sql.Open("sqlite3", database)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer db.Close()
-
-	var version string
-	err = db.QueryRow("SELECT SQLITE_VERSION()").Scan(&version)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Debugf("Database Version: %s", version)
-	if !tableExists(db, "categories") {
-		createCategories(db)
-	}
-	if !tableExists(db, "posts") {
-		createPosts(db)
-	}
-}
-
-func tableExists(db *sql.DB, tableName string) bool {
-	// Query to check if a table exists in SQLite
-	query := "SELECT name FROM sqlite_master WHERE type='table' AND name=?"
-	var name string
-	err := db.QueryRow(query, tableName).Scan(&name)
-	return err == nil
-}
-
-func createCategories(db *sql.DB) {
-	// create "Categories" table
-	statement, err := db.Prepare("DROP TABLE IF EXISTS categories")
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		log.Info("Dropped categories table")
-	}
-	statement.Exec()
-
-	statement, err = db.Prepare("CREATE TABLE IF NOT EXISTS categories (name VARCHAR(15) PRIMARY KEY, parent VARCHAR(15))")
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		log.Info("Created categories table")
-	}
-	statement.Exec()
-
-	statement, _ = db.Prepare("INSERT INTO categories (name, parent) VALUES (?, ?)")
-	statement.Exec("coding", "root")
-	statement.Exec("learning", "coding")
-	statement.Exec("devlog", "coding")
-	statement.Exec("gamedev", "devlog")
-	statement.Exec("webdev", "devlog")
-	statement.Exec("code-story", "coding")
-	statement.Exec("hobbies", "root")
-	statement.Exec("photography", "hobbies")
-	statement.Exec("painting", "hobbies")
-	statement.Exec("hiking", "hobbies")
-	statement.Exec("story", "root")
-	statement.Exec("advice", "root")
-	log.Printf("Inserted categories")
-}
-
-func createPosts(db *sql.DB) {
-	statement, err := db.Prepare("DROP TABLE IF EXISTS posts")
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		log.Info("Dropped posts table")
-	}
-	statement.Exec()
-
-	statement, err = db.Prepare("CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, slug TEXT NOT NULL UNIQUE, title TEXT NOT NULL, content TEXT NOT NULL, category TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		statement.Exec()
-		log.Info("Created posts table")
-	}
-
-	statement, err = db.Prepare("INSERT INTO posts (slug, title, content, category) VALUES (?,?,?,?)")
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		statement.Exec("test-post", "test", "this is a test post, first post.", "coding")
-		log.Info("Inserted 'test-post'")
-	}
-
 }
