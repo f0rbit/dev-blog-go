@@ -10,6 +10,7 @@
 
 # v0.2
 - [ ] `GET /tags`
+- [ ] `PUT /post/tag`
 - [ ] `GET /posts` (with tag param)
 - [x] Move all SQL setup & seeding queries into .sql files
 - [x] setup a migrations folder (for tags)
