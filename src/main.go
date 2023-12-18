@@ -13,6 +13,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/gorilla/mux"
+    "github.com/rs/cors"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -29,16 +30,20 @@ func main() {
 	r.HandleFunc("/post/delete/{id}", routes.DeletePost).Methods("DELETE")
 	r.HandleFunc("/categories", routes.GetCategories).Methods("GET")
 
+    c := cors.New(cors.Options{
+        AllowedOrigins: []string{"http://localhost:5173"},
+        AllowCredentials: true,
+    })
+
 	// Start the server
 	port := ":8080"
-	log.Infof("Server started on port %s", port)
 	server := &http.Server{
 		Addr: ":8080",
+        Handler: c.Handler(r),
 	}
-	//log.Fatal(http.ListenAndServe(port, r))
+	log.Info("Server started", "port", port)
 
 	go func() {
-		server.Handler = r
 		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("HTTP server error: %v", err)
 		}
