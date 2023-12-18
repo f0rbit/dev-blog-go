@@ -7,10 +7,10 @@ type Category = {
 
 test("categories", async () => {
     const response = await fetch("localhost:8080/categories", { method: "GET" });
-    expect(!!response);
+    expect(response).toBeTruthy();
     const result = (await response.json()) as Category[];
-    expect(!!result);
-    expect(result.length > 0);
-    expect(result.find((cat) => cat.name == "coding"));
-    expect(result.find((cat) => cat.name == "webdev" && cat.parent == "devlog"));
+    expect(result).toBeTruthy();
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.find((cat) => cat.name == "coding")).toBeTruthy();
+    expect(result.find((cat) => cat.name == "webdev" && cat.parent == "devlog")).toBeTruthy();
 });
