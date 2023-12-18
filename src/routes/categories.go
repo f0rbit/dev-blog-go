@@ -5,8 +5,9 @@ import (
 	"blog-server/types"
 	"database/sql"
 	"encoding/json"
-	"github.com/charmbracelet/log"
 	"net/http"
+
+	"github.com/charmbracelet/log"
 )
 
 // GetCategories handles the GET /categories route
@@ -35,7 +36,7 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
 
 func fetchCategories() ([]types.Category, error) {
 	var categories []types.Category
-	db, err := sql.Open("sqlite3", "db/sqlite.db")
+	db, err := sql.Open("sqlite3", database)
 	if err != nil {
 		return categories, err
 	}

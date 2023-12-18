@@ -17,11 +17,11 @@ clean:
 	rm -f server.log
 
 run: clean build
-	./${BINARY_NAME}
+	DATABASE=db/sqlite.db ./${BINARY_NAME}
 
 run-coverage: clean build-coverage
 	mkdir -p ${COVERAGE_DIR}
-	GOCOVERDIR=${COVERAGE_DIR} ./${BINARY_NAME}
+	GOCOVERDIR=${COVERAGE_DIR} DATABASE=db/sqlite.db ./${BINARY_NAME}
 
-test: build-coverage
-	cd test && bun test
+test: clean
+	./test.sh

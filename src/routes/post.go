@@ -5,12 +5,16 @@ import (
 	"blog-server/types"
 	"database/sql"
 	"encoding/json"
-	"github.com/charmbracelet/log"
 	"net/http"
+	"os"
 	"strconv"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/gorilla/mux"
 )
+
+var database string = os.Getenv("DATABASE")
 
 func GetPostByID(w http.ResponseWriter, r *http.Request) {
 	// Extract post ID parameter from URL
@@ -123,7 +127,6 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-const database string = "db/sqlite.db"
 
 func fetchPostByID(postID int) (types.Post, error) {
 	var post types.Post
@@ -185,6 +188,8 @@ func updatePost(updatedPost *types.Post) error {
 	_, err = db.Exec("UPDATE posts SET slug = ?, title = ?, content = ?, category = ? WHERE id = ?",
 		updatedPost.Slug, updatedPost.Title, updatedPost.Content, updatedPost.Category, updatedPost.Id)
 
+    log.Info("Updated Post", "id", updatedPost.Id)
+
 	return err
 }
 
@@ -197,6 +202,8 @@ func deletePost(postID int) error {
 
 	// Delete the post by ID
 	_, err = db.Exec("DELETE FROM posts WHERE id = ?", postID)
+
+    log.Info("Deleted Post", "id", postID)
 
 	return err
 }

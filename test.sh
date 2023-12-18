@@ -2,6 +2,15 @@
 ROOT_DIR=$(pwd)
 BINARY_NAME=server.out
 COVERAGE_DIR=src/coverage
+DATABASE_FILE=db/test.db
+
+mkdir -p db
+rm -f ${DATABASE_FILE}
+touch ${DATABASE_FILE}
+
+# setup the database
+sqlite3 ${DATABASE_FILE} < sql/setup.sql
+sqlite3 ${DATABASE_FILE} < sql/test_seed.sql
 
 # Check if server.out exists
 if [ ! -f "$BINARY_NAME" ]; then
@@ -14,7 +23,7 @@ cd ${ROOT_DIR}
 mkdir -p ${COVERAGE_DIR}
 
 # Start the Go server in the background
-GOCOVERDIR=${COVERAGE_DIR} ./${BINARY_NAME} 2> server.log &
+GOCOVERDIR=${COVERAGE_DIR} DATABASE=${DATABASE_FILE} ./${BINARY_NAME} 2> server.log &
 
 # Store the process ID of the Go server
 server_pid=$!
