@@ -3,3 +3,4 @@ db/*
 *.out
 src/coverage
 *.log
+node_modules
