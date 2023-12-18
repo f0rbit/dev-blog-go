@@ -3,10 +3,10 @@
 - [x] `GET /posts/:cateogry`
 - [x] `GET /post/:id`
 - [x] `POST /post/new`
-- [ ] `PUT /post/edit`
+- [x] `PUT /post/edit`
 - [x] `GET /categories`
 - [x] `DELETE /post/delete/:id`
-- [ ] Primary testing of endpoints
+- [x] Primary testing of endpoints
 
 # v0.2
 - [ ] `GET /tags`
