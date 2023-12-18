@@ -20,3 +20,20 @@
 - [ ] Github actions for testing
 - [ ] Figure out how to get code coverage over the two completely different codebases
 - [ ] Add authentication middleware for endpoints
+
+# v0.4
+- [ ] Front end implementation
+    - [ ] Create Blog Posts
+    - [ ] Edit existing Posts
+    - [ ] Delete posts
+    - [ ] Assign categories
+    - [ ] Assign tags
+- [ ] Front end typesafety w/ zod
+- [ ] Front end styling
+
+# v0.5
+- [ ] Database connection pooling
+- [ ] Proper graph data structure for categories
+- [ ] Refactor & simplify code bases
+    - [ ] > 85% test coverage
+- [ ] Proper input/output data validation (type safety)
