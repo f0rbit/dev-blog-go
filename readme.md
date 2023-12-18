@@ -37,3 +37,5 @@ These categories should be stored in the sqlite file.
 # TESTING
 In order to run the unit tests, the server must first be running, and you must have Bun installed as the test runner.
 Simply navigate to the `/tests` folder and run `bun test`. All tests should pass.
+
+If you want logs, run `make 2> <log_file>` and it will redirect stdout to a log file.
