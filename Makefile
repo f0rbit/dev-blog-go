@@ -1,9 +1,10 @@
 BINARY_NAME=server.out
 COVERAGE_DIR=src/coverage
+DATABASE_DIR=db/sqlite.db
 
 all: clean build run
 
-build: 
+build:
 	cd src && go build -o ${BINARY_NAME} && mv ${BINARY_NAME} ../
 
 build-coverage:
@@ -17,11 +18,28 @@ clean:
 	rm -f server.log
 
 run: clean build
-	DATABASE=db/sqlite.db ./${BINARY_NAME}
+	DATABASE=${DATABASE_DIR} ./${BINARY_NAME}
 
 run-coverage: clean build-coverage
 	mkdir -p ${COVERAGE_DIR}
-	GOCOVERDIR=${COVERAGE_DIR} DATABASE=db/sqlite.db ./${BINARY_NAME}
+	GOCOVERDIR=${COVERAGE_DIR} DATABASE=${DATABASE_DIR} ./${BINARY_NAME}
 
 test: clean
 	./test.sh
+
+database:
+	mkdir -p db
+	touch ${DATABASE_DIR}
+	sqlite3 ${DATABASE_DIR} < sql/setup.sql
+	./apply_migrations.sh ${DATABASE_DIR}
+	sqlite3 ${DATABASE_DIR} < sql/base_seed.sql
+
+reset-database:
+	rm -rf db
+	mkdir -p db
+	touch ${DATABASE_DIR}
+	sqlite3 ${DATABASE_DIR} < sql/setup.sql
+	./apply_migrations.sh ${DATABASE_DIR}
+	sqlite3 ${DATABASE_DIR} < sql/base_seed.sql
+
+
