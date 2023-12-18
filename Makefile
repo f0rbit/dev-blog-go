@@ -30,7 +30,7 @@ run-coverage: clean build-coverage
 	@GOCOVERDIR=${COVERAGE_DIR} DATABASE=${DATABASE_DIR} ./${BINARY_NAME}
 
 test: clean
-	@./test.sh
+	@PORT=8080 ./test.sh
 
 database:
 	@mkdir -p db
@@ -50,5 +50,5 @@ reset-database:
 	sqlite3 ${DATABASE_DIR} < sql/base_seed.sql
 
 coverage: 
-	@./test.sh > /dev/null 2> /dev/null
+	@PORT=8080 ./test.sh > /dev/null 2> /dev/null
 	@go tool covdata func -i=${COVERAGE_DIR} | grep total | awk '{print $$3}'
