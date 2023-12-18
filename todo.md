@@ -18,7 +18,7 @@
 - [x] Replace logging with Charm's Go logging library
 
 # v0.3
-- [ ] Deployment scripts & setup
+- [x] Deployment scripts & setup
 - [x] Github actions for testing
 - [x] Figure out how to get code coverage over the two completely different codebases
 - [ ] Add authentication middleware for endpoints
