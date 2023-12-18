@@ -5,9 +5,11 @@ import (
 	"blog-server/types"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -102,16 +104,45 @@ func fetchPostsByCategory(category string, limit, offset int) ([]types.Post, int
 	}
 	defer db.Close()
 
-	// Query to get total number of posts for the given category
-	err = db.QueryRow("SELECT COUNT(*) FROM posts WHERE category = ?", category).Scan(&totalPosts)
+	log.Printf("Searching for posts under category %s", category)
+
+	// given a category, we want to get all the children category and include those in our select post query as an 'IN (<array of categories>)'
+	var search_categories []any
+	categories, err := fetchCategories()
 	if err != nil {
 		return posts, totalPosts, err
 	}
+	search_categories = append(search_categories, category)
+	// go through categories here (they have properties .name and .parent)
+	children := getChildrenCateogires(categories, category)
+	for i := 0; i < len(children); i++ {
+		search_categories = append(search_categories, children[i].Name)
+	}
+	log.Printf("Searching through categories: %v", search_categories)
 
-	// Query to fetch paginated posts for the given category
-	rows, err := db.Query("SELECT id, slug, title, content, category FROM posts WHERE category = ? LIMIT ? OFFSET ?", category, limit, offset)
+	// Build the IN clause with placeholders
+	placeholders := make([]string, len(search_categories))
+	for i := range search_categories {
+		placeholders[i] = "?"
+	}
+	inClause := strings.Join(placeholders, ",")
+
+	err = db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM posts WHERE category IN (%s)", inClause), search_categories...).Scan(&totalPosts)
 	if err != nil {
 		return posts, totalPosts, err
+	}
+	log.Printf("Found %d posts", totalPosts)
+
+	// Query to fetch paginated posts for the given category
+	query := fmt.Sprintf("SELECT id, slug, title, content, category FROM posts WHERE category IN (%s) LIMIT ? OFFSET ?", inClause)
+	log.Printf("DB Query: %s", query)
+
+	search_categories = append(search_categories, limit)
+	search_categories = append(search_categories, offset)
+
+	rows, err := db.Query(query, search_categories...)
+	if err != nil {
+		return posts, len(posts), err
 	}
 
 	for rows.Next() {
@@ -124,6 +155,14 @@ func fetchPostsByCategory(category string, limit, offset int) ([]types.Post, int
 	}
 
 	return posts, totalPosts, nil
+}
+
+func buildPreparedParams(length int) string {
+	var placeholders []string
+	for i := 0; i < length; i++ {
+		placeholders = append(placeholders, "?")
+	}
+	return "(" + strings.Join(placeholders, ",") + ")"
 }
 
 func fetchPosts(limit, offset int) ([]types.Post, int, error) {
