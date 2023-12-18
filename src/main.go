@@ -37,10 +37,10 @@ func main() {
     r.HandleFunc("/tags", routes.GetTags).Methods("GET")
 
 	// Start the server
-	port := ":8080"
+	port := os.Getenv("PORT") 
 	log.Infof("Server started on port %s", port)
 	server := &http.Server{
-		Addr: ":8080",
+		Addr: ":" + port,
 	}
 	//log.Fatal(http.ListenAndServe(port, r))
 
