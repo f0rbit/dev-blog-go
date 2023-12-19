@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
 import './App.css'
 import React from 'react';
-import { FolderTree, Home, LibraryBig, Settings, Tags } from 'lucide-react';
+import { ArrowDownNarrowWide, Filter, FolderTree, Home, LibraryBig, Plus, Search, Settings, Tags } from 'lucide-react';
 
 interface PostContext {
     posts: any,
@@ -37,10 +37,10 @@ function App() {
             <nav>
                 <Sidebar page={page} setPage={setPage} />
             </nav>
-            <main>
+            <section>
                 <TitleBar page={page} />
                 <Content page={page} />
-            </main>
+            </section>
         </PostContext.Provider>
     )
 }
@@ -64,10 +64,10 @@ function TitleBar({ page }: { page: Page }) {
             case "settings": return "Modify settings";
         }
     }
-    return <div id="title-bar">
+    return <header>
         <h1>{title()}</h1>
         <p>{description()}</p>
-    </div>
+    </header>
 
 }
 
@@ -113,13 +113,44 @@ function HomePage() {
     </>;
 }
 
+type PostSort = "created" | "edited" | "published" | "oldest";
+
 function PostsPage() {
     const { posts } = useContext(PostContext);
-    console.log(posts);
-    if (!posts || !posts.posts) return <p>No Posts Found!</p>
+    const [selected, setSelected] = useState<PostSort>("created");
+
+    if (!posts || !posts.posts) return <p>No Posts Found!</p>;
+
+    return <main>
+        <section id="post-filters">
+            <label htmlFor='post-search'><Search /></label>
+            <input type="text" id='post-search' />
+            <SortControl selected={selected} setSelected={setSelected} />
+            <button><Filter /><span>Filter</span></button>
+            <button style={{ marginLeft: "auto" }}><Plus /><span>Create</span></button>
+        </section>
+        <section id='post-grid'>
+            {posts.posts.map((p: any) => (<pre key={p.id}>{JSON.stringify(p, null, 2)}</pre>))}
+        </section>
+    </main>
+}
+
+function SortControl({ selected, setSelected }: { selected: PostSort, setSelected: Dispatch<SetStateAction<PostSort>> }) {
+    const [open, setOpen] = useState(false);
+
+    const SortButton = ({ sort }: { sort: PostSort }) => {
+        return <button className={(selected == sort ? "selected " : "") + " sort-button"} onClick={() => { setSelected(sort); setOpen(false) }}>{sort}</button>
+    }
+
     return <>
-        <h1>Posts</h1>
-        <p>{posts.posts.map((p: any) => (<pre key={p.id}>{JSON.stringify(p, null, 2)}</pre>))}</p>
+        <button onClick={() => setOpen(!open)}><ArrowDownNarrowWide /><span>Sort</span></button> 
+        {open && <>
+            <SortButton sort="created" /> 
+            <SortButton sort="edited" /> 
+            <SortButton sort="published" /> 
+            <SortButton sort="oldest" /> 
+        </>}
+
     </>
 }
 
