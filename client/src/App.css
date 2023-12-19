@@ -159,3 +159,16 @@ main {
     gap: 10px;
     padding-top: 10px;
 }
+
+#category-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.category-card {
+    text-transform: capitalize;
+    padding: 5px 10px;
+    border: 1px solid var(--border-primary);
+    border-radius: 5px;
+}

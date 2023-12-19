@@ -25,18 +25,21 @@ interface PostContext {
     posts: PostResponse,
     setPosts: Dispatch<SetStateAction<PostResponse>>,
     categories: any,
-    setCategories: Dispatch<SetStateAction<any>>
+    setCategories: Dispatch<SetStateAction<any>>,
+    tags: string[],
+    setTags: Dispatch<SetStateAction<string[]>>
 }
 
 const PAGES = ["home", "posts", "categories", "tags", "settings"] as const;
 type Page = (typeof PAGES)[keyof typeof PAGES]
 
-const PostContext = React.createContext<PostContext>({ posts: {} as PostResponse, setPosts: () => { }, categories: [], setCategories: () => { } });
+const PostContext = React.createContext<PostContext>({ posts: {} as PostResponse, setPosts: () => { }, categories: [], setCategories: () => { }, tags: [], setTags: () => {} });
 
 function App() {
     const [posts, setPosts] = useState<PostResponse>({} as PostResponse);
     const [categories, setCategories] = useState([]);
     const [page, setPage] = useState<Page>("home");
+    const [tags, setTags] = useState<string[]>([]);
 
     useEffect(() => {
         (async () => {
@@ -47,11 +50,15 @@ function App() {
             const cat_res = await fetch("http://localhost:8080/categories");
             const cat_result = await cat_res.json();
             setCategories(cat_result);
+
+            const tag_res = await fetch("http://localhost:8080/tags");
+            const tag_result = await tag_res.json();
+            setTags(tag_result);
         })();
     }, []);
 
     return (
-        <PostContext.Provider value={{ posts, setPosts, categories, setCategories }}>
+        <PostContext.Provider value={{ posts, setPosts, categories, setCategories, tags, setTags }}>
             <nav>
                 <Sidebar page={page} setPage={setPage} />
             </nav>
@@ -182,17 +189,44 @@ function SortControl({ selected, setSelected }: { selected: PostSort, setSelecte
 
 function CategoriesPage() {
     const { categories } = useContext(PostContext);
-    return <>
-        <h1>Categories Page</h1>
-        {categories.map((c: any) => (<pre key={c.name}>{JSON.stringify(c, null, 2)}</pre>))}
-    </>
+
+    // construct a graph of categories
+    // let's start at the root node
+    const graph = getChildrenCategories(categories, 'root');
+
+    const elements = getCategoryElements(graph, 0);
+
+    return <main id='category-list'>
+        {elements}
+    </main>
+}
+
+function getChildrenCategories(categories: { name: string, parent: string }[], root: string): any {
+    const graph: any = {};
+    for (const cat of categories) {
+        if (cat.parent == root) graph[cat.name] = getChildrenCategories(categories, cat.name);
+    }
+    return graph;
+}
+function getCategoryElements(values: any, depth: number) {
+    const list: JSX.Element[] = [];
+
+    const CategoryCard = ({ cat, depth }: { cat: string, depth: number }) => {
+        return <div style={{ marginLeft: (depth * 40) + "px" }} className="category-card">{cat}</div>
+    }
+    
+    for (const [key, value] of Object.entries(values)) {
+        list.push(<CategoryCard cat={key} depth={depth} />);
+        list.push(...getCategoryElements(value, depth + 1));
+    }
+    return list;
 }
 
 function TagsPage() {
-    return <>
-        <h1>Tags Page</h1>
-        <p>list of tags</p>
-    </>
+    const { tags } = useContext(PostContext);
+    return <main>
+        <pre>{JSON.stringify(tags, null, 2)}</pre>
+    </main>
 }
 function SettingsPage() {
     return <>
