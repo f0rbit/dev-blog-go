@@ -1,0 +1,34 @@
+body {
+    margin: unset;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+#root {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+}
+
+#root > nav {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 15vw;
+}
+
+#root > nav > button[data-page="settings"] {
+    margin-top: auto;
+}
+
+#root > main {
+    width: 100%;
+    height: 100%;
+    background: yellowgreen;
+}
