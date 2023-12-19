@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
 import './App.css'
 import React from 'react';
+import { FolderTree, Home, LibraryBig, Settings, Tags } from 'lucide-react';
 
 interface PostContext {
     posts: any,
@@ -12,7 +13,7 @@ interface PostContext {
 const PAGES = ["home", "posts", "categories", "tags", "settings"] as const;
 type Page = (typeof PAGES)[keyof typeof PAGES]
 
-const PostContext = React.createContext<PostContext>({ posts: [], setPosts: () => { }, categories: [], setCategories: () => {} });
+const PostContext = React.createContext<PostContext>({ posts: [], setPosts: () => { }, categories: [], setCategories: () => { } });
 
 function App() {
     const [posts, setPosts] = useState({});
@@ -37,10 +38,37 @@ function App() {
                 <Sidebar page={page} setPage={setPage} />
             </nav>
             <main>
+                <TitleBar page={page} />
                 <Content page={page} />
             </main>
         </PostContext.Provider>
     )
+}
+
+function TitleBar({ page }: { page: Page }) {
+    const title = () => {
+        switch (page) {
+            case "home": return "Home";
+            case "categories": return "Categories";
+            case "posts": return "Posts";
+            case "tags": return "Tags";
+            case "settings": return "Settings";
+        }
+    }
+    const description = () => {
+        switch (page) {
+            case "home": return "Overview & analytics";
+            case "categories": return "Manage available categories";
+            case "posts": return "Create, edit, delete posts";
+            case "tags": return "View tag information";
+            case "settings": return "Modify settings";
+        }
+    }
+    return <div id="title-bar">
+        <h1>{title()}</h1>
+        <p>{description()}</p>
+    </div>
+
 }
 
 function Content({ page }: { page: Page }) {
@@ -53,10 +81,30 @@ function Content({ page }: { page: Page }) {
     }
 }
 
+function LinkContent({ page }: { page: Page }) {
+    switch (page) {
+        case "home":
+            return <>
+                <Home />
+                <span>Home</span>
+            </>
+        case "tags":
+            return <><Tags /><span>Tags</span></>;
+        case "posts":
+            return <><LibraryBig /><span>Posts</span></>;
+        case "categories":
+            return <><FolderTree /><span>Categories</span></>;
+        case "settings":
+            return <><Settings /><span>Settings</span></>;
+    }
+}
+
 function Sidebar({ page, setPage }: { page: Page, setPage: Dispatch<SetStateAction<Page>> }) {
     // render the icons for each page
-    return <>{PAGES.map((p) => (<button key={p} data-page={p} className={page == p ? "selected" : ""} onClick={() => setPage(p)}>{p}</button>))}</>;
-} 
+    return <>
+        {PAGES.map((p) => (<button key={p} data-page={p} className={page == p ? "selected" : ""} onClick={() => setPage(p)}><LinkContent page={p} /></button>))}
+    </>;
+}
 
 function HomePage() {
     return <>
@@ -79,7 +127,7 @@ function CategoriesPage() {
     const { categories } = useContext(PostContext);
     return <>
         <h1>Categories Page</h1>
-        {categories.map((c: any) => (<pre key={c.name}>{JSON.stringify(c,null,2)}</pre>))}
+        {categories.map((c: any) => (<pre key={c.name}>{JSON.stringify(c, null, 2)}</pre>))}
     </>
 }
 
@@ -87,7 +135,7 @@ function TagsPage() {
     return <>
         <h1>Tags Page</h1>
         <p>list of tags</p>
-        </>
+    </>
 }
 function SettingsPage() {
     return <>
