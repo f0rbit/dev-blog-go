@@ -3,9 +3,27 @@ import './App.css'
 import React from 'react';
 import { ArrowDownNarrowWide, Filter, FolderTree, Home, LibraryBig, Plus, Search, Settings, Tags } from 'lucide-react';
 
+type Post = {
+    id: number,
+    slug: string,
+    title: string,
+    content: string,
+    category: string,
+    created_at: string,
+    updated_at: string
+}
+
+type PostResponse = {
+    posts: Post[],
+    total_pages: number,
+    current_page: number,
+    total_posts: number,
+    per_page: number,
+}
+
 interface PostContext {
-    posts: any,
-    setPosts: Dispatch<SetStateAction<any>>,
+    posts: PostResponse,
+    setPosts: Dispatch<SetStateAction<PostResponse>>,
     categories: any,
     setCategories: Dispatch<SetStateAction<any>>
 }
@@ -13,10 +31,10 @@ interface PostContext {
 const PAGES = ["home", "posts", "categories", "tags", "settings"] as const;
 type Page = (typeof PAGES)[keyof typeof PAGES]
 
-const PostContext = React.createContext<PostContext>({ posts: [], setPosts: () => { }, categories: [], setCategories: () => { } });
+const PostContext = React.createContext<PostContext>({ posts: {} as PostResponse, setPosts: () => { }, categories: [], setCategories: () => { } });
 
 function App() {
-    const [posts, setPosts] = useState({});
+    const [posts, setPosts] = useState<PostResponse>({} as PostResponse);
     const [categories, setCategories] = useState([]);
     const [page, setPage] = useState<Page>("home");
 
@@ -130,9 +148,18 @@ function PostsPage() {
             <button style={{ marginLeft: "auto" }}><Plus /><span>Create</span></button>
         </section>
         <section id='post-grid'>
-            {posts.posts.map((p: any) => (<pre key={p.id}>{JSON.stringify(p, null, 2)}</pre>))}
+            {posts.posts.map((p: any) => <PostCard key={p.id} post={p} />)}
         </section>
     </main>
+}
+
+function PostCard({ post }: { post: Post }) {
+   
+    return <div className='post-card'>
+        <h2>{post.title}</h2>
+        <pre>{post.slug}</pre>
+        <p>{post.content}</p>
+    </div>
 }
 
 function SortControl({ selected, setSelected }: { selected: PostSort, setSelected: Dispatch<SetStateAction<PostSort>> }) {
@@ -143,14 +170,13 @@ function SortControl({ selected, setSelected }: { selected: PostSort, setSelecte
     }
 
     return <>
-        <button onClick={() => setOpen(!open)}><ArrowDownNarrowWide /><span>Sort</span></button> 
+        <button onClick={() => setOpen(!open)}><ArrowDownNarrowWide /><span>Sort</span></button>
         {open && <>
-            <SortButton sort="created" /> 
-            <SortButton sort="edited" /> 
-            <SortButton sort="published" /> 
-            <SortButton sort="oldest" /> 
+            <SortButton sort="created" />
+            <SortButton sort="edited" />
+            <SortButton sort="published" />
+            <SortButton sort="oldest" />
         </>}
-
     </>
 }
 

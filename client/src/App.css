@@ -146,3 +146,16 @@ main {
         height: 18px;
     }
 }
+
+.post-card {
+    border: 1px solid var(--border-primary);
+    border-radius: 5px;
+    padding: 5px 10px;
+}
+
+#post-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    padding-top: 10px;
+}
