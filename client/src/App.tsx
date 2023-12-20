@@ -1,7 +1,8 @@
-import { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
+import { ChangeEvent, Dispatch, InputHTMLAttributes, SetStateAction, useContext, useEffect, useState } from 'react'
 import './App.css'
 import React from 'react';
-import { ArrowDownNarrowWide, Filter, FolderTree, Home, LibraryBig, Plus, Search, Settings, Tags } from 'lucide-react';
+import { ArrowDownNarrowWide, Filter, FolderTree, Home, LibraryBig, Plus, Save, Search, Settings, Tags, Trash } from 'lucide-react';
+import Modal from "./components/Modal";
 
 type Post = {
     id: number,
@@ -33,7 +34,7 @@ interface PostContext {
 const PAGES = ["home", "posts", "categories", "tags", "settings"] as const;
 type Page = (typeof PAGES)[keyof typeof PAGES]
 
-const PostContext = React.createContext<PostContext>({ posts: {} as PostResponse, setPosts: () => { }, categories: [], setCategories: () => { }, tags: [], setTags: () => {} });
+const PostContext = React.createContext<PostContext>({ posts: {} as PostResponse, setPosts: () => { }, categories: [], setCategories: () => { }, tags: [], setTags: () => { } });
 
 function App() {
     const [posts, setPosts] = useState<PostResponse>({} as PostResponse);
@@ -141,10 +142,24 @@ function HomePage() {
 type PostSort = "created" | "edited" | "published" | "oldest";
 
 function PostsPage() {
-    const { posts } = useContext(PostContext);
+    const { posts, categories } = useContext(PostContext);
     const [selected, setSelected] = useState<PostSort>("created");
+    const [openCreatePost, setOpenCreatePost] = useState(false);
 
     if (!posts || !posts.posts) return <p>No Posts Found!</p>;
+
+
+    async function createPost({ title, slug, content, category }: { title: string, slug: string, content: string, category: string }): Promise<{ success: true, error: null } | { success: false, error: string }> {
+        if (slug.includes(" ")) return { error: "Invalid Slug!", success: false } 
+        const cat_list = Object.values(categories).map((cat: any) => cat.name);
+        console.log({ category, cat_list, categories });
+        if (!(cat_list.includes(category))) return { error: "Invalid Category!", success: false }
+        const data = { title, slug, content, category };
+        const response = await fetch("http://localhost:8080/post/new", { method: "POST", body: JSON.stringify(data) });
+        const result = await response.json();
+        posts.posts.push(result);
+        return { error: null, success: true }
+    }
 
     return <main>
         <section id="post-filters">
@@ -152,16 +167,56 @@ function PostsPage() {
             <input type="text" id='post-search' />
             <SortControl selected={selected} setSelected={setSelected} />
             <button><Filter /><span>Filter</span></button>
-            <button style={{ marginLeft: "auto" }}><Plus /><span>Create</span></button>
+            <button style={{ marginLeft: "auto" }} onClick={() => setOpenCreatePost(true)}><Plus /><span>Create</span></button>
         </section>
         <section id='post-grid'>
             {posts.posts.map((p: any) => <PostCard key={p.id} post={p} />)}
         </section>
+        <Modal openModal={openCreatePost} closeModal={() => setOpenCreatePost(false)}>
+            <CreatePost create={createPost} />
+        </Modal>
     </main>
 }
 
+function CreatePost({ create }: { create: (data: { title: string, slug: string, content: string, category: string }) => Promise<{ success: true, error: null } | { success: false, error: string }> }) {
+    const [title, setTitle] = useState<string>("");
+    const [slug, setSlug] = useState<string>("");
+    const [manualSlug, setManualSlug] = useState<boolean>(false);
+    const [content, setContent] = useState<string>("");
+    const [category, setCategory] = useState<string>("");
+    const [error, setError] = useState<string|null>(null);
+
+    function updateTitle(value: string) {
+        if (!manualSlug) {
+            setSlug(value.replaceAll(" ", "-").toLowerCase());
+        }
+        setTitle(value);
+    }
+
+    function updateSlug(value: string) {
+        if (manualSlug == false) setManualSlug(true);
+        setSlug(value);
+    }
+
+
+    return <div className="flex-col">
+        <h3>Create Post</h3>
+        <div className="input-grid">
+            <label>Title</label><input type="text" value={title} onChange={(e) => updateTitle(e.target.value)} />
+            <label>Slug</label><input type="text" value={slug} onChange={(e) => updateSlug(e.target.value)}/>
+            <label>Category</label><input type="text" value={category} onChange={(e) => setCategory(e.target.value)} />
+            <label>Publish</label><input type="date" />
+            <label style={{ placeSelf: "stretch" }}>Content</label><textarea style={{ gridColumn: "span 3", fontFamily: "monospace" }} rows={10} value={content} onChange={(e) => setContent(e.target.value)} />
+        </div>
+        {error && <p className="error-message">{error}</p>} 
+        <div className="flex-row center">
+            <button onClick={() => create({ title, slug, content, category }).then((res) => setError(res.error))}><Save />Save</button><button><Trash />Cancel</button>
+        </div>
+    </div>
+}
+
 function PostCard({ post }: { post: Post }) {
-   
+
     return <div className='post-card'>
         <h2>{post.title}</h2>
         <pre>{post.slug}</pre>
@@ -214,7 +269,7 @@ function getCategoryElements(values: any, depth: number) {
     const CategoryCard = ({ cat, depth }: { cat: string, depth: number }) => {
         return <div style={{ marginLeft: (depth * 40) + "px" }} className="category-card">{cat}</div>
     }
-    
+
     for (const [key, value] of Object.entries(values)) {
         list.push(<CategoryCard cat={key} depth={depth} />);
         list.push(...getCategoryElements(value, depth + 1));

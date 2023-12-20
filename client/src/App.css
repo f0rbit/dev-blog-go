@@ -68,13 +68,14 @@ header {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: 0px 20px;
+    padding: 10px 20px;
 
     border-bottom: 1px solid var(--border-primary);
 }
 
 h1,h2,h3,h4,h5,h6 {
     margin: unset;
+    color: var(--text-secondary)
 }
 
 h1 {
@@ -85,9 +86,10 @@ h1 {
 p {
     color: var(--text-subtle);
     font-size: smaller;
+    margin:unset;
 }
 
-input, select {
+input, select, textarea {
     background: var(--accent-primary);
     border: 1px solid var(--border-primary);
     color: var(--text-secondary);
@@ -98,6 +100,18 @@ input, select {
 input:focus, select:focus {
     background: var(--accent-secondary);
     border: 1px solid var(--border-secondary);
+}
+
+dialog {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 5px;
+    color: var(--text-subtle);
+
+    .lucide {
+        width: 18px;
+        height: 18px;
+    }
 }
 
 .sort-button {
@@ -123,6 +137,18 @@ button {
     gap: 5px;
     align-items: center;
 }
+
+button.close-button {
+    padding: 2px 5px;
+    width: 32px;
+    height: 32px;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    justify-content: center;
+}
+
+
 button:hover {
     background-color: var(--accent-primary);
 }
@@ -171,4 +197,34 @@ main {
     padding: 5px 10px;
     border: 1px solid var(--border-primary);
     border-radius: 5px;
+}
+
+.flex-row {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+}
+
+.flex-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.center {
+    justify-content: center;
+    align-items: center;
+}
+
+.input-grid {
+    display: grid;
+    grid-template-columns: max-content 20vw max-content 20vw;
+    row-gap: 5px;
+    column-gap: 20px;
+    align-items: center;
+}
+
+.error-message {
+    text-align: center;
+    color: #d97e7e;
 }
