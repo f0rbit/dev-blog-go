@@ -228,3 +228,36 @@ main {
     text-align: center;
     color: #d97e7e;
 }
+
+.category-input-list {
+    position: absolute;
+    top: calc(100% + 2px);
+    background: var(--accent-primary);
+    border: 1px solid var(--border-primary);
+    padding: 5px;
+    border-radius: 5px;
+    width: 100%;
+    gap: 4px;
+    max-height: 150px;
+    overflow-y: auto;
+
+    span {
+        font-size: small;
+    }
+
+    span.post-count {
+        color: var(--text-dark);
+        margin-left: auto;
+    }
+
+    button {
+        background: var(--accent-secondary);
+        border: 1px solid var(--border-secondary);
+        color: var(--text-subtlish);
+    }
+
+    button.hovered {
+        background: var(--btn-primary);
+        border: 1px solid var(--btn-secondary);
+    }
+}

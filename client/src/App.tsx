@@ -3,6 +3,7 @@ import './App.css'
 import React from 'react';
 import { ArrowDownNarrowWide, Filter, FolderTree, Home, LibraryBig, Plus, Save, Search, Settings, Tags, Trash } from 'lucide-react';
 import Modal from "./components/Modal";
+import CategoryInput from './components/CategoryInput';
 
 type Post = {
     id: number,
@@ -186,6 +187,8 @@ function CreatePost({ create }: { create: (data: { title: string, slug: string, 
     const [category, setCategory] = useState<string>("");
     const [error, setError] = useState<string|null>(null);
 
+    const { categories } = useContext(PostContext);
+
     function updateTitle(value: string) {
         if (!manualSlug) {
             setSlug(value.replaceAll(" ", "-").toLowerCase());
@@ -204,7 +207,7 @@ function CreatePost({ create }: { create: (data: { title: string, slug: string, 
         <div className="input-grid">
             <label>Title</label><input type="text" value={title} onChange={(e) => updateTitle(e.target.value)} />
             <label>Slug</label><input type="text" value={slug} onChange={(e) => updateSlug(e.target.value)}/>
-            <label>Category</label><input type="text" value={category} onChange={(e) => setCategory(e.target.value)} />
+            <label>Category</label><CategoryInput categories={categories} setValue={(c) => setCategory(c)} />
             <label>Publish</label><input type="date" />
             <label style={{ placeSelf: "stretch" }}>Content</label><textarea style={{ gridColumn: "span 3", fontFamily: "monospace" }} rows={10} value={content} onChange={(e) => setContent(e.target.value)} />
         </div>
