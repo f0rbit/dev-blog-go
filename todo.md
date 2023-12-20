@@ -40,3 +40,32 @@
 - [ ] Refactor & simplify code bases
     - [ ] > 85% test coverage
 - [ ] Proper input/output data validation (type safety)
+
+# v0.6
+- [ ] Instant Reactivity in client, consider transitioning to UUID for id's in DB
+    - [ ] Blog updates & creation should appear instant in client, some kind of spinner and validation message upon completion
+- [ ] Login Page
+    - [ ] Proper authentication token handling
+
+# v1.0
+- [ ] Expose API to third-party website
+- [ ] Deploy client on public-accessible 
+    - [ ] Try Github pages since there's no need for a server
+    - [ ] Otherwise try vercel (free tier)
+    - [ ] Finally, host client on vps alongside the server
+
+# v1.1
+- [ ] Transition DB into a multi-user setup
+- [ ] Allow for multiple 'authors' on the server
+- [ ] Authentication support for each author individually
+- [ ] Client supports multiple 'authors'
+
+# v1.2
+- [ ] Integration with third-party API, only support `devto` at the moment, but create a generic interface for adding more
+    - [ ] devto
+    - [ ] Medium's API
+    - [ ] Substack's API
+- [ ] Integrate with media-timeline project
+    - [ ] Tightly integrated, not just sharing API keys but full linking workflow that feels natural
+    - [ ] Obviously for this, have to finish up media-timeline as well.
+
