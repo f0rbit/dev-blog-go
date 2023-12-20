@@ -26,13 +26,14 @@
 
 # v0.4
 - [ ] Front end implementation
-    - [ ] Create Blog Posts
+    - [x] Create Blog Posts
     - [ ] Edit existing Posts
     - [ ] Delete posts
     - [ ] Assign categories
     - [ ] Assign tags
 - [ ] Front end typesafety w/ zod
 - [ ] Front end styling
+- [ ] Implement publish date on posts
 
 # v0.5
 - [ ] Database connection pooling
