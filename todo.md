@@ -31,6 +31,9 @@
     - [ ] Delete posts
     - [ ] Assign categories
     - [ ] Assign tags
+    - [ ] Filter posts menu
+        - [ ] By category
+        - [ ] By tag
 - [ ] Front end typesafety w/ zod
 - [ ] Front end styling
 - [ ] Implement publish date on posts
