@@ -156,6 +156,7 @@ func fetchPosts(category string, limit, offset int, tag string) ([]types.Post, i
 
 	search_categories = append(search_categories, limit)
 	search_categories = append(search_categories, offset)
+    log.Info("Searching with limit & offset of", "limit", limit, "offset", offset)
 
 	rows, err := db.Query(query, search_categories...)
 	if err != nil {

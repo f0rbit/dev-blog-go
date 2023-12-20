@@ -45,7 +45,7 @@ function App() {
 
     useEffect(() => {
         (async () => {
-            const response = await fetch("http://localhost:8080/posts");
+            const response = await fetch("http://localhost:8080/posts?limit=-1");
             const result = await response.json();
             setPosts(result);
 
@@ -162,6 +162,21 @@ function PostsPage() {
         return { error: null, success: true }
     }
 
+    // sort posts
+    let sorted_posts = structuredClone(posts.posts);
+    switch (selected) {
+        case "edited": 
+            sorted_posts = sorted_posts.sort((a,b) => (new Date(b.updated_at).getTime()) - (new Date(a.updated_at).getTime()));
+            break;
+        case "created":
+        case "oldest":
+            sorted_posts = sorted_posts.sort((a,b) => (new Date(b.updated_at).getTime()) - (new Date(a.updated_at).getTime()));
+            if (selected == "oldest") sorted_posts.reverse();
+            break;
+        case "published":
+            break;
+    }
+
     return <main>
         <section id="post-filters">
             <label htmlFor='post-search'><Search /></label>
@@ -171,7 +186,7 @@ function PostsPage() {
             <button style={{ marginLeft: "auto" }} onClick={() => setOpenCreatePost(true)}><Plus /><span>Create</span></button>
         </section>
         <section id='post-grid'>
-            {posts.posts.map((p: any) => <PostCard key={p.id} post={p} />)}
+            {sorted_posts.map((p: any) => <PostCard key={p.id} post={p} />)}
         </section>
         <Modal openModal={openCreatePost} closeModal={() => setOpenCreatePost(false)}>
             <CreatePost create={createPost} />
