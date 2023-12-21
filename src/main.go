@@ -56,7 +56,7 @@ func main() {
     r.HandleFunc("/tags", routes.GetTags).Methods("GET")
 
     c := cors.New(cors.Options{
-        AllowedOrigins: []string{"http://localhost:5173"},
+        AllowedOrigins: []string{"http://localhost:5173", "https://f0rbit.github.io"},
         AllowCredentials: true,
     })
 
