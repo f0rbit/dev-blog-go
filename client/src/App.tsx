@@ -36,6 +36,8 @@ const PAGES = ["home", "posts", "categories", "tags", "settings"] as const;
 type Page = (typeof PAGES)[keyof typeof PAGES]
 
 const API_URL: string = import.meta.env.VITE_API_URL;
+const VERSION = "v0.5";
+console.log("Version: " + VERSION);
 
 const PostContext = React.createContext<PostContext>({ posts: {} as PostResponse, setPosts: () => { }, categories: [], setCategories: () => { }, tags: [], setTags: () => { } });
 
