@@ -4,3 +4,4 @@ db/*
 src/coverage
 *.log
 node_modules
+.env
