@@ -1,4 +1,4 @@
-import { ChangeEvent, Dispatch, InputHTMLAttributes, SetStateAction, useContext, useEffect, useState } from 'react'
+import { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
 import './App.css'
 import React from 'react';
 import { ArrowDownNarrowWide, Filter, FolderTree, Home, LibraryBig, Plus, Save, Search, Settings, Tags, Trash } from 'lucide-react';
@@ -35,6 +35,8 @@ interface PostContext {
 const PAGES = ["home", "posts", "categories", "tags", "settings"] as const;
 type Page = (typeof PAGES)[keyof typeof PAGES]
 
+const API_URL: string = import.meta.env.VITE_API_URL;
+
 const PostContext = React.createContext<PostContext>({ posts: {} as PostResponse, setPosts: () => { }, categories: [], setCategories: () => { }, tags: [], setTags: () => { } });
 
 function App() {
@@ -45,15 +47,15 @@ function App() {
 
     useEffect(() => {
         (async () => {
-            const response = await fetch("http://localhost:8080/posts?limit=-1");
+            const response = await fetch(`${API_URL}/posts?limit=-1`);
             const result = await response.json();
             setPosts(result);
 
-            const cat_res = await fetch("http://localhost:8080/categories");
+            const cat_res = await fetch(`${API_URL}/categories`);
             const cat_result = await cat_res.json();
             setCategories(cat_result);
 
-            const tag_res = await fetch("http://localhost:8080/tags");
+            const tag_res = await fetch(`${API_URL}/tags`);
             const tag_result = await tag_res.json();
             setTags(tag_result);
         })();
