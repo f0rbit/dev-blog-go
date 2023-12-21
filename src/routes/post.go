@@ -135,7 +135,7 @@ func fetchPostBySlug(slug string) (types.Post, error) {
     }
     defer db.Close()
 
-    err = db.QueryRow("SELECT id, slug, title, content, category FROM posts WHERE slug = ?", slug).Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category)
+    err = db.QueryRow("SELECT id, slug, title, content, category, created_at, updated_at FROM posts WHERE slug = ?", slug).Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.CreatedAt, &post.UpdatedAt)
 
     if err != nil {
         return post, err
@@ -154,8 +154,8 @@ func fetchPostByID(postID int) (types.Post, error) {
 	defer db.Close()
 
 	// Query to fetch the post by ID
-	err = db.QueryRow("SELECT id, slug, title, content, category FROM posts WHERE id = ?", postID).
-		Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category)
+	err = db.QueryRow("SELECT id, slug, title, content, category, created_at, updated_at FROM posts WHERE id = ?", postID).
+		Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.CreatedAt, &post.UpdatedAt)
 
 	if err != nil {
 		return post, err

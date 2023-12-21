@@ -152,10 +152,11 @@ func fetchPosts(category string, limit, offset int, tag string) ([]types.Post, i
 	log.Infof("Found %d posts", totalPosts)
 
 	// Query to fetch paginated posts for the given category
-	query := fmt.Sprintf("SELECT id, slug, title, content, category FROM posts WHERE category IN (%s) LIMIT ? OFFSET ?", inClause)
+	query := fmt.Sprintf("SELECT id, slug, title, content, category, created_at, updated_at FROM posts WHERE category IN (%s) LIMIT ? OFFSET ?", inClause)
 
 	search_categories = append(search_categories, limit)
 	search_categories = append(search_categories, offset)
+    log.Info("Searching with limit & offset of", "limit", limit, "offset", offset)
 
 	rows, err := db.Query(query, search_categories...)
 	if err != nil {
@@ -164,7 +165,7 @@ func fetchPosts(category string, limit, offset int, tag string) ([]types.Post, i
 
 	for rows.Next() {
 		var post types.Post
-		err := rows.Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category)
+		err := rows.Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.CreatedAt, &post.UpdatedAt)
 		if err != nil {
 			return posts, totalPosts, err
 		}

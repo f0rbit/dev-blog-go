@@ -13,6 +13,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/gorilla/mux"
+    "github.com/rs/cors"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -54,12 +55,17 @@ func main() {
     r.HandleFunc("/post/tag", routes.DeletePostTag).Methods("DELETE")
     r.HandleFunc("/tags", routes.GetTags).Methods("GET")
 
+    c := cors.New(cors.Options{
+        AllowedOrigins: []string{"http://localhost:5173", "https://f0rbit.github.io"},
+        AllowCredentials: true,
+    })
+
 	// Start the server
 	port := os.Getenv("PORT") 
 	log.Infof("Server started on port %s", port)
 	server := &http.Server{
 		Addr: ":" + port,
-        Handler: r,
+        Handler: c.Handler(r),
 	}
 
 	go func() {
