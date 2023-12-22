@@ -31,9 +31,9 @@
     - [x] Delete posts
     - [x] Assign categories
     - [x] Assign tags
-    - [ ] Filter posts menu
-        - [ ] By category
-        - [ ] By tag
+    - [x] Filter posts menu
+        - [x] By category
+        - [x] By tag
 - [ ] Front end typesafety w/ zod
 - [x] Front end styling
 - [ ] Implement publish date on posts
@@ -48,6 +48,7 @@
 # v0.6
 - [ ] Instant Reactivity in client, consider transitioning to UUID for id's in DB
     - [ ] Blog updates & creation should appear instant in client, some kind of spinner and validation message upon completion
+- [ ] Tag Input component like category component
 - [ ] Login Page
     - [ ] Proper authentication token handling
 
