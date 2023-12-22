@@ -30,12 +30,12 @@
     - [x] Edit existing Posts
     - [x] Delete posts
     - [x] Assign categories
-    - [ ] Assign tags
+    - [x] Assign tags
     - [ ] Filter posts menu
         - [ ] By category
         - [ ] By tag
 - [ ] Front end typesafety w/ zod
-- [ ] Front end styling
+- [x] Front end styling
 - [ ] Implement publish date on posts
 
 # v0.5
@@ -72,4 +72,8 @@
 - [ ] Integrate with media-timeline project
     - [ ] Tightly integrated, not just sharing API keys but full linking workflow that feels natural
     - [ ] Obviously for this, have to finish up media-timeline as well.
+
+# v1.3
+- [ ] Light mode support & theme switcher
+- [ ] Refactor for support for multiple themes
 
