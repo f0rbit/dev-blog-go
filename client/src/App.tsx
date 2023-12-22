@@ -271,6 +271,13 @@ function PostCard({ post }: { post: Post }) {
     const [editingPost, setEditingPost] = useState<PostCreation>({ ...post });
     const { posts, setPosts } = useContext(PostContext);
 
+    const deletePost = async (): FunctionResponse => {
+        const response = await fetch(`${API_URL}/post/delete/${post.id}`, { method: "DELETE" });
+        if (!response || !response.ok) return { error: "Invalid response", success: false };
+        setPosts({ ...posts, posts: posts.posts.filter((p) => p.id != post.id) });
+        return { success: true, error: null };
+    }
+
     const savePost = async (): FunctionResponse => {
         const id = post.id;
         const upload_post = {
@@ -286,7 +293,6 @@ function PostCard({ post }: { post: Post }) {
             return { ...p, ...upload_post };
         }) });
         return { error: null, success: true };
-
     }
 
     function close() {
@@ -299,7 +305,7 @@ function PostCard({ post }: { post: Post }) {
             <PostEditor post={editingPost} setPost={setEditingPost} save={savePost} type={"edit"} cancel={close} />
         </Modal>
         <div className='flex-row center top-right hidden-child'>
-            <button><Trash /></button>
+            <button onClick={deletePost}><Trash /></button>
             <button onClick={() => setEditorOpen(true)}><Edit /></button>
         </div>
         <h2>{post.title}</h2>
