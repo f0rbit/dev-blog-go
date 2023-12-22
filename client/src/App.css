@@ -177,6 +177,12 @@ main {
     border: 1px solid var(--border-primary);
     border-radius: 5px;
     padding: 5px 10px;
+    position: relative;
+
+    .lucide {
+        width: 18px;
+        height: 18px;
+    }
 }
 
 #post-grid {
@@ -260,4 +266,19 @@ main {
         background: var(--btn-primary);
         border: 1px solid var(--btn-secondary);
     }
+}
+
+.top-right {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+}
+
+
+.hidden-parent .hidden-child {
+    visibility: hidden;
+}
+
+.hidden-parent:hover .hidden-child {
+    visibility: visible;
 }

@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
 import './App.css'
 import React from 'react';
-import { ArrowDownNarrowWide, Filter, FolderTree, Home, LibraryBig, Plus, Save, Search, Settings, Tags, Trash } from 'lucide-react';
+import { ArrowDownNarrowWide, Edit, Filter, FolderTree, Home, LibraryBig, Plus, Save, Search, Settings, Tags, Trash, X } from 'lucide-react';
 import Modal from "./components/Modal";
 import CategoryInput from './components/CategoryInput';
 
@@ -193,12 +193,12 @@ function PostsPage() {
             {sorted_posts.map((p: any) => <PostCard key={p.id} post={p} />)}
         </section>
         <Modal openModal={openCreatePost} closeModal={() => setOpenCreatePost(false)}>
-            <CreatePost create={createPost} />
+            <PostEditor save={createPost} type={"create"} cancel={() => setOpenCreatePost(false)} />
         </Modal>
     </main>
 }
 
-function CreatePost({ create }: { create: (data: { title: string, slug: string, content: string, category: string }) => Promise<{ success: true, error: null } | { success: false, error: string }> }) {
+function PostEditor({ save, type, cancel }: { type: "create" | "edit", save: (data: { title: string, slug: string, content: string, category: string }) => Promise<{ success: true, error: null } | { success: false, error: string }>, cancel: () => void }) {
     const [title, setTitle] = useState<string>("");
     const [slug, setSlug] = useState<string>("");
     const [manualSlug, setManualSlug] = useState<boolean>(false);
@@ -220,9 +220,16 @@ function CreatePost({ create }: { create: (data: { title: string, slug: string, 
         setSlug(value);
     }
 
+    function SaveContent() {
+        switch (type) {
+            case "create": return <><Save />Create</>
+            case "edit": return <><Save />Save</>
+        }
+    }
+
 
     return <div className="flex-col">
-        <h3>Create Post</h3>
+        <h3 style={{ textTransform: "capitalize" }}>{type} Post</h3>
         <div className="input-grid">
             <label>Title</label><input type="text" value={title} onChange={(e) => updateTitle(e.target.value)} />
             <label>Slug</label><input type="text" value={slug} onChange={(e) => updateSlug(e.target.value)}/>
@@ -232,14 +239,26 @@ function CreatePost({ create }: { create: (data: { title: string, slug: string, 
         </div>
         {error && <p className="error-message">{error}</p>} 
         <div className="flex-row center">
-            <button onClick={() => create({ title, slug, content, category }).then((res) => setError(res.error))}><Save />Save</button><button><Trash />Cancel</button>
+            <button onClick={() => save({ title, slug, content, category }).then((res) => setError(res.error))}><SaveContent /></button><button onClick={cancel}><X />Cancel</button>
         </div>
     </div>
 }
 
 function PostCard({ post }: { post: Post }) {
+    const [editorOpen, setEditorOpen] = useState(false);
 
-    return <div className='post-card'>
+    function savePost(post: any): any {
+        console.log("hi!");
+    }
+
+    return <div className='post-card hidden-parent'>
+        <Modal openModal={editorOpen} closeModal={() => setEditorOpen(false)}>
+            <PostEditor save={savePost} type={"edit"} cancel={() => setEditorOpen(false)} />
+        </Modal>
+        <div className='flex-row center top-right hidden-child'>
+            <button><Trash /></button>
+            <button onClick={() => setEditorOpen(true)}><Edit /></button>
+        </div>
         <h2>{post.title}</h2>
         <pre>{post.slug}</pre>
         <p>{post.content}</p>
