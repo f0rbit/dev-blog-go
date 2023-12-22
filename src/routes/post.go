@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/charmbracelet/log"
 
@@ -135,7 +136,15 @@ func fetchPostBySlug(slug string) (types.Post, error) {
 	}
 	defer db.Close()
 
-	err = db.QueryRow("SELECT posts.id, posts.slug, posts.title, posts.content, posts.category, posts.created_at, updated_at, GROUP_CONACT(tags.tag) AS tags FROM posts LEFT JOIN tags ON posts.id = tags.post_id GROUP BY posts.id WHERE posts.slug = ?", slug).Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.CreatedAt, &post.UpdatedAt)
+    var tags sql.NullString
+
+	err = db.QueryRow("SELECT posts.id, posts.slug, posts.title, posts.content, posts.category, posts.created_at, updated_at, GROUP_CONCAT(tags.tag) AS tags FROM posts LEFT JOIN tags ON posts.id = tags.post_id WHERE posts.slug = ?", slug).Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.CreatedAt, &post.UpdatedAt, &tags)
+
+    if tags.Valid {
+        post.Tags = strings.Split(tags.String, ",")
+    } else {
+        post.Tags = []string{}
+    }
 
 	if err != nil {
 		return post, err
@@ -153,8 +162,31 @@ func fetchPostByID(postID int) (types.Post, error) {
 	}
 	defer db.Close()
 
+    var tags sql.NullString
+
 	// Query to fetch the post by ID
-	err = db.QueryRow("SELECT posts.id, posts.slug, posts.title, posts.content, posts.category, posts.created_at, updated_at, GROUP_CONACT(tags.tag) AS tags FROM posts LEFT JOIN tags ON posts.id = tags.post_id GROUP BY posts.id WHERE id = ?", postID).Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.CreatedAt, &post.UpdatedAt)
+	err = db.QueryRow(`
+    SELECT 
+        posts.id, 
+        posts.slug,
+        posts.title,
+        posts.content,
+        posts.category,
+        posts.created_at,
+        updated_at,
+        GROUP_CONCAT(tags.tag) AS tags 
+    FROM 
+        posts 
+    LEFT JOIN 
+        tags ON posts.id = tags.post_id 
+    WHERE 
+        posts.id = ?`, postID).Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.CreatedAt, &post.UpdatedAt, &tags)
+
+    if tags.Valid {
+        post.Tags = strings.Split(tags.String, ",")
+    } else {
+        post.Tags = []string{}
+    }
 
 	if err != nil {
 		return post, err
@@ -188,6 +220,13 @@ func insertPost(newPost *types.Post) error {
 	}
 
 	log.Infof("Inserted new post '%s' with ID: %d", newPost.Slug, newPost.Id)
+
+    insert, err := db.Prepare("INSERT INTO tags (post_id, tag) VALUES (?, ?)")
+    // insert any tags
+    for _, s := range newPost.Tags {
+        insert.Exec(newPost.Id, s)
+    }
+    log.Info("Inserted tags", "tags", newPost.Tags);
 
 	return err
 }

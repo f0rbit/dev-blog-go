@@ -159,7 +159,7 @@ const EMPTY_POST_CREATION: PostCreation = {
 }
 
 function PostsPage() {
-    const { posts, categories } = useContext(PostContext);
+    const { posts, setPosts, categories } = useContext(PostContext);
     const [selected, setSelected] = useState<PostSort>("created");
     const [openCreatePost, setOpenCreatePost] = useState(false);
     const [creatingPost, setCreatingPost] = useState<PostCreation>(EMPTY_POST_CREATION);
@@ -168,15 +168,17 @@ function PostsPage() {
 
 
     async function createPost(): Promise<FunctionResponse> {
-        const { slug, title, content, category } = creatingPost;
+        // input validation
+        const { slug, category } = creatingPost;
         if (slug.includes(" ")) return { error: "Invalid Slug!", success: false }
         const cat_list = Object.values(categories).map((cat: any) => cat.name);
-        console.log({ category, cat_list, categories });
         if (!(cat_list.includes(category))) return { error: "Invalid Category!", success: false }
-        const data = { title, slug, content, category };
-        const response = await fetch(`${API_URL}/post/new`, { method: "POST", body: JSON.stringify(data) });
+
+        // send request
+        const response = await fetch(`${API_URL}/post/new`, { method: "POST", body: JSON.stringify(creatingPost) });
         const result = await response.json();
-        posts.posts.push(result);
+        // update state?
+        setPosts({ ...posts, posts: [ ...posts.posts, result ] });
         return { error: null, success: true }
     }
 
