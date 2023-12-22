@@ -27,7 +27,7 @@
 # v0.4
 - [ ] Front end implementation
     - [x] Create Blog Posts
-    - [ ] Edit existing Posts
+    - [x] Edit existing Posts
     - [ ] Delete posts
     - [ ] Assign categories
     - [ ] Assign tags
