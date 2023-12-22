@@ -18,12 +18,12 @@ var database string = os.Getenv("DATABASE")
 
 func GetPostBySlug(w http.ResponseWriter, r *http.Request) {
 	// Extract post ID parameter from URL
-    var slug string = mux.Vars(r)["slug"]
-    if len(slug) == 0 {
-        log.Error("Called GetPostBySlug without slug specified!")
-        http.Error(w, "Bad Request", http.StatusBadRequest)
-        return
-    }
+	var slug string = mux.Vars(r)["slug"]
+	if len(slug) == 0 {
+		log.Error("Called GetPostBySlug without slug specified!")
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 
 	// Fetch the post by ID
 	post, err := fetchPostBySlug(slug)
@@ -127,21 +127,21 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func fetchPostBySlug(slug string) (types.Post, error) {
-    var post types.Post
+	var post types.Post
 
-    db, err := sql.Open("sqlite3", database)
-    if err != nil {
-        return post, err
-    }
-    defer db.Close()
+	db, err := sql.Open("sqlite3", database)
+	if err != nil {
+		return post, err
+	}
+	defer db.Close()
 
-    err = db.QueryRow("SELECT id, slug, title, content, category, created_at, updated_at FROM posts WHERE slug = ?", slug).Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.CreatedAt, &post.UpdatedAt)
+	err = db.QueryRow("SELECT posts.id, posts.slug, posts.title, posts.content, posts.category, posts.created_at, updated_at, GROUP_CONACT(tags.tag) AS tags FROM posts LEFT JOIN tags ON posts.id = tags.post_id GROUP BY posts.id WHERE posts.slug = ?", slug).Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.CreatedAt, &post.UpdatedAt)
 
-    if err != nil {
-        return post, err
-    }
+	if err != nil {
+		return post, err
+	}
 
-    return post, nil
+	return post, nil
 }
 
 func fetchPostByID(postID int) (types.Post, error) {
@@ -154,8 +154,7 @@ func fetchPostByID(postID int) (types.Post, error) {
 	defer db.Close()
 
 	// Query to fetch the post by ID
-	err = db.QueryRow("SELECT id, slug, title, content, category, created_at, updated_at FROM posts WHERE id = ?", postID).
-		Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.CreatedAt, &post.UpdatedAt)
+	err = db.QueryRow("SELECT posts.id, posts.slug, posts.title, posts.content, posts.category, posts.created_at, updated_at, GROUP_CONACT(tags.tag) AS tags FROM posts LEFT JOIN tags ON posts.id = tags.post_id GROUP BY posts.id WHERE id = ?", postID).Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.CreatedAt, &post.UpdatedAt)
 
 	if err != nil {
 		return post, err
@@ -204,7 +203,7 @@ func updatePost(updatedPost *types.Post) error {
 	_, err = db.Exec("UPDATE posts SET slug = ?, title = ?, content = ?, category = ? WHERE id = ?",
 		updatedPost.Slug, updatedPost.Title, updatedPost.Content, updatedPost.Category, updatedPost.Id)
 
-    log.Info("Updated Post", "id", updatedPost.Id)
+	log.Info("Updated Post", "id", updatedPost.Id)
 
 	return err
 }
@@ -219,7 +218,7 @@ func deletePost(postID int) error {
 	// Delete the post by ID
 	_, err = db.Exec("DELETE FROM posts WHERE id = ?", postID)
 
-    log.Info("Deleted Post", "id", postID)
+	log.Info("Deleted Post", "id", postID)
 
 	return err
 }
