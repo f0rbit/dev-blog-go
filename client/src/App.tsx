@@ -15,6 +15,8 @@ type Post = {
     updated_at: string
 }
 
+type PostCreation = Omit<Post, "id" | "created_at" | "updated_at">
+
 type PostResponse = {
     posts: Post[],
     total_pages: number,
@@ -34,6 +36,8 @@ interface PostContext {
 
 const PAGES = ["home", "posts", "categories", "tags", "settings"] as const;
 type Page = (typeof PAGES)[keyof typeof PAGES]
+
+type FunctionResponse = Promise<{ success: true, error: null } | { success: false, error: string }>
 
 const API_URL: string = import.meta.env.VITE_API_URL;
 const VERSION = "v0.4.0";
@@ -98,6 +102,7 @@ function TitleBar({ page }: { page: Page }) {
     return <header>
         <h1>{title()}</h1>
         <p>{description()}</p>
+        retur
     </header>
 
 }
@@ -145,17 +150,25 @@ function HomePage() {
 }
 
 type PostSort = "created" | "edited" | "published" | "oldest";
+const EMPTY_POST_CREATION: PostCreation = {
+    slug: "",
+    title: "",
+    content: "",
+    category: ""
+}
 
 function PostsPage() {
     const { posts, categories } = useContext(PostContext);
     const [selected, setSelected] = useState<PostSort>("created");
     const [openCreatePost, setOpenCreatePost] = useState(false);
+    const [creatingPost, setCreatingPost] = useState<PostCreation>(EMPTY_POST_CREATION);
 
     if (!posts || !posts.posts) return <p>No Posts Found!</p>;
 
 
-    async function createPost({ title, slug, content, category }: { title: string, slug: string, content: string, category: string }): Promise<{ success: true, error: null } | { success: false, error: string }> {
-        if (slug.includes(" ")) return { error: "Invalid Slug!", success: false } 
+    async function createPost(): FunctionResponse {
+        const { slug, title, content, category } = creatingPost;
+        if (slug.includes(" ")) return { error: "Invalid Slug!", success: false }
         const cat_list = Object.values(categories).map((cat: any) => cat.name);
         console.log({ category, cat_list, categories });
         if (!(cat_list.includes(category))) return { error: "Invalid Category!", success: false }
@@ -169,16 +182,21 @@ function PostsPage() {
     // sort posts
     let sorted_posts = structuredClone(posts.posts);
     switch (selected) {
-        case "edited": 
-            sorted_posts = sorted_posts.sort((a,b) => (new Date(b.updated_at).getTime()) - (new Date(a.updated_at).getTime()));
+        case "edited":
+            sorted_posts = sorted_posts.sort((a, b) => (new Date(b.updated_at).getTime()) - (new Date(a.updated_at).getTime()));
             break;
         case "created":
         case "oldest":
-            sorted_posts = sorted_posts.sort((a,b) => (new Date(b.updated_at).getTime()) - (new Date(a.updated_at).getTime()));
+            sorted_posts = sorted_posts.sort((a, b) => (new Date(b.updated_at).getTime()) - (new Date(a.updated_at).getTime()));
             if (selected == "oldest") sorted_posts.reverse();
             break;
         case "published":
             break;
+    }
+
+    function closeEditor() {
+        setOpenCreatePost(false);
+        setCreatingPost(EMPTY_POST_CREATION);
     }
 
     return <main>
@@ -192,32 +210,35 @@ function PostsPage() {
         <section id='post-grid'>
             {sorted_posts.map((p: any) => <PostCard key={p.id} post={p} />)}
         </section>
-        <Modal openModal={openCreatePost} closeModal={() => setOpenCreatePost(false)}>
-            <PostEditor save={createPost} type={"create"} cancel={() => setOpenCreatePost(false)} />
+        <Modal openModal={openCreatePost} closeModal={closeEditor}>
+            <PostEditor post={creatingPost} setPost={setCreatingPost} save={createPost} type={"create"} cancel={closeEditor} />
         </Modal>
     </main>
 }
 
-function PostEditor({ save, type, cancel }: { type: "create" | "edit", save: (data: { title: string, slug: string, content: string, category: string }) => Promise<{ success: true, error: null } | { success: false, error: string }>, cancel: () => void }) {
-    const [title, setTitle] = useState<string>("");
-    const [slug, setSlug] = useState<string>("");
-    const [manualSlug, setManualSlug] = useState<boolean>(false);
-    const [content, setContent] = useState<string>("");
-    const [category, setCategory] = useState<string>("");
-    const [error, setError] = useState<string|null>(null);
 
+interface PostEditorProps {
+    post: PostCreation,
+    setPost: Dispatch<SetStateAction<PostCreation>>,
+    save: () => FunctionResponse,
+    type: "create" | "edit",
+    cancel: () => void
+}
+
+function PostEditor({ post, setPost, save, type, cancel }: PostEditorProps) {
+    const [manualSlug, setManualSlug] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
     const { categories } = useContext(PostContext);
 
     function updateTitle(value: string) {
-        if (!manualSlug) {
-            setSlug(value.replaceAll(" ", "-").toLowerCase());
-        }
-        setTitle(value);
+        const update_post = { ...post, title: value };
+        if (!manualSlug) update_post['slug'] = value.replaceAll(" ", "-").toLowerCase();
+        setPost(update_post);
     }
 
     function updateSlug(value: string) {
         if (manualSlug == false) setManualSlug(true);
-        setSlug(value);
+        setPost({ ...post, slug: value });
     }
 
     function SaveContent() {
@@ -231,29 +252,40 @@ function PostEditor({ save, type, cancel }: { type: "create" | "edit", save: (da
     return <div className="flex-col">
         <h3 style={{ textTransform: "capitalize" }}>{type} Post</h3>
         <div className="input-grid">
-            <label>Title</label><input type="text" value={title} onChange={(e) => updateTitle(e.target.value)} />
-            <label>Slug</label><input type="text" value={slug} onChange={(e) => updateSlug(e.target.value)}/>
-            <label>Category</label><CategoryInput categories={categories} setValue={(c) => setCategory(c)} />
+            <label>Title</label><input type="text" value={post.title} onChange={(e) => updateTitle(e.target.value)} />
+            <label>Slug</label><input type="text" value={post.slug} onChange={(e) => updateSlug(e.target.value)} />
+            <label>Category</label><CategoryInput categories={categories} setValue={(c) => setPost({ ...post, category: c })} />
             <label>Publish</label><input type="date" />
-            <label style={{ placeSelf: "stretch" }}>Content</label><textarea style={{ gridColumn: "span 3", fontFamily: "monospace" }} rows={10} value={content} onChange={(e) => setContent(e.target.value)} />
+            <label style={{ placeSelf: "stretch" }}>Content</label><textarea style={{ gridColumn: "span 3", fontFamily: "monospace" }} rows={10} value={post.content} onChange={(e) => setPost({ ...post, content: e.target.value })} />
         </div>
-        {error && <p className="error-message">{error}</p>} 
+        {error && <p className="error-message">{error}</p>}
         <div className="flex-row center">
-            <button onClick={() => save({ title, slug, content, category }).then((res) => setError(res.error))}><SaveContent /></button><button onClick={cancel}><X />Cancel</button>
+            <button onClick={() => save().then((res) => setError(res.error))}><SaveContent /></button><button onClick={cancel}><X />Cancel</button>
         </div>
     </div>
 }
 
 function PostCard({ post }: { post: Post }) {
     const [editorOpen, setEditorOpen] = useState(false);
+    const [editingPost, setEditingPost] = useState<PostCreation>({ ...post });
 
-    function savePost(post: any): any {
-        console.log("hi!");
+    function savePost(): any {
+        const id = post.id;
+        const upload_post = {
+            ...editingPost,
+            id
+        }
+        // send upload post to server
+    }
+
+    function close() {
+        setEditorOpen(false);
+        setEditingPost({ ...post});
     }
 
     return <div className='post-card hidden-parent'>
-        <Modal openModal={editorOpen} closeModal={() => setEditorOpen(false)}>
-            <PostEditor save={savePost} type={"edit"} cancel={() => setEditorOpen(false)} />
+        <Modal openModal={editorOpen} closeModal={close}>
+            <PostEditor post={editingPost} setPost={setEditingPost} save={savePost} type={"edit"} cancel={close} />
         </Modal>
         <div className='flex-row center top-right hidden-child'>
             <button><Trash /></button>

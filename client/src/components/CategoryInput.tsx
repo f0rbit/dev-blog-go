@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useState } from "react";
 
-function CategoryInput({ categories, setValue }: { categories: { name: string, parent: string }[], setValue: Dispatch<SetStateAction<string>> }) {
+function CategoryInput({ categories, setValue }: { categories: { name: string, parent: string }[], setValue: Dispatch<SetStateAction<any>> }) {
     const [input, setInput] = useState<string>("");
     const [open, setOpen] = useState<boolean>(false);
     const [hovering, setHovering] = useState<number>(0);
