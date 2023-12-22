@@ -28,7 +28,7 @@
 - [ ] Front end implementation
     - [x] Create Blog Posts
     - [x] Edit existing Posts
-    - [ ] Delete posts
+    - [x] Delete posts
     - [ ] Assign categories
     - [ ] Assign tags
     - [ ] Filter posts menu
