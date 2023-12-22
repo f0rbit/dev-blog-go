@@ -2,8 +2,8 @@ import { useState } from "react";
 
 type CategorySetter = (category: string) => void;
 
-function CategoryInput({ categories, setValue }: { categories: { name: string, parent: string }[], setValue: CategorySetter }) {
-    const [input, setInput] = useState<string>("");
+function CategoryInput({ categories, setValue, value }: { categories: { name: string, parent: string }[], setValue: CategorySetter, value: string }) {
+    const [input, setInput] = useState<string>(value);
     const [open, setOpen] = useState<boolean>(false);
     const [hovering, setHovering] = useState<number>(0);
 

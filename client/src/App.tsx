@@ -162,6 +162,7 @@ function PostsPage() {
     const { posts, setPosts, categories } = useContext(PostContext);
     const [selected, setSelected] = useState<PostSort>("created");
     const [openCreatePost, setOpenCreatePost] = useState(false);
+    const [filters, setFilters] = useState<PostFilters>({ category: null, tag: null });
     const [creatingPost, setCreatingPost] = useState<PostCreation>(EMPTY_POST_CREATION);
 
     if (!posts || !posts.posts) return <p>No Posts Found!</p>;
@@ -197,6 +198,19 @@ function PostsPage() {
             break;
     }
 
+    let filtered_posts = sorted_posts.filter((p) => {
+        // tag filtering
+        if (filters.tag) {
+            const contains_tag = p.tags.includes(filters.tag);
+            if (!contains_tag) return false;
+        }
+        // category filtering
+        if (filters.category) {
+            if (p.category != filters.category) return false;
+        }
+        return true;
+    });
+
     function closeEditor() {
         setOpenCreatePost(false);
         setCreatingPost(EMPTY_POST_CREATION);
@@ -207,11 +221,11 @@ function PostsPage() {
             <label htmlFor='post-search'><Search /></label>
             <input type="text" id='post-search' />
             <SortControl selected={selected} setSelected={setSelected} />
-            <button><Filter /><span>Filter</span></button>
+            <FilterControl filters={filters} setFilters={setFilters} />
             <button style={{ marginLeft: "auto" }} onClick={() => setOpenCreatePost(true)}><Plus /><span>Create</span></button>
         </section>
         <section id='post-grid'>
-            {sorted_posts.map((p: any) => <PostCard key={p.id} post={p} />)}
+            {filtered_posts.map((p: any) => <PostCard key={p.id} post={p} />)}
         </section>
         <Modal openModal={openCreatePost} closeModal={closeEditor}>
             <PostEditor post={creatingPost} setPost={setCreatingPost} save={createPost} type={"create"} cancel={closeEditor} />
@@ -256,7 +270,7 @@ function PostEditor({ post, setPost, save, type, cancel }: PostEditorProps) {
         <div className="input-grid">
             <label>Title</label><input type="text" value={post.title} onChange={(e) => updateTitle(e.target.value)} />
             <label>Slug</label><input type="text" value={post.slug} onChange={(e) => updateSlug(e.target.value)} />
-            <label>Category</label><CategoryInput categories={categories} setValue={(c) => setPost({ ...post, category: c })} />
+            <label>Category</label><CategoryInput value={post.category} categories={categories} setValue={(c) => setPost({ ...post, category: c })} />
             <label>Publish</label><input type="date" />
             <label style={{ placeSelf: "stretch" }}>Content</label><textarea style={{ gridColumn: "span 3", fontFamily: "monospace" }} rows={10} value={post.content} onChange={(e) => setPost({ ...post, content: e.target.value })} />
             <label>Tags</label><TagEditor tags={post.tags} setTags={(tags) => setPost({...post, tags })} />
@@ -358,6 +372,29 @@ function SortControl({ selected, setSelected }: { selected: PostSort, setSelecte
             <SortButton sort="published" />
             <SortButton sort="oldest" />
         </>}
+    </>
+}
+
+type PostFilters = {
+    category: Post['category'] | null,
+    tag: string | null
+}
+
+function FilterControl({ filters, setFilters }: { filters: PostFilters, setFilters: Dispatch<SetStateAction<PostFilters>> }) {
+    const [open, setOpen] = useState(false);
+    const { categories } = useContext(PostContext)
+
+    const applied = filters.category || filters.tag;
+
+    return <>
+        <button onClick={() => setOpen(!open)}><Filter /><span>Filter</span></button>
+        {open && <>
+            <FolderTree />
+            <CategoryInput value={filters.category ?? ""} categories={categories} key={0} setValue={(c) => setFilters({ ...filters, category: c })}  />
+            <Tags />
+            <input type="text" value={filters.tag ?? ""} onChange={(e) => setFilters({ ...filters, tag: e.target.value }) } />
+        </>}
+        {(applied || open) && <button title="Clear" onClick={() => { setFilters({ category: null, tag: null }); setOpen(false) }}><X /></button>}
     </>
 }
 

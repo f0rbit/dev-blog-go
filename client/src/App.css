@@ -246,6 +246,7 @@ main {
     gap: 4px;
     max-height: 150px;
     overflow-y: auto;
+    z-index: 4;
 
     span {
         font-size: small;
