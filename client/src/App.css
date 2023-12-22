@@ -285,6 +285,7 @@ main {
 
 .tag-editor {
     flex-wrap: wrap;
+    grid-column: span 3;
 
     button {
         border: none;

@@ -11,11 +11,12 @@ type Post = {
     title: string,
     content: string,
     category: string,
+    tags: string[],
     created_at: string,
     updated_at: string
 }
 
-type PostCreation = Omit<Post, "id" | "created_at" | "updated_at"> & { tags: string[] }
+type PostCreation = Omit<Post, "id" | "created_at" | "updated_at">
 
 type PostResponse = {
     posts: Post[],
@@ -265,7 +266,8 @@ function PostEditor({ post, setPost, save, type, cancel }: PostEditorProps) {
     </div>
 }
 
-function TagEditor({ tags, setTags }: { tags: PostCreation['tags'], setTags: (tags: PostCreation['tags']) => void}) {
+
+function TagEditor({ tags, setTags }: { tags: Post['tags'], setTags: (tags: Post['tags']) => void}) {
     const [input, setInput] = useState("");
 
     function add() {
@@ -274,13 +276,13 @@ function TagEditor({ tags, setTags }: { tags: PostCreation['tags'], setTags: (ta
     }
 
     return <div className="flex-row tag-editor">
-            <input type="text" 
-                value={input} 
-                onChange={(e) => setInput(e.target.value) }
-                onKeyDown={(e) => { if (e.key == 'Enter' || e.key == 'Tab') { add(); e.preventDefault() }}}
-            />
-            <button onClick={() => { setTags([...tags, input]); setInput("") }}><Plus /></button>
-            {tags.map((tag, index) => <Tag key={index} tag={tag} remove={() => setTags(tags.toSpliced(index, 1))} />)}
+        <input type="text" 
+            value={input} 
+            onChange={(e) => setInput(e.target.value) }
+            onKeyDown={(e) => { if (e.key == 'Enter' || e.key == 'Tab') { add(); e.preventDefault() }}}
+        />
+        <button onClick={() => { setTags([...tags, input]); setInput("") }}><Plus /></button>
+        {tags.map((tag, index) => <Tag key={index} tag={tag} remove={() => setTags(tags.toSpliced(index, 1))} />)}
     </div>
 }
 
@@ -293,7 +295,7 @@ function Tag({ tag, remove }: { tag: string, remove: (() => void) | null }) {
 
 function PostCard({ post }: { post: Post }) {
     const [editorOpen, setEditorOpen] = useState(false);
-    const [editingPost, setEditingPost] = useState<PostCreation>({ ...post, tags: [] });
+    const [editingPost, setEditingPost] = useState<PostCreation>({ ...post });
     const { posts, setPosts } = useContext(PostContext);
 
     const deletePost = async (): Promise<FunctionResponse> => {
@@ -322,7 +324,7 @@ function PostCard({ post }: { post: Post }) {
 
     function close() {
         setEditorOpen(false);
-        setEditingPost({ ...post, tags: []});
+        setEditingPost({ ...post });
     }
 
     return <div className='post-card hidden-parent'>
