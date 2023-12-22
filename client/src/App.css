@@ -224,7 +224,7 @@ main {
 
 .input-grid {
     display: grid;
-    grid-template-columns: max-content 20vw max-content 20vw;
+    grid-template-columns: 6vw 20vw 6vw 20vw;
     row-gap: 5px;
     column-gap: 20px;
     align-items: center;
@@ -281,4 +281,26 @@ main {
 
 .hidden-parent:hover .hidden-child {
     visibility: visible;
+}
+
+.tag-editor {
+    flex-wrap: wrap;
+
+    button {
+        border: none;
+        padding: 5px 5px;
+    }
+
+    .lucide {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.tag {
+    border: 1px solid var(--border-primary);
+    border-radius: 5px;
+    padding: 0px 10px;
+
+    padding-right: 2px;
 }

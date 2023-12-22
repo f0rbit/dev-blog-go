@@ -15,7 +15,7 @@ type Post = {
     updated_at: string
 }
 
-type PostCreation = Omit<Post, "id" | "created_at" | "updated_at">
+type PostCreation = Omit<Post, "id" | "created_at" | "updated_at"> & { tags: string[] }
 
 type PostResponse = {
     posts: Post[],
@@ -37,7 +37,7 @@ interface PostContext {
 const PAGES = ["home", "posts", "categories", "tags", "settings"] as const;
 type Page = (typeof PAGES)[keyof typeof PAGES]
 
-type FunctionResponse = Promise<{ success: true, error: null } | { success: false, error: string }>
+type FunctionResponse = { success: true, error: null } | { success: false, error: string }
 
 const API_URL: string = import.meta.env.VITE_API_URL;
 const VERSION = "v0.4.0";
@@ -102,7 +102,6 @@ function TitleBar({ page }: { page: Page }) {
     return <header>
         <h1>{title()}</h1>
         <p>{description()}</p>
-        retur
     </header>
 
 }
@@ -154,7 +153,8 @@ const EMPTY_POST_CREATION: PostCreation = {
     slug: "",
     title: "",
     content: "",
-    category: ""
+    category: "",
+    tags: []
 }
 
 function PostsPage() {
@@ -166,7 +166,7 @@ function PostsPage() {
     if (!posts || !posts.posts) return <p>No Posts Found!</p>;
 
 
-    async function createPost(): FunctionResponse {
+    async function createPost(): Promise<FunctionResponse> {
         const { slug, title, content, category } = creatingPost;
         if (slug.includes(" ")) return { error: "Invalid Slug!", success: false }
         const cat_list = Object.values(categories).map((cat: any) => cat.name);
@@ -220,7 +220,7 @@ function PostsPage() {
 interface PostEditorProps {
     post: PostCreation,
     setPost: Dispatch<SetStateAction<PostCreation>>,
-    save: () => FunctionResponse,
+    save: () => Promise<FunctionResponse>,
     type: "create" | "edit",
     cancel: () => void
 }
@@ -248,8 +248,6 @@ function PostEditor({ post, setPost, save, type, cancel }: PostEditorProps) {
         }
     }
 
-    console.log(post.slug, post.category);
-
     return <div className="flex-col">
         <h3 style={{ textTransform: "capitalize" }}>{type} Post</h3>
         <div className="input-grid">
@@ -258,6 +256,7 @@ function PostEditor({ post, setPost, save, type, cancel }: PostEditorProps) {
             <label>Category</label><CategoryInput categories={categories} setValue={(c) => setPost({ ...post, category: c })} />
             <label>Publish</label><input type="date" />
             <label style={{ placeSelf: "stretch" }}>Content</label><textarea style={{ gridColumn: "span 3", fontFamily: "monospace" }} rows={10} value={post.content} onChange={(e) => setPost({ ...post, content: e.target.value })} />
+            <label>Tags</label><TagEditor tags={post.tags} setTags={(tags) => setPost({...post, tags })} />
         </div>
         {error && <p className="error-message">{error}</p>}
         <div className="flex-row center">
@@ -266,19 +265,45 @@ function PostEditor({ post, setPost, save, type, cancel }: PostEditorProps) {
     </div>
 }
 
+function TagEditor({ tags, setTags }: { tags: PostCreation['tags'], setTags: (tags: PostCreation['tags']) => void}) {
+    const [input, setInput] = useState("");
+
+    function add() {
+        setTags([...tags, input ]);
+        setInput("");
+    }
+
+    return <div className="flex-row tag-editor">
+            <input type="text" 
+                value={input} 
+                onChange={(e) => setInput(e.target.value) }
+                onKeyDown={(e) => { if (e.key == 'Enter' || e.key == 'Tab') { add(); e.preventDefault() }}}
+            />
+            <button onClick={() => { setTags([...tags, input]); setInput("") }}><Plus /></button>
+            {tags.map((tag, index) => <Tag key={index} tag={tag} remove={() => setTags(tags.toSpliced(index, 1))} />)}
+    </div>
+}
+
+function Tag({ tag, remove }: { tag: string, remove: (() => void) | null }) {
+    return <div className="flex-row center tag">
+        <span>{tag}</span>
+        {remove && <button onClick={remove}><X /></button>}
+    </div>;
+}
+
 function PostCard({ post }: { post: Post }) {
     const [editorOpen, setEditorOpen] = useState(false);
-    const [editingPost, setEditingPost] = useState<PostCreation>({ ...post });
+    const [editingPost, setEditingPost] = useState<PostCreation>({ ...post, tags: [] });
     const { posts, setPosts } = useContext(PostContext);
 
-    const deletePost = async (): FunctionResponse => {
+    const deletePost = async (): Promise<FunctionResponse> => {
         const response = await fetch(`${API_URL}/post/delete/${post.id}`, { method: "DELETE" });
         if (!response || !response.ok) return { error: "Invalid response", success: false };
         setPosts({ ...posts, posts: posts.posts.filter((p) => p.id != post.id) });
         return { success: true, error: null };
     }
 
-    const savePost = async (): FunctionResponse => {
+    const savePost = async (): Promise<FunctionResponse> => {
         const id = post.id;
         const upload_post = {
             ...editingPost,
@@ -297,7 +322,7 @@ function PostCard({ post }: { post: Post }) {
 
     function close() {
         setEditorOpen(false);
-        setEditingPost({ ...post});
+        setEditingPost({ ...post, tags: []});
     }
 
     return <div className='post-card hidden-parent'>
