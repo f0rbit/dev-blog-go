@@ -29,7 +29,7 @@
     - [x] Create Blog Posts
     - [x] Edit existing Posts
     - [x] Delete posts
-    - [ ] Assign categories
+    - [x] Assign categories
     - [ ] Assign tags
     - [ ] Filter posts menu
         - [ ] By category
