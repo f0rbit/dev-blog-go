@@ -1,6 +1,8 @@
-import { Dispatch, SetStateAction, useState } from "react";
+import { useState } from "react";
 
-function CategoryInput({ categories, setValue }: { categories: { name: string, parent: string }[], setValue: Dispatch<SetStateAction<any>> }) {
+type CategorySetter = (category: string) => void;
+
+function CategoryInput({ categories, setValue }: { categories: { name: string, parent: string }[], setValue: CategorySetter }) {
     const [input, setInput] = useState<string>("");
     const [open, setOpen] = useState<boolean>(false);
     const [hovering, setHovering] = useState<number>(0);
@@ -11,14 +13,15 @@ function CategoryInput({ categories, setValue }: { categories: { name: string, p
         if (e.key == 'Enter' || e.key == 'Tab') {
             if (cat_list.length > 0) {
                 const index = hovering >= 0 ? hovering : 0;
-                setInput(cat_list[index]);
                 setValue(cat_list[index]);
+                setInput(cat_list[index]);
                 setHovering(-1);
             } else {
                 // cry
             }
             // typescript hack to trigger blur
-            (e.target as any).blur();
+            requestAnimationFrame(() => (e.target as any).blur());
+            e.preventDefault();
         } else if (e.key == 'ArrowUp') {
             setHovering(hovering - 1);
             e.preventDefault();
@@ -50,7 +53,7 @@ function CategoryInput({ categories, setValue }: { categories: { name: string, p
     </div>
 }
 
-function CategoryOption({ category, setValue, hovered }: { category: string, setValue: Dispatch<SetStateAction<string>>, hovered: boolean }) {
+function CategoryOption({ category, setValue, hovered }: { category: string, setValue: CategorySetter, hovered: boolean }) {
     return <button onClick={() => setValue(category)} className={hovered ? "hovered" : ""}>
         <span>{category}</span>
         <span style={{ marginLeft: "auto" }} className="post-count">0 posts</span>

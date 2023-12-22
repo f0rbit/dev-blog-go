@@ -173,7 +173,7 @@ function PostsPage() {
         console.log({ category, cat_list, categories });
         if (!(cat_list.includes(category))) return { error: "Invalid Category!", success: false }
         const data = { title, slug, content, category };
-        const response = await fetch("http://localhost:8080/post/new", { method: "POST", body: JSON.stringify(data) });
+        const response = await fetch(`${API_URL}/post/new`, { method: "POST", body: JSON.stringify(data) });
         const result = await response.json();
         posts.posts.push(result);
         return { error: null, success: true }
@@ -248,6 +248,7 @@ function PostEditor({ post, setPost, save, type, cancel }: PostEditorProps) {
         }
     }
 
+    console.log(post.slug, post.category);
 
     return <div className="flex-col">
         <h3 style={{ textTransform: "capitalize" }}>{type} Post</h3>
@@ -268,14 +269,24 @@ function PostEditor({ post, setPost, save, type, cancel }: PostEditorProps) {
 function PostCard({ post }: { post: Post }) {
     const [editorOpen, setEditorOpen] = useState(false);
     const [editingPost, setEditingPost] = useState<PostCreation>({ ...post });
+    const { posts, setPosts } = useContext(PostContext);
 
-    function savePost(): any {
+    const savePost = async (): FunctionResponse => {
         const id = post.id;
         const upload_post = {
             ...editingPost,
             id
         }
         // send upload post to server
+        const response = await fetch(`${API_URL}/post/edit`, { method: "PUT", body: JSON.stringify(upload_post) });
+        if (!response || !response.ok) return { error: "Invalid Response", success: false };
+        // update state
+        setPosts({ ...posts, posts: posts.posts.map((p) => {
+            if (p.id != id) return p;
+            return { ...p, ...upload_post };
+        }) });
+        return { error: null, success: true };
+
     }
 
     function close() {
