@@ -203,6 +203,15 @@ func updatePost(updatedPost *types.Post) error {
 	_, err = db.Exec("UPDATE posts SET slug = ?, title = ?, content = ?, category = ? WHERE id = ?",
 		updatedPost.Slug, updatedPost.Title, updatedPost.Content, updatedPost.Category, updatedPost.Id)
 
+    // Update the tags
+    // first we drop all the previous tags and then re-add
+    _, err = db.Exec("DELETE FROM tags WHERE post_id = ?", updatedPost.Id)
+    insert, err := db.Prepare("INSERT INTO tags (post_id, tag) VALUES (?, ?)");
+
+    for _, s := range updatedPost.Tags {
+        insert.Exec(updatedPost.Id, s)
+    }
+
 	log.Info("Updated Post", "id", updatedPost.Id)
 
 	return err
