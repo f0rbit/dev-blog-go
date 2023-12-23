@@ -35,7 +35,7 @@
         - [x] By category
         - [x] By tag
 - [x] Front end styling
-- [ ] Implement publish date on posts
+- [x] Implement publish date on posts
 
 # v0.5
 - [ ] Database connection pooling
