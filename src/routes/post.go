@@ -55,14 +55,14 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Insert the new post into the database
-	err = insertPost(&newPost)
+    id, err := database.CreatePost(&newPost)
 	if err != nil {
 		log.Error("Error creating new post", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 	// Fetch the complete post with the new ID
-    createdPost, err := database.FetchPost(database.ID, newPost.Id)
+    createdPost, err := database.FetchPost(database.ID, id)
 	if err != nil {
 		log.Error("Error fetching created post", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -93,7 +93,7 @@ func EditPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update the post in the database
-	err = updatePost(&updatedPost)
+	err = database.UpdatePost(&updatedPost)
 	if err != nil {
 		log.Error("Error updating post", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -114,7 +114,7 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete the post by ID
-	err = deletePost(postID)
+	err = database.DeletePost(postID)
 	if err != nil {
 		log.Error("Error deleting post", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -122,72 +122,4 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-}
-
-func insertPost(newPost *types.Post) error {
-    db := database.Connection();
-    var err error;
-
-	// Insert the new post into the database
-    _, err = db.Exec("INSERT INTO posts (slug, title, content, category, publish_at) VALUES (?, ?, ?, ?, ?)",
-		newPost.Slug, newPost.Title, newPost.Content, newPost.Category, newPost.PublishAt)
-
-	if err != nil {
-		return err
-	}
-
-	// Assuming your database is configured to auto-increment the ID,
-	// retrieve the last inserted ID using the LastInsertId method
-	row := db.QueryRow("SELECT last_insert_rowid()")
-
-	err = row.Scan(&newPost.Id)
-	if err != nil {
-		return err
-	}
-
-	log.Infof("Inserted new post '%s' with ID: %d", newPost.Slug, newPost.Id)
-
-    insert, err := db.Prepare("INSERT INTO tags (post_id, tag) VALUES (?, ?)")
-    // insert any tags
-    for _, s := range newPost.Tags {
-        insert.Exec(newPost.Id, s)
-    }
-    log.Info("Inserted tags", "tags", newPost.Tags);
-
-	return err
-}
-
-func updatePost(updatedPost *types.Post) error {
-    db := database.Connection();
-    var err error;
-
-    log.Info("updating", "publish_at", updatedPost.PublishAt)
-	// Update the post in the database
-	_, err = db.Exec("UPDATE posts SET slug = ?, title = ?, content = ?, category = ?, archived = ?, publish_at = ? WHERE id = ?",
-		updatedPost.Slug, updatedPost.Title, updatedPost.Content, updatedPost.Category, updatedPost.Archived, updatedPost.PublishAt, updatedPost.Id)
-
-    // Update the tags
-    // first we drop all the previous tags and then re-add
-    _, err = db.Exec("DELETE FROM tags WHERE post_id = ?", updatedPost.Id)
-    insert, err := db.Prepare("INSERT INTO tags (post_id, tag) VALUES (?, ?)");
-
-    for _, s := range updatedPost.Tags {
-        insert.Exec(updatedPost.Id, s)
-    }
-
-	log.Info("Updated Post", "id", updatedPost.Id)
-
-	return err
-}
-
-func deletePost(postID int) error {
-    var db = database.Connection()
-    var err error;
-
-	// Delete the post by ID
-	_, err = db.Exec("DELETE FROM posts WHERE id = ?", postID)
-
-	log.Info("Deleted Post", "id", postID)
-
-	return err
 }

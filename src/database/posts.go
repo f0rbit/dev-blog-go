@@ -4,6 +4,8 @@ import (
 	"blog-server/types"
 	"database/sql"
 	"strings"
+
+    "github.com/charmbracelet/log"
 )
 
 type Identifier string
@@ -65,4 +67,74 @@ func FetchPost(identifier Identifier, needle interface{}) (types.Post, error) {
     }
     
     return post, nil;
+}
+
+func CreatePost(post *types.Post) (int, error) {
+    var err error;
+	// Insert the new post into the database
+    _, err = db.Exec(
+        `INSERT INTO posts (slug, title, content, category, publish_at) VALUES (?, ?, ?, ?, ?)`,
+		post.Slug, 
+        post.Title, 
+        post.Content, 
+        post.Category, 
+        post.PublishAt)
+    // get the id & update data structure
+	if err != nil { return -1, err } 
+	row := db.QueryRow("SELECT last_insert_rowid()")
+	err = row.Scan(&post.Id)
+	if err != nil { return -1, err }
+    // insert any tags
+    insert, err := db.Prepare("INSERT INTO tags (post_id, tag) VALUES (?, ?)")
+    if err != nil { return -1, err }
+    for _, s := range post.Tags {
+        _, err = insert.Exec(post.Id, s);
+        if err != nil { return -1, err }
+    }
+    log.Info("Inserted new post", "slug", post.Slug, "id", post.Id);
+    return post.Id, err
+}
+
+func DeletePost(id int) error {
+    _, err := db.Exec("DELETE FROM posts WHERE id = ?", id);
+    if err == nil {
+        log.Info("Deleted Post", "id", id);
+    }
+    return err;
+}
+
+func UpdatePost(updatedPost *types.Post) error {
+    var err error;
+    // update post
+	_, err = db.Exec(`
+    UPDATE 
+        posts 
+    SET 
+        slug = ?,
+        title = ?,
+        content = ?,
+        category = ?,
+        archived = ?,
+        publish_at = ? 
+    WHERE 
+        id = ?`,
+	updatedPost.Slug, 
+    updatedPost.Title, 
+    updatedPost.Content, 
+    updatedPost.Category, 
+    updatedPost.Archived, 
+    updatedPost.PublishAt, 
+    updatedPost.Id);
+    if err != nil { return err }
+    // update tags
+    _, err = db.Exec("DELETE FROM tags WHERE post_id = ?", updatedPost.Id)
+    if err != nil { return err }
+    insert, err := db.Prepare("INSERT INTO tags (post_id, tag) VALUES (?, ?)");
+    if err != nil { return err }
+    for _, s := range updatedPost.Tags {
+        _, err = insert.Exec(updatedPost.Id, s)
+        if err != nil { return err }
+    }
+	log.Info("Updated Post", "id", updatedPost.Id)
+	return err
 }
