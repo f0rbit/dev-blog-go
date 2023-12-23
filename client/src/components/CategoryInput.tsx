@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { PostContext } from "../App";
 
 type CategorySetter = (category: string) => void;
 
@@ -54,9 +55,11 @@ function CategoryInput({ categories, setValue, value }: { categories: { name: st
 }
 
 function CategoryOption({ category, setValue, hovered }: { category: string, setValue: CategorySetter, hovered: boolean }) {
+    const { posts } = useContext(PostContext);
+    const count = posts.posts.filter((p) => p.category == category).length;
     return <button onClick={() => setValue(category)} className={hovered ? "hovered" : ""}>
         <span>{category}</span>
-        <span style={{ marginLeft: "auto" }} className="post-count">0 posts</span>
+        <span style={{ marginLeft: "auto" }} className="post-count">{count} posts</span>
     </button>;
 }
 

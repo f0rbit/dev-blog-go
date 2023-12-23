@@ -49,6 +49,7 @@
 - [ ] Instant Reactivity in client, consider transitioning to UUID for id's in DB
     - [ ] Blog updates & creation should appear instant in client, some kind of spinner and validation message upon completion
 - [ ] Tag Input component like category component
+- [ ] Arrow key down in dropdowns should scroll the div down 
 - [ ] Login Page
     - [ ] Proper authentication token handling
 

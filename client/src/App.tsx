@@ -44,7 +44,7 @@ const API_URL: string = import.meta.env.VITE_API_URL;
 const VERSION = "v0.4.0";
 console.log("Version: " + VERSION);
 
-const PostContext = React.createContext<PostContext>({ posts: {} as PostResponse, setPosts: () => { }, categories: [], setCategories: () => { }, tags: [], setTags: () => { } });
+export const PostContext = React.createContext<PostContext>({ posts: {} as PostResponse, setPosts: () => { }, categories: [], setCategories: () => { }, tags: [], setTags: () => { } });
 
 function App() {
     const [posts, setPosts] = useState<PostResponse>({} as PostResponse);
