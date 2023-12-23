@@ -159,6 +159,8 @@ func fetchPosts(category string, limit, offset int, tag string) ([]types.Post, i
         posts.title, 
         posts.content, 
         posts.category, 
+        posts.archived,
+        posts.publish_at,
         posts.created_at, 
         posts.updated_at,
         GROUP_CONCAT(tags.tag) AS tags
@@ -186,7 +188,7 @@ func fetchPosts(category string, limit, offset int, tag string) ([]types.Post, i
 	for rows.Next() {
 		var post types.Post
         var tags sql.NullString
-		err := rows.Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.CreatedAt, &post.UpdatedAt, &tags)
+		err := rows.Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.Archived, &post.UpdatedAt, &post.CreatedAt, &post.UpdatedAt, &tags)
 
 		if err != nil {
             log.Error("Error during scanning posts", "err", err)

@@ -138,7 +138,7 @@ func fetchPostBySlug(slug string) (types.Post, error) {
 
     var tags sql.NullString
 
-	err = db.QueryRow("SELECT posts.id, posts.slug, posts.title, posts.content, posts.category, posts.created_at, updated_at, GROUP_CONCAT(tags.tag) AS tags FROM posts LEFT JOIN tags ON posts.id = tags.post_id WHERE posts.slug = ?", slug).Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.CreatedAt, &post.UpdatedAt, &tags)
+	err = db.QueryRow("SELECT posts.id, posts.slug, posts.title, posts.content, posts.category, posts.archived, posts.publish_at, posts.created_at, posts.updated_at, GROUP_CONCAT(tags.tag) AS tags FROM posts LEFT JOIN tags ON posts.id = tags.post_id WHERE posts.slug = ?", slug).Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.Archived, &post.PublishAt, &post.CreatedAt, &post.UpdatedAt, &tags)
 
     if tags.Valid {
         post.Tags = strings.Split(tags.String, ",")
@@ -172,15 +172,17 @@ func fetchPostByID(postID int) (types.Post, error) {
         posts.title,
         posts.content,
         posts.category,
+        posts.archived,
+        posts.publish_at,
         posts.created_at,
-        updated_at,
+        posts.updated_at,
         GROUP_CONCAT(tags.tag) AS tags 
     FROM 
         posts 
     LEFT JOIN 
         tags ON posts.id = tags.post_id 
     WHERE 
-        posts.id = ?`, postID).Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.CreatedAt, &post.UpdatedAt, &tags)
+        posts.id = ?`, postID).Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.Archived, &post.UpdatedAt, &post.CreatedAt, &post.UpdatedAt, &tags)
 
     if tags.Valid {
         post.Tags = strings.Split(tags.String, ",")
@@ -203,8 +205,8 @@ func insertPost(newPost *types.Post) error {
 	defer db.Close()
 
 	// Insert the new post into the database
-	_, err = db.Exec("INSERT INTO posts (slug, title, content, category) VALUES (?, ?, ?, ?)",
-		newPost.Slug, newPost.Title, newPost.Content, newPost.Category)
+	_, err = db.Exec("INSERT INTO posts (slug, title, content, category, publish_at) VALUES (?, ?, ?, ?, ?)",
+		newPost.Slug, newPost.Title, newPost.Content, newPost.Category, newPost.PublishAt)
 
 	if err != nil {
 		return err
@@ -239,8 +241,8 @@ func updatePost(updatedPost *types.Post) error {
 	defer db.Close()
 
 	// Update the post in the database
-	_, err = db.Exec("UPDATE posts SET slug = ?, title = ?, content = ?, category = ? WHERE id = ?",
-		updatedPost.Slug, updatedPost.Title, updatedPost.Content, updatedPost.Category, updatedPost.Id)
+	_, err = db.Exec("UPDATE posts SET slug = ?, title = ?, content = ?, category = ?, archived = ?, publish_at = ? WHERE id = ?",
+		updatedPost.Slug, updatedPost.Title, updatedPost.Content, updatedPost.Category, updatedPost.Id, updatedPost.Archived, updatedPost.PublishAt)
 
     // Update the tags
     // first we drop all the previous tags and then re-add
