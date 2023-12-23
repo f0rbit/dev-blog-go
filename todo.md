@@ -25,7 +25,7 @@
 - [x] Update README for server
 
 # v0.4
-- [ ] Front end implementation
+- [x] Front end implementation
     - [x] Create Blog Posts
     - [x] Edit existing Posts
     - [x] Delete posts
@@ -34,7 +34,6 @@
     - [x] Filter posts menu
         - [x] By category
         - [x] By tag
-- [ ] Front end typesafety w/ zod
 - [x] Front end styling
 - [ ] Implement publish date on posts
 
@@ -43,7 +42,8 @@
 - [ ] Proper graph data structure for categories
 - [ ] Refactor & simplify code bases
     - [ ] > 85% test coverage
-- [ ] Proper input/output data validation (type safety)
+- [ ] Proper input/output data validation (type safety) on backend
+- [ ] Front end typesafety w/ zod
 
 # v0.6
 - [ ] Instant Reactivity in client, consider transitioning to UUID for id's in DB
