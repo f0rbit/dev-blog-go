@@ -4,7 +4,6 @@ import React from 'react';
 import { ArrowDownNarrowWide, Edit, Filter, FolderTree, Home, LibraryBig, Plus, Save, Search, Settings, Tags, Trash, X } from 'lucide-react';
 import Modal from "./components/Modal";
 import CategoryInput from './components/CategoryInput';
-import { DateTime } from "luxon";
 
 type Post = {
     id: number,
@@ -271,10 +270,10 @@ function PostEditor({ post, setPost, save, type, cancel }: PostEditorProps) {
     }
 
     function setPublishDate(value: any) {
-        console.log({ value });
         setPost({...post, publish_at: value });
     }
 
+    const edit_time = post.publish_at?.length > 1 ? toIsoString(new Date(post.publish_at)): "";
 
     return <div className="flex-col">
         <h3 style={{ textTransform: "capitalize" }}>{type} Post</h3>
@@ -282,7 +281,7 @@ function PostEditor({ post, setPost, save, type, cancel }: PostEditorProps) {
             <label>Title</label><input type="text" value={post.title} onChange={(e) => updateTitle(e.target.value)} />
             <label>Slug</label><input type="text" value={post.slug} onChange={(e) => updateSlug(e.target.value)} />
             <label>Category</label><CategoryInput value={post.category} categories={categories} setValue={(c) => setPost({ ...post, category: c })} />
-            <label>Publish</label><input type="datetime-local" value={DateTime.fromISO(post.publish_at).toISO({ includeOffset: false }) ?? ""} onChange={(e) => setPublishDate(DateTime.fromISO(e.target.value).toISO({ includeOffset: false }))} />
+            <label>Publish</label><input type="datetime-local" value={edit_time} onChange={(e) => setPublishDate(new Date(e.target.value).toISOString())} />
             <label style={{ placeSelf: "stretch" }}>Content</label><textarea style={{ gridColumn: "span 3", fontFamily: "monospace" }} rows={10} value={post.content} onChange={(e) => setPost({ ...post, content: e.target.value })} />
             <label>Tags</label><TagEditor tags={post.tags} setTags={(tags) => setPost({...post, tags })} />
         </div>
@@ -291,6 +290,19 @@ function PostEditor({ post, setPost, save, type, cancel }: PostEditorProps) {
             <button onClick={() => save().then((res) => setError(res.error))}><SaveContent /></button><button onClick={cancel}><X />Cancel</button>
         </div>
     </div>
+}
+
+function toIsoString(date: Date) {
+    const pad = function(num: number) {
+        return (num < 10 ? '0' : '') + num;
+    };
+
+  return date.getFullYear() +
+      '-' + pad(date.getMonth() + 1) +
+      '-' + pad(date.getDate()) +
+      'T' + pad(date.getHours()) +
+      ':' + pad(date.getMinutes()) +
+      ':' + pad(date.getSeconds())
 }
 
 
@@ -335,7 +347,7 @@ function PostCard({ post }: { post: Post }) {
         const upload_post: PostCreation & { id: number } = {
             ...editingPost,
             id,
-            publish_at: DateTime.fromISO(editingPost.publish_at).toUTC().toString()
+            publish_at: new Date(editingPost.publish_at).toISOString()
         }
         // send upload post to server
         const response = await fetch(`${API_URL}/post/edit`, { method: "PUT", body: JSON.stringify(upload_post) });
