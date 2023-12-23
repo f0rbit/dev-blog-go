@@ -177,6 +177,12 @@ main {
     border: 1px solid var(--border-primary);
     border-radius: 5px;
     padding: 5px 10px;
+    position: relative;
+
+    .lucide {
+        width: 18px;
+        height: 18px;
+    }
 }
 
 #post-grid {
@@ -218,7 +224,7 @@ main {
 
 .input-grid {
     display: grid;
-    grid-template-columns: max-content 20vw max-content 20vw;
+    grid-template-columns: 6vw 20vw 6vw 20vw;
     row-gap: 5px;
     column-gap: 20px;
     align-items: center;
@@ -240,6 +246,7 @@ main {
     gap: 4px;
     max-height: 150px;
     overflow-y: auto;
+    z-index: 4;
 
     span {
         font-size: small;
@@ -260,4 +267,42 @@ main {
         background: var(--btn-primary);
         border: 1px solid var(--btn-secondary);
     }
+}
+
+.top-right {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+}
+
+
+.hidden-parent .hidden-child {
+    visibility: hidden;
+}
+
+.hidden-parent:hover .hidden-child {
+    visibility: visible;
+}
+
+.tag-editor {
+    flex-wrap: wrap;
+    grid-column: span 3;
+
+    button {
+        border: none;
+        padding: 5px 5px;
+    }
+
+    .lucide {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.tag {
+    border: 1px solid var(--border-primary);
+    border-radius: 5px;
+    padding: 0px 10px;
+
+    padding-right: 2px;
 }

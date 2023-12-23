@@ -25,29 +25,31 @@
 - [x] Update README for server
 
 # v0.4
-- [ ] Front end implementation
+- [x] Front end implementation
     - [x] Create Blog Posts
-    - [ ] Edit existing Posts
-    - [ ] Delete posts
-    - [ ] Assign categories
-    - [ ] Assign tags
-    - [ ] Filter posts menu
-        - [ ] By category
-        - [ ] By tag
-- [ ] Front end typesafety w/ zod
-- [ ] Front end styling
-- [ ] Implement publish date on posts
+    - [x] Edit existing Posts
+    - [x] Delete posts
+    - [x] Assign categories
+    - [x] Assign tags
+    - [x] Filter posts menu
+        - [x] By category
+        - [x] By tag
+- [x] Front end styling
+- [x] Implement publish date on posts
 
 # v0.5
 - [ ] Database connection pooling
 - [ ] Proper graph data structure for categories
 - [ ] Refactor & simplify code bases
     - [ ] > 85% test coverage
-- [ ] Proper input/output data validation (type safety)
+- [ ] Proper input/output data validation (type safety) on backend
+- [ ] Front end typesafety w/ zod
 
 # v0.6
 - [ ] Instant Reactivity in client, consider transitioning to UUID for id's in DB
     - [ ] Blog updates & creation should appear instant in client, some kind of spinner and validation message upon completion
+- [ ] Tag Input component like category component
+- [ ] Arrow key down in dropdowns should scroll the div down 
 - [ ] Login Page
     - [ ] Proper authentication token handling
 
@@ -72,4 +74,8 @@
 - [ ] Integrate with media-timeline project
     - [ ] Tightly integrated, not just sharing API keys but full linking workflow that feels natural
     - [ ] Obviously for this, have to finish up media-timeline as well.
+
+# v1.3
+- [ ] Light mode support & theme switcher
+- [ ] Refactor for support for multiple themes
 

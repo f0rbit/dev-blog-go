@@ -24,12 +24,12 @@ clean:
 
 run: clean build
 	@echo "Running..."
-	@DATABASE=${DATABASE_DIR} ./${BINARY_NAME}
+	@DATABASE=${DATABASE_DIR}?parseTime=true ./${BINARY_NAME}
 
 run-coverage: clean build-coverage
 	@echo "Runnnig with coverage"
 	@mkdir -p ${COVERAGE_DIR}
-	@GOCOVERDIR=${COVERAGE_DIR} DATABASE=${DATABASE_DIR} ./${BINARY_NAME}
+	@GOCOVERDIR=${COVERAGE_DIR} DATABASE=${DATABASE_DIR}?parseTime=true ./${BINARY_NAME}
 
 test: clean
 	@PORT=${TEST_PORT} AUTH_TOKEN=${TEST_TOKEN} ./test.sh

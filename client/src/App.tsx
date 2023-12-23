@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
 import './App.css'
 import React from 'react';
-import { ArrowDownNarrowWide, Filter, FolderTree, Home, LibraryBig, Plus, Save, Search, Settings, Tags, Trash } from 'lucide-react';
+import { ArrowDownNarrowWide, Edit, Filter, FolderTree, Home, LibraryBig, Plus, Save, Search, Settings, Tags, Trash, X } from 'lucide-react';
 import Modal from "./components/Modal";
 import CategoryInput from './components/CategoryInput';
 
@@ -11,9 +11,14 @@ type Post = {
     title: string,
     content: string,
     category: string,
+    tags: string[],
+    archived: 0 | 1,
+    publish_at: string,
     created_at: string,
     updated_at: string
 }
+
+type PostCreation = Omit<Post, "id" | "created_at" | "updated_at">
 
 type PostResponse = {
     posts: Post[],
@@ -35,11 +40,13 @@ interface PostContext {
 const PAGES = ["home", "posts", "categories", "tags", "settings"] as const;
 type Page = (typeof PAGES)[keyof typeof PAGES]
 
+type FunctionResponse = { success: true, error: null } | { success: false, error: string }
+
 const API_URL: string = import.meta.env.VITE_API_URL;
 const VERSION = "v0.4.0";
 console.log("Version: " + VERSION);
 
-const PostContext = React.createContext<PostContext>({ posts: {} as PostResponse, setPosts: () => { }, categories: [], setCategories: () => { }, tags: [], setTags: () => { } });
+export const PostContext = React.createContext<PostContext>({ posts: {} as PostResponse, setPosts: () => { }, categories: [], setCategories: () => { }, tags: [], setTags: () => { } });
 
 function App() {
     const [posts, setPosts] = useState<PostResponse>({} as PostResponse);
@@ -145,40 +152,72 @@ function HomePage() {
 }
 
 type PostSort = "created" | "edited" | "published" | "oldest";
+const EMPTY_POST_CREATION: PostCreation = {
+    slug: "",
+    title: "",
+    content: "",
+    category: "",
+    tags: [],
+    publish_at: "",
+    archived: 0
+}
 
 function PostsPage() {
-    const { posts, categories } = useContext(PostContext);
+    const { posts, setPosts, categories } = useContext(PostContext);
     const [selected, setSelected] = useState<PostSort>("created");
     const [openCreatePost, setOpenCreatePost] = useState(false);
+    const [filters, setFilters] = useState<PostFilters>({ category: null, tag: null });
+    const [creatingPost, setCreatingPost] = useState<PostCreation>(EMPTY_POST_CREATION);
 
     if (!posts || !posts.posts) return <p>No Posts Found!</p>;
 
 
-    async function createPost({ title, slug, content, category }: { title: string, slug: string, content: string, category: string }): Promise<{ success: true, error: null } | { success: false, error: string }> {
-        if (slug.includes(" ")) return { error: "Invalid Slug!", success: false } 
+    async function createPost(): Promise<FunctionResponse> {
+        // input validation
+        const { slug, category } = creatingPost;
+        if (slug.includes(" ")) return { error: "Invalid Slug!", success: false }
         const cat_list = Object.values(categories).map((cat: any) => cat.name);
-        console.log({ category, cat_list, categories });
         if (!(cat_list.includes(category))) return { error: "Invalid Category!", success: false }
-        const data = { title, slug, content, category };
-        const response = await fetch("http://localhost:8080/post/new", { method: "POST", body: JSON.stringify(data) });
+
+        // send request
+        const response = await fetch(`${API_URL}/post/new`, { method: "POST", body: JSON.stringify(creatingPost) });
         const result = await response.json();
-        posts.posts.push(result);
+        // update state?
+        setPosts({ ...posts, posts: [ ...posts.posts, result ] });
         return { error: null, success: true }
     }
 
     // sort posts
     let sorted_posts = structuredClone(posts.posts);
     switch (selected) {
-        case "edited": 
-            sorted_posts = sorted_posts.sort((a,b) => (new Date(b.updated_at).getTime()) - (new Date(a.updated_at).getTime()));
+        case "edited":
+            sorted_posts = sorted_posts.sort((a, b) => (new Date(b.updated_at).getTime()) - (new Date(a.updated_at).getTime()));
             break;
         case "created":
         case "oldest":
-            sorted_posts = sorted_posts.sort((a,b) => (new Date(b.updated_at).getTime()) - (new Date(a.updated_at).getTime()));
+            sorted_posts = sorted_posts.sort((a, b) => (new Date(b.updated_at).getTime()) - (new Date(a.updated_at).getTime()));
             if (selected == "oldest") sorted_posts.reverse();
             break;
         case "published":
             break;
+    }
+
+    let filtered_posts = sorted_posts.filter((p) => {
+        // tag filtering
+        if (filters.tag) {
+            const contains_tag = p.tags.includes(filters.tag);
+            if (!contains_tag) return false;
+        }
+        // category filtering
+        if (filters.category) {
+            if (p.category != filters.category) return false;
+        }
+        return true;
+    });
+
+    function closeEditor() {
+        setOpenCreatePost(false);
+        setCreatingPost(EMPTY_POST_CREATION);
     }
 
     return <main>
@@ -186,60 +225,154 @@ function PostsPage() {
             <label htmlFor='post-search'><Search /></label>
             <input type="text" id='post-search' />
             <SortControl selected={selected} setSelected={setSelected} />
-            <button><Filter /><span>Filter</span></button>
+            <FilterControl filters={filters} setFilters={setFilters} />
             <button style={{ marginLeft: "auto" }} onClick={() => setOpenCreatePost(true)}><Plus /><span>Create</span></button>
         </section>
         <section id='post-grid'>
-            {sorted_posts.map((p: any) => <PostCard key={p.id} post={p} />)}
+            {filtered_posts.map((p: any) => <PostCard key={p.id} post={p} />)}
         </section>
-        <Modal openModal={openCreatePost} closeModal={() => setOpenCreatePost(false)}>
-            <CreatePost create={createPost} />
+        <Modal openModal={openCreatePost} closeModal={closeEditor}>
+            <PostEditor post={creatingPost} setPost={setCreatingPost} save={createPost} type={"create"} cancel={closeEditor} />
         </Modal>
     </main>
 }
 
-function CreatePost({ create }: { create: (data: { title: string, slug: string, content: string, category: string }) => Promise<{ success: true, error: null } | { success: false, error: string }> }) {
-    const [title, setTitle] = useState<string>("");
-    const [slug, setSlug] = useState<string>("");
-    const [manualSlug, setManualSlug] = useState<boolean>(false);
-    const [content, setContent] = useState<string>("");
-    const [category, setCategory] = useState<string>("");
-    const [error, setError] = useState<string|null>(null);
 
+interface PostEditorProps {
+    post: PostCreation,
+    setPost: Dispatch<SetStateAction<PostCreation>>,
+    save: () => Promise<FunctionResponse>,
+    type: "create" | "edit",
+    cancel: () => void
+}
+
+function PostEditor({ post, setPost, save, type, cancel }: PostEditorProps) {
+    const [manualSlug, setManualSlug] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
     const { categories } = useContext(PostContext);
 
     function updateTitle(value: string) {
-        if (!manualSlug) {
-            setSlug(value.replaceAll(" ", "-").toLowerCase());
-        }
-        setTitle(value);
+        const update_post = { ...post, title: value };
+        if (!manualSlug) update_post['slug'] = value.replaceAll(" ", "-").toLowerCase();
+        setPost(update_post);
     }
 
     function updateSlug(value: string) {
         if (manualSlug == false) setManualSlug(true);
-        setSlug(value);
+        setPost({ ...post, slug: value });
     }
 
+    function SaveContent() {
+        switch (type) {
+            case "create": return <><Save />Create</>
+            case "edit": return <><Save />Save</>
+        }
+    }
+
+    function setPublishDate(value: any) {
+        setPost({...post, publish_at: value });
+    }
+
+    const edit_time = post.publish_at?.length > 1 ? toIsoString(new Date(post.publish_at)): "";
 
     return <div className="flex-col">
-        <h3>Create Post</h3>
+        <h3 style={{ textTransform: "capitalize" }}>{type} Post</h3>
         <div className="input-grid">
-            <label>Title</label><input type="text" value={title} onChange={(e) => updateTitle(e.target.value)} />
-            <label>Slug</label><input type="text" value={slug} onChange={(e) => updateSlug(e.target.value)}/>
-            <label>Category</label><CategoryInput categories={categories} setValue={(c) => setCategory(c)} />
-            <label>Publish</label><input type="date" />
-            <label style={{ placeSelf: "stretch" }}>Content</label><textarea style={{ gridColumn: "span 3", fontFamily: "monospace" }} rows={10} value={content} onChange={(e) => setContent(e.target.value)} />
+            <label>Title</label><input type="text" value={post.title} onChange={(e) => updateTitle(e.target.value)} />
+            <label>Slug</label><input type="text" value={post.slug} onChange={(e) => updateSlug(e.target.value)} />
+            <label>Category</label><CategoryInput value={post.category} categories={categories} setValue={(c) => setPost({ ...post, category: c })} />
+            <label>Publish</label><input type="datetime-local" value={edit_time} onChange={(e) => setPublishDate(new Date(e.target.value).toISOString())} />
+            <label style={{ placeSelf: "stretch" }}>Content</label><textarea style={{ gridColumn: "span 3", fontFamily: "monospace" }} rows={10} value={post.content} onChange={(e) => setPost({ ...post, content: e.target.value })} />
+            <label>Tags</label><TagEditor tags={post.tags} setTags={(tags) => setPost({...post, tags })} />
         </div>
-        {error && <p className="error-message">{error}</p>} 
+        {error && <p className="error-message">{error}</p>}
         <div className="flex-row center">
-            <button onClick={() => create({ title, slug, content, category }).then((res) => setError(res.error))}><Save />Save</button><button><Trash />Cancel</button>
+            <button onClick={() => save().then((res) => setError(res.error))}><SaveContent /></button><button onClick={cancel}><X />Cancel</button>
         </div>
     </div>
 }
 
-function PostCard({ post }: { post: Post }) {
+function toIsoString(date: Date) {
+    const pad = function(num: number) {
+        return (num < 10 ? '0' : '') + num;
+    };
 
-    return <div className='post-card'>
+  return date.getFullYear() +
+      '-' + pad(date.getMonth() + 1) +
+      '-' + pad(date.getDate()) +
+      'T' + pad(date.getHours()) +
+      ':' + pad(date.getMinutes()) +
+      ':' + pad(date.getSeconds())
+}
+
+
+function TagEditor({ tags, setTags }: { tags: Post['tags'], setTags: (tags: Post['tags']) => void}) {
+    const [input, setInput] = useState("");
+
+    function add() {
+        setTags([...tags, input ]);
+        setInput("");
+    }
+
+    return <div className="flex-row tag-editor">
+        <input type="text" 
+            value={input} 
+            onChange={(e) => setInput(e.target.value) }
+            onKeyDown={(e) => { if (e.key == 'Enter' || e.key == 'Tab') { add(); e.preventDefault() }}}
+        />
+        <button onClick={() => { setTags([...tags, input]); setInput("") }}><Plus /></button>
+        {tags.map((tag, index) => <Tag key={index} tag={tag} remove={() => setTags(tags.toSpliced(index, 1))} />)}
+    </div>
+}
+
+function Tag({ tag, remove }: { tag: string, remove: (() => void) | null }) {
+    return <div className="flex-row center tag">
+        <span>{tag}</span>
+        {remove && <button onClick={remove}><X /></button>}
+    </div>;
+}
+
+function PostCard({ post }: { post: Post }) {
+    const [editorOpen, setEditorOpen] = useState(false);
+    const [editingPost, setEditingPost] = useState<PostCreation>({ ...post });
+    const { posts, setPosts } = useContext(PostContext);
+
+    const deletePost = async (): Promise<FunctionResponse> => {
+        setEditingPost({ ...editingPost, archived: 1 });
+        return savePost();
+    }
+
+    const savePost = async (): Promise<FunctionResponse> => {
+        const id = post.id;
+        const upload_post: PostCreation & { id: number } = {
+            ...editingPost,
+            id,
+            publish_at: new Date(editingPost.publish_at).toISOString()
+        }
+        // send upload post to server
+        const response = await fetch(`${API_URL}/post/edit`, { method: "PUT", body: JSON.stringify(upload_post) });
+        if (!response || !response.ok) return { error: "Invalid Response", success: false };
+        // update state
+        setPosts({ ...posts, posts: posts.posts.map((p) => {
+            if (p.id != id) return p;
+            return { ...p, ...upload_post };
+        }) });
+        return { error: null, success: true };
+    }
+
+    function close() {
+        setEditorOpen(false);
+        setEditingPost({ ...post });
+    }
+
+    return <div className='post-card hidden-parent'>
+        <Modal openModal={editorOpen} closeModal={close}>
+            <PostEditor post={editingPost} setPost={setEditingPost} save={savePost} type={"edit"} cancel={close} />
+        </Modal>
+        <div className='flex-row center top-right hidden-child'>
+            <button onClick={deletePost}><Trash /></button>
+            <button onClick={() => setEditorOpen(true)}><Edit /></button>
+        </div>
         <h2>{post.title}</h2>
         <pre>{post.slug}</pre>
         <p>{post.content}</p>
@@ -261,6 +394,29 @@ function SortControl({ selected, setSelected }: { selected: PostSort, setSelecte
             <SortButton sort="published" />
             <SortButton sort="oldest" />
         </>}
+    </>
+}
+
+type PostFilters = {
+    category: Post['category'] | null,
+    tag: string | null
+}
+
+function FilterControl({ filters, setFilters }: { filters: PostFilters, setFilters: Dispatch<SetStateAction<PostFilters>> }) {
+    const [open, setOpen] = useState(false);
+    const { categories } = useContext(PostContext)
+
+    const applied = filters.category || filters.tag;
+
+    return <>
+        <button onClick={() => setOpen(!open)}><Filter /><span>Filter</span></button>
+        {open && <>
+            <FolderTree />
+            <CategoryInput value={filters.category ?? ""} categories={categories} key={0} setValue={(c) => setFilters({ ...filters, category: c })}  />
+            <Tags />
+            <input type="text" value={filters.tag ?? ""} onChange={(e) => setFilters({ ...filters, tag: e.target.value }) } />
+        </>}
+        {(applied || open) && <button title="Clear" onClick={() => { setFilters({ category: null, tag: null }); setOpen(false) }}><X /></button>}
     </>
 }
 

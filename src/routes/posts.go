@@ -152,7 +152,28 @@ func fetchPosts(category string, limit, offset int, tag string) ([]types.Post, i
 	log.Infof("Found %d posts", totalPosts)
 
 	// Query to fetch paginated posts for the given category
-	query := fmt.Sprintf("SELECT id, slug, title, content, category, created_at, updated_at FROM posts WHERE category IN (%s) LIMIT ? OFFSET ?", inClause)
+	query := fmt.Sprintf(`
+    SELECT 
+        posts.id, 
+        posts.slug, 
+        posts.title, 
+        posts.content, 
+        posts.category, 
+        posts.archived,
+        posts.publish_at,
+        posts.created_at, 
+        posts.updated_at,
+        GROUP_CONCAT(tags.tag) AS tags
+    FROM 
+        posts 
+    LEFT JOIN
+        tags ON posts.id = tags.post_id
+    WHERE 
+        posts.category IN (%s) 
+    GROUP BY
+        posts.id
+    LIMIT ? 
+    OFFSET ?`, inClause)
 
 	search_categories = append(search_categories, limit)
 	search_categories = append(search_categories, offset)
@@ -160,15 +181,26 @@ func fetchPosts(category string, limit, offset int, tag string) ([]types.Post, i
 
 	rows, err := db.Query(query, search_categories...)
 	if err != nil {
+        log.Error("Error during posts query", "err", err)
 		return posts, len(posts), err
 	}
 
 	for rows.Next() {
 		var post types.Post
-		err := rows.Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.CreatedAt, &post.UpdatedAt)
+        var tags sql.NullString
+		err := rows.Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.Archived, &post.PublishAt, &post.CreatedAt, &post.UpdatedAt, &tags)
+
 		if err != nil {
+            log.Error("Error during scanning posts", "err", err)
 			return posts, totalPosts, err
 		}
+
+        if tags.Valid {
+            post.Tags = strings.Split(tags.String, ",")
+        } else {
+            post.Tags = []string{}
+        }
+
 		posts = append(posts, post)
 	}
 
