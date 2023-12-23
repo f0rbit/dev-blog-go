@@ -14,8 +14,8 @@ type Post struct {
 	Content   string    `json:"content"`
 	Category  string    `json:"category"`
 	Tags      []string  `json:"tags"`
-    Archived  int       `json:"archived"`
-    PublishAt time.Time `json:"publish_at"`
+	Archived  bool      `json:"archived"`
+    PublishAt time.Time `json:"publish_at" time_format:"sql_datetime"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

@@ -4,6 +4,7 @@ import React from 'react';
 import { ArrowDownNarrowWide, Edit, Filter, FolderTree, Home, LibraryBig, Plus, Save, Search, Settings, Tags, Trash, X } from 'lucide-react';
 import Modal from "./components/Modal";
 import CategoryInput from './components/CategoryInput';
+import { DateTime } from "luxon";
 
 type Post = {
     id: number,
@@ -12,6 +13,8 @@ type Post = {
     content: string,
     category: string,
     tags: string[],
+    archived: 0 | 1,
+    publish_at: string,
     created_at: string,
     updated_at: string
 }
@@ -155,7 +158,9 @@ const EMPTY_POST_CREATION: PostCreation = {
     title: "",
     content: "",
     category: "",
-    tags: []
+    tags: [],
+    publish_at: "",
+    archived: 0
 }
 
 function PostsPage() {
@@ -265,13 +270,19 @@ function PostEditor({ post, setPost, save, type, cancel }: PostEditorProps) {
         }
     }
 
+    function setPublishDate(value: any) {
+        console.log({ value });
+        setPost({...post, publish_at: value });
+    }
+
+
     return <div className="flex-col">
         <h3 style={{ textTransform: "capitalize" }}>{type} Post</h3>
         <div className="input-grid">
             <label>Title</label><input type="text" value={post.title} onChange={(e) => updateTitle(e.target.value)} />
             <label>Slug</label><input type="text" value={post.slug} onChange={(e) => updateSlug(e.target.value)} />
             <label>Category</label><CategoryInput value={post.category} categories={categories} setValue={(c) => setPost({ ...post, category: c })} />
-            <label>Publish</label><input type="date" />
+            <label>Publish</label><input type="datetime-local" value={DateTime.fromISO(post.publish_at).toISO({ includeOffset: false }) ?? ""} onChange={(e) => setPublishDate(DateTime.fromISO(e.target.value).toISO({ includeOffset: false }))} />
             <label style={{ placeSelf: "stretch" }}>Content</label><textarea style={{ gridColumn: "span 3", fontFamily: "monospace" }} rows={10} value={post.content} onChange={(e) => setPost({ ...post, content: e.target.value })} />
             <label>Tags</label><TagEditor tags={post.tags} setTags={(tags) => setPost({...post, tags })} />
         </div>
@@ -315,17 +326,16 @@ function PostCard({ post }: { post: Post }) {
     const { posts, setPosts } = useContext(PostContext);
 
     const deletePost = async (): Promise<FunctionResponse> => {
-        const response = await fetch(`${API_URL}/post/delete/${post.id}`, { method: "DELETE" });
-        if (!response || !response.ok) return { error: "Invalid response", success: false };
-        setPosts({ ...posts, posts: posts.posts.filter((p) => p.id != post.id) });
-        return { success: true, error: null };
+        setEditingPost({ ...editingPost, archived: 1 });
+        return savePost();
     }
 
     const savePost = async (): Promise<FunctionResponse> => {
         const id = post.id;
-        const upload_post = {
+        const upload_post: PostCreation & { id: number } = {
             ...editingPost,
-            id
+            id,
+            publish_at: DateTime.fromISO(editingPost.publish_at).toUTC().toString()
         }
         // send upload post to server
         const response = await fetch(`${API_URL}/post/edit`, { method: "PUT", body: JSON.stringify(upload_post) });

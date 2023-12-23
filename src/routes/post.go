@@ -240,9 +240,10 @@ func updatePost(updatedPost *types.Post) error {
 	}
 	defer db.Close()
 
+    log.Info("updating", "publish_at", updatedPost.PublishAt)
 	// Update the post in the database
 	_, err = db.Exec("UPDATE posts SET slug = ?, title = ?, content = ?, category = ?, archived = ?, publish_at = ? WHERE id = ?",
-		updatedPost.Slug, updatedPost.Title, updatedPost.Content, updatedPost.Category, updatedPost.Id, updatedPost.Archived, updatedPost.PublishAt)
+		updatedPost.Slug, updatedPost.Title, updatedPost.Content, updatedPost.Category, updatedPost.Archived, updatedPost.PublishAt, updatedPost.Id)
 
     // Update the tags
     // first we drop all the previous tags and then re-add
