@@ -2,7 +2,7 @@
 package routes
 
 import (
-	"database/sql"
+    "blog-server/database"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -12,13 +12,7 @@ import (
 )
 
 func AddPostTag(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("sqlite3", database)
-	if err != nil {
-		log.Error("Error opening database", "err", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	defer db.Close()
+    var db = database.Connection();
 
     id, tag, err := parseTagParams(r)
     if err != nil {
@@ -39,13 +33,7 @@ func AddPostTag(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeletePostTag(w http.ResponseWriter, r *http.Request) {
-    db, err := sql.Open("sqlite3", database)
-	if err != nil {
-		log.Error("Error opening database", "err", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	defer db.Close()
+    var db = database.Connection();
 
     id, tag, err := parseTagParams(r)
     if err != nil {
@@ -66,13 +54,8 @@ func DeletePostTag(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTags(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("sqlite3", database)
-	if err != nil {
-		log.Error("Error opening database", "err", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	defer db.Close()
+    var db = database.Connection();
+
 	rows, err := db.Query("SELECT DISTINCT tag FROM tags")
 	if err != nil {
 		log.Error("Query error", "err", err)

@@ -2,6 +2,7 @@
 package routes
 
 import (
+	"blog-server/database"
 	"blog-server/types"
 	"database/sql"
 	"encoding/json"
@@ -100,12 +101,7 @@ func GetPostsByCategory(w http.ResponseWriter, r *http.Request) {
 func fetchPosts(category string, limit, offset int, tag string) ([]types.Post, int, error) {
 	var posts []types.Post
 	var totalPosts int
-
-	db, err := sql.Open("sqlite3", database)
-	if err != nil {
-		return posts, totalPosts, err
-	}
-	defer db.Close()
+    var db = database.Connection();
 
 	log.Info("Searching for posts", "category", category, "tag", tag)
 

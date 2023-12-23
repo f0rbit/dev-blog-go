@@ -2,6 +2,7 @@
 package main
 
 import (
+	"blog-server/database"
 	"blog-server/routes"
 	"context"
 	"errors"
@@ -13,14 +14,16 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/gorilla/mux"
-    "github.com/rs/cors"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/rs/cors"
 )
 
 var AUTH_TOKEN = os.Getenv("AUTH_TOKEN")
 
 func main() {
 	log.SetLevel(log.DebugLevel)
+
+    database.Connect()
 
 	r := mux.NewRouter()
     // Middleware for checking 'Auth-Token' header

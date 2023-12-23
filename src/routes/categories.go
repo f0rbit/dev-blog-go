@@ -2,8 +2,8 @@
 package routes
 
 import (
+	"blog-server/database"
 	"blog-server/types"
-	"database/sql"
 	"encoding/json"
 	"net/http"
 
@@ -36,11 +36,7 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
 
 func fetchCategories() ([]types.Category, error) {
 	var categories []types.Category
-	db, err := sql.Open("sqlite3", database)
-	if err != nil {
-		return categories, err
-	}
-	defer db.Close()
+    var db = database.Connection();
 	rows, err := db.Query("SELECT name, parent FROM categories")
 	if err != nil {
 		return categories, err
