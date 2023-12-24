@@ -34,7 +34,6 @@ func FetchPost(identifier Identifier, needle interface{}) (types.Post, error) {
         posts
     LEFT JOIN
         tags ON posts.id = tags.post_id
-    
     `
 	var query string
 	if identifier == "id" {

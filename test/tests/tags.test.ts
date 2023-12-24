@@ -19,7 +19,6 @@ beforeAll(async () => {
     expect(result.id).toBeTruthy();
     expect(result.slug).toBe(test_post.slug);
     test_id = result.id;
-    console.log(test_id);
 });
 
 describe("tags", () => {
@@ -68,4 +67,11 @@ describe("tags", () => {
         const check_result = await check.json();
         expect(check_result).not.toContain("test-tag");
     })
+    test("unauthorized delete tag", async () => {
+        const response = await fetch(`localhost:8080/post/tag?id=${test_id}&tag=test-tag`, { method: "DELETE" });
+        expect(response).toBeTruthy();
+        expect(response.ok).toBeFalse();
+        expect(response.status).toBe(401);
+        expect(response.statusText).toBe("Unauthorized");
+    });
 })

@@ -10,10 +10,12 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+    "github.com/charmbracelet/log"
 )
 
 func GetPostBySlug(w http.ResponseWriter, r *http.Request) {
 	var slug string = mux.Vars(r)["slug"];
+    log.Info("fetching by", "slug", slug);
 	if len(slug) == 0 {
         utils.LogError("No slug specified", nil, http.StatusBadRequest, w);
 		return;
@@ -21,7 +23,7 @@ func GetPostBySlug(w http.ResponseWriter, r *http.Request) {
 
 	post, err := database.FetchPost(database.Slug, slug)
 	if err != nil {
-        utils.LogError("Error fetching post by ID", err, http.StatusInternalServerError, w);
+        utils.LogError("Error fetching post by slug", err, http.StatusNotFound, w);
 		return
 	}
 
