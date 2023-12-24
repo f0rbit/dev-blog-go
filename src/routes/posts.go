@@ -4,20 +4,18 @@ package routes
 import (
 	"blog-server/database"
 	"blog-server/types"
-	"encoding/json"
+	"blog-server/utils"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/charmbracelet/log"
 	"github.com/gorilla/mux"
 )
 
 func FetchPosts(w http.ResponseWriter, r *http.Request) {
 	limit, offset, err := parsePaginationParams(r)
 	if err != nil {
-		log.Error("Error parsing params", "err", err)
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+        utils.LogError("Error parsing params", err, http.StatusBadRequest, w);
 		return
 	}
 
@@ -30,8 +28,7 @@ func FetchPosts(w http.ResponseWriter, r *http.Request) {
 
 	posts, totalPosts, err := database.GetPosts(category, tag, limit, offset)
 	if err != nil {
-		log.Error("Error fetching posts by category", "err", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+        utils.LogError("Error fetching posts by categorty", err, http.StatusInternalServerError, w);
 		return
 	}
 
@@ -48,15 +45,7 @@ func FetchPosts(w http.ResponseWriter, r *http.Request) {
 		CurrentPage: currentPage,
 	}
 
-	encoded, err := json.Marshal(response)
-	if err != nil {
-		log.Error("Error converting posts to JSON", "err", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(encoded)
+    utils.ResponseJSON(response, w);
 }
 
 func buildPreparedParams(length int) string {

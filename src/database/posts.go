@@ -2,6 +2,7 @@ package database
 
 import (
 	"blog-server/types"
+	"blog-server/utils"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -177,7 +178,7 @@ func GetPosts(category, tag string, limit, offset int) ([]types.Post, int, error
 		}
 	} else {
 		// go through categories here (they have properties .name and .parent)
-		children := getChildrenCategories(categories, category)
+		children := utils.GetChildrenCategories(categories, category)
 		for i := 0; i < len(children); i++ {
 			search_categories = append(search_categories, children[i].Name)
 		}
@@ -267,19 +268,4 @@ func GetPosts(category, tag string, limit, offset int) ([]types.Post, int, error
 	return posts, totalPosts, nil
 }
 
-func getChildrenCategories(categories []types.Category, parent string) []types.Category {
-	var cats []types.Category
 
-	for i := 0; i < len(categories); i++ {
-		if categories[i].Parent == parent {
-			cats = append(cats, categories[i])
-			// add all the children as well
-			var children = getChildrenCategories(categories, categories[i].Name)
-			for j := 0; j < len(children); j++ {
-				cats = append(cats, children[j])
-			}
-		}
-	}
-
-	return cats
-}

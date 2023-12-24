@@ -18,8 +18,6 @@ import (
 	"github.com/rs/cors"
 )
 
-var AUTH_TOKEN = os.Getenv("AUTH_TOKEN")
-
 func main() {
 	log.SetLevel(log.DebugLevel)
 	// set up database
@@ -52,7 +50,7 @@ func main() {
 
 	// Start the server
 	port := os.Getenv("PORT")
-	log.Infof("Server started on port %s", port)
+	log.Info("Server started", "port", port)
 	server := &http.Server{
 		Addr:    ":" + port,
 		Handler: c.Handler(r),
@@ -80,6 +78,8 @@ func main() {
 
 // this is the header we look for in the query for auth token.
 const AUTH_HEADER = "Auth-Token"
+
+var AUTH_TOKEN = os.Getenv("AUTH_TOKEN")
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

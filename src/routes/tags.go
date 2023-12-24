@@ -3,46 +3,40 @@ package routes
 
 import (
 	"blog-server/database"
-	"encoding/json"
+	"blog-server/utils"
 	"errors"
 	"net/http"
 	"strconv"
-
-	"github.com/charmbracelet/log"
 )
 
 func AddPostTag(w http.ResponseWriter, r *http.Request) {
-	id, tag, err := parseTagParams(r)
+	params, err := getTagParams(r);
 	if err != nil {
-		log.Error("Error parsing params", "err", err)
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
+        utils.LogError("Error parsing params", err, http.StatusBadRequest, w);
+		return;
 	}
 
-	err = database.CreateTag(id, tag)
+	err = database.CreateTag(params.id, params.tag);
 
 	if err != nil {
-		log.Warn("Error inserting tag", "err", err)
-		http.Error(w, "Error creating tag", http.StatusInternalServerError)
-		return
+        utils.LogError("Error inserting tag", err, http.StatusInternalServerError, w);
+		return;
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusOK);
 }
 
 func DeletePostTag(w http.ResponseWriter, r *http.Request) {
-	id, tag, err := parseTagParams(r)
+	params, err := getTagParams(r)
 	if err != nil {
-		log.Error("Error parsing params", "err", err)
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
+        utils.LogError("Error parsing params", err, http.StatusBadRequest, w);
+		return;
 	}
 
-	err = database.DeleteTag(id, tag)
+	err = database.DeleteTag(params.id, params.tag)
 
 	if err != nil {
-		log.Warn("Error deleting tag", "err", err)
-		http.Error(w, "Error deleting tag", http.StatusInternalServerError)
+        utils.LogError("Error deleting tag", err, http.StatusInternalServerError, w);
 		return
 	}
 
@@ -52,40 +46,37 @@ func DeletePostTag(w http.ResponseWriter, r *http.Request) {
 func GetTags(w http.ResponseWriter, r *http.Request) {
 	tags, err := database.GetTags()
 	if err != nil {
-		log.Error("Error fetching tags", "err", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	// and then respond with json
-	encoded, err := json.Marshal(tags)
-	if err != nil {
-		log.Error("Error marshalling categories to JSON", "err", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+        utils.LogError("Error fetching tags", err, http.StatusInternalServerError, w);
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(encoded)
+    utils.ResponseJSON(tags, w);
 }
 
-func parseTagParams(r *http.Request) (int, string, error) {
-	idstr := r.URL.Query().Get("id")
+type TagParams struct {
+	id  int
+	tag string
+}
+
+func getTagParams(r *http.Request) (TagParams, error) {
+	idstr := r.URL.Query().Get("id") // will be converted to an integer
 	tag := r.URL.Query().Get("tag")
-	id := 0
-	var err error
+    params := TagParams{0, tag}
 	if idstr != "" {
-		id, err = strconv.Atoi(idstr)
+        id, err := strconv.Atoi(idstr)
 		if err != nil {
-			return 0, "", err
+			return params, err
 		}
+        params.id = id;
 	} else {
-		return 0, "", errors.New("Invalid id")
+        // id is a required param
+		return params, errors.New("Invalid id")
 	}
 
-	if tag == "" || len(tag) <= 0 {
-		return 0, "", errors.New("Invalid tag")
+	if params.tag == "" || len(params.tag) <= 0 {
+        // tag is a required param
+		return params, errors.New("Invalid tag")
 	}
 
-	return id, tag, nil
+	return params, nil
 }
