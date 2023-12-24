@@ -26,7 +26,7 @@ type Page = (typeof PAGES)[keyof typeof PAGES]
 export type FunctionResponse = { success: true, error: null } | { success: false, error: string }
 
 export const API_URL: string = import.meta.env.VITE_API_URL;
-const VERSION = "v0.6.0";
+const VERSION = "v0.5.0";
 console.log("Version: " + VERSION);
 
 export const PostContext = React.createContext<PostContext>({ posts: {} as PostsResponse, setPosts: () => { }, categories: {} as CategoryResponse, setCategories: () => { }, tags: [], setTags: () => { } });

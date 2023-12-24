@@ -13,7 +13,7 @@ const EMPTY_POST_CREATION: PostCreation = {
     category: "",
     tags: [],
     publish_at: "",
-    archived: 0
+    archived: false
 }
 
 export function PostsPage() {
@@ -197,7 +197,7 @@ function PostCard({ post }: { post: Post }) {
     const { posts, setPosts } = useContext(PostContext);
 
     const deletePost = async (): Promise<FunctionResponse> => {
-        setEditingPost({ ...editingPost, archived: 1 });
+        setEditingPost({ ...editingPost, archived: true });
         return savePost();
     }
 
