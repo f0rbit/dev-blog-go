@@ -2,8 +2,8 @@
 package routes
 
 import (
+	"blog-server/database"
 	"blog-server/types"
-    "blog-server/database"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -24,7 +24,7 @@ func GetPostBySlug(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch the post by ID
 	// post, err := fetchPostBySlug(slug)
-    post, err := database.FetchPost(database.Slug, slug); 
+	post, err := database.FetchPost(database.Slug, slug)
 	if err != nil {
 		log.Error("Error fetching post by ID", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -55,14 +55,14 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Insert the new post into the database
-    id, err := database.CreatePost(&newPost)
+	id, err := database.CreatePost(&newPost)
 	if err != nil {
 		log.Error("Error creating new post", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 	// Fetch the complete post with the new ID
-    createdPost, err := database.FetchPost(database.ID, id)
+	createdPost, err := database.FetchPost(database.ID, id)
 	if err != nil {
 		log.Error("Error fetching created post", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

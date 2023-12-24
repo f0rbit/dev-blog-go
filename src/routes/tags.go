@@ -2,7 +2,7 @@
 package routes
 
 import (
-    "blog-server/database"
+	"blog-server/database"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -12,56 +12,56 @@ import (
 )
 
 func AddPostTag(w http.ResponseWriter, r *http.Request) {
-    id, tag, err := parseTagParams(r)
-    if err != nil {
-        log.Error("Error parsing params", "err", err)
-        http.Error(w, "Bad Request", http.StatusBadRequest)
-        return
-    }
+	id, tag, err := parseTagParams(r)
+	if err != nil {
+		log.Error("Error parsing params", "err", err)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 
-    err = database.CreateTag(id, tag);
+	err = database.CreateTag(id, tag)
 
-    if err != nil {
-        log.Warn("Error inserting tag", "err", err)
-        http.Error(w, "Error creating tag", http.StatusInternalServerError)
-        return
-    }
+	if err != nil {
+		log.Warn("Error inserting tag", "err", err)
+		http.Error(w, "Error creating tag", http.StatusInternalServerError)
+		return
+	}
 
-    w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusOK)
 }
 
 func DeletePostTag(w http.ResponseWriter, r *http.Request) {
-    id, tag, err := parseTagParams(r)
-    if err != nil {
-        log.Error("Error parsing params", "err", err)
-        http.Error(w, "Bad Request", http.StatusBadRequest)
-        return
-    }
+	id, tag, err := parseTagParams(r)
+	if err != nil {
+		log.Error("Error parsing params", "err", err)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 
-    err = database.DeleteTag(id, tag)
+	err = database.DeleteTag(id, tag)
 
-    if err != nil {
-        log.Warn("Error deleting tag", "err", err)
-        http.Error(w, "Error deleting tag", http.StatusInternalServerError)
-        return
-    }
+	if err != nil {
+		log.Warn("Error deleting tag", "err", err)
+		http.Error(w, "Error deleting tag", http.StatusInternalServerError)
+		return
+	}
 
-    w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusOK)
 }
 
 func GetTags(w http.ResponseWriter, r *http.Request) {
-    tags, err := database.GetTags();
-    if err != nil {
-        log.Error("Error fetching tags", "err", err);
-        http.Error(w, "Internal Server Error", http.StatusInternalServerError);
-        return;
-    }
+	tags, err := database.GetTags()
+	if err != nil {
+		log.Error("Error fetching tags", "err", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 	// and then respond with json
 	encoded, err := json.Marshal(tags)
 	if err != nil {
 		log.Error("Error marshalling categories to JSON", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return;
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")

@@ -3,7 +3,6 @@ package routes
 
 import (
 	"blog-server/database"
-	"blog-server/types"
 	"encoding/json"
 	"net/http"
 
@@ -32,21 +31,4 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(encoded)
-}
-
-func getChildrenCategories(categories []types.Category, parent string) []types.Category {
-	var cats []types.Category
-
-	for i := 0; i < len(categories); i++ {
-		if categories[i].Parent == parent {
-			cats = append(cats, categories[i])
-			// add all the children as well
-			var children = getChildrenCategories(categories, categories[i].Name)
-			for j := 0; j < len(children); j++ {
-				cats = append(cats, children[j])
-			}
-		}
-	}
-
-	return cats
 }

@@ -22,40 +22,40 @@ var AUTH_TOKEN = os.Getenv("AUTH_TOKEN")
 
 func main() {
 	log.SetLevel(log.DebugLevel)
-    // set up database
-    database.Connect()
-    // set up router with auth middleware
+	// set up database
+	database.Connect()
+	// set up router with auth middleware
 	r := mux.NewRouter()
 	r.Use(AuthMiddleware)
-    // posts
-	r.HandleFunc("/posts", routes.GetPosts).Methods("GET")
-	r.HandleFunc("/posts/{category}", routes.GetPostsByCategory).Methods("GET")
-    // individual post functions
+	// posts
+	r.HandleFunc("/posts", routes.FetchPosts).Methods("GET")
+	r.HandleFunc("/posts/{category}", routes.FetchPosts).Methods("GET")
+	// individual post functions
 	r.HandleFunc("/post/{slug}", routes.GetPostBySlug).Methods("GET")
 	r.HandleFunc("/post/new", routes.CreatePost).Methods("POST")
 	r.HandleFunc("/post/edit", routes.EditPost).Methods("PUT")
 	r.HandleFunc("/post/delete/{id}", routes.DeletePost).Methods("DELETE")
-    // category
+	// category
 	r.HandleFunc("/categories", routes.GetCategories).Methods("GET")
-    // tags
-    r.HandleFunc("/post/tag", routes.AddPostTag).Methods("PUT")
-    r.HandleFunc("/post/tag", routes.DeletePostTag).Methods("DELETE")
-    r.HandleFunc("/tags", routes.GetTags).Methods("GET")
+	// tags
+	r.HandleFunc("/post/tag", routes.AddPostTag).Methods("PUT")
+	r.HandleFunc("/post/tag", routes.DeletePostTag).Methods("DELETE")
+	r.HandleFunc("/tags", routes.GetTags).Methods("GET")
 
-    // modify cors
-    c := cors.New(cors.Options{
-        AllowedOrigins: []string{"http://localhost:5173", "https://f0rbit.github.io"},
-        AllowedHeaders: []string{"Content-Type"},
-        AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-        AllowCredentials: true,
-    })
+	// modify cors
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173", "https://f0rbit.github.io"},
+		AllowedHeaders:   []string{"Content-Type"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowCredentials: true,
+	})
 
 	// Start the server
-	port := os.Getenv("PORT") 
+	port := os.Getenv("PORT")
 	log.Infof("Server started on port %s", port)
 	server := &http.Server{
-		Addr: ":" + port,
-        Handler: c.Handler(r),
+		Addr:    ":" + port,
+		Handler: c.Handler(r),
 	}
 
 	go func() {
@@ -78,14 +78,19 @@ func main() {
 	log.Info("Graceful shutdown complete.")
 }
 
-
 // this is the header we look for in the query for auth token.
-const AUTH_HEADER = "Auth-Token";
+const AUTH_HEADER = "Auth-Token"
 
 func AuthMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        if r.Method == http.MethodGet { next.ServeHTTP(w,r); return; }
-        if r.Header.Get(AUTH_HEADER) == AUTH_TOKEN { next.ServeHTTP(w,r); return; }
-        http.Error(w, "Unauthorized", http.StatusUnauthorized);
-    })
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			next.ServeHTTP(w, r)
+			return
+		}
+		if r.Header.Get(AUTH_HEADER) == AUTH_TOKEN {
+			next.ServeHTTP(w, r)
+			return
+		}
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	})
 }
