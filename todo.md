@@ -45,6 +45,8 @@
     - [ ] Front end
 - [x] > 80% test coverage
 - [ ] Front end typesafety w/ zod
+    - [x] Create zod schemas
+    - [ ] Validate responses
 
 # v0.6
 - [ ] Instant Reactivity in client, consider transitioning to UUID for id's in DB
