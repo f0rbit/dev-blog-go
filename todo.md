@@ -43,7 +43,7 @@
 - [ ] Refactor & simplify code bases
     - [x] Back end
     - [ ] Front end
-- [ ] > 85% test coverage
+- [x] > 80% test coverage
 - [ ] Front end typesafety w/ zod
 
 # v0.6
