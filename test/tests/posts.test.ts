@@ -1,14 +1,5 @@
 import { expect, test, describe, afterAll } from "bun:test";
-
-type Post = {
-    id: number,
-    slug: string,
-    title: string,
-    content: string,
-    category: string,
-    created_at: string,
-    updated_at: string
-}
+import type { Post } from "@client/schema";
 
 type PostsResponse = {
     posts: Post[],
