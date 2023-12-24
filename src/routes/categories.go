@@ -16,5 +16,12 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    utils.ResponseJSON(categories, w);
+    graph := database.ConstructCategoryGraph(categories, "root");
+
+    response :=  map[string]interface{}{
+        "categories": categories,
+        "graph": graph,
+    }
+
+    utils.ResponseJSON(response, w);
 }

@@ -17,3 +17,16 @@ func GetCategories() ([]types.Category, error) {
 	}
 	return categories, nil
 }
+
+func ConstructCategoryGraph(categories []types.Category, root string) types.CategoryNode {
+    var node = types.CategoryNode{
+        Name: root,
+        Children: make([]types.CategoryNode, 0),
+    }
+	for _, cat := range categories {
+		if cat.Parent == node.Name {
+            node.Children = append(node.Children, ConstructCategoryGraph(categories, cat.Name))
+		}
+	}
+	return node;
+}

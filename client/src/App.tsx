@@ -28,10 +28,15 @@ type PostResponse = {
     per_page: number,
 }
 
+type CategoryNode = {
+    name: string,
+    children: CategoryNode[]
+}
+
 interface PostContext {
     posts: PostResponse,
     setPosts: Dispatch<SetStateAction<PostResponse>>,
-    categories: any,
+    categories: { categories: { name: string, parent: string }[], graph: CategoryNode } | null,
     setCategories: Dispatch<SetStateAction<any>>,
     tags: string[],
     setTags: Dispatch<SetStateAction<string[]>>
@@ -46,11 +51,11 @@ const API_URL: string = import.meta.env.VITE_API_URL;
 const VERSION = "v0.4.0";
 console.log("Version: " + VERSION);
 
-export const PostContext = React.createContext<PostContext>({ posts: {} as PostResponse, setPosts: () => { }, categories: [], setCategories: () => { }, tags: [], setTags: () => { } });
+export const PostContext = React.createContext<PostContext>({ posts: {} as PostResponse, setPosts: () => { }, categories: null, setCategories: () => { }, tags: [], setTags: () => { } });
 
 function App() {
     const [posts, setPosts] = useState<PostResponse>({} as PostResponse);
-    const [categories, setCategories] = useState([]);
+    const [categories, setCategories] = useState(null);
     const [page, setPage] = useState<Page>("home");
     const [tags, setTags] = useState<string[]>([]);
 
@@ -176,7 +181,8 @@ function PostsPage() {
         // input validation
         const { slug, category } = creatingPost;
         if (slug.includes(" ")) return { error: "Invalid Slug!", success: false }
-        const cat_list = Object.values(categories).map((cat: any) => cat.name);
+        if (categories == null) return { error: "Not fetched categories", success: false };
+        const cat_list = Object.values(categories.categories).map((cat: any) => cat.name);
         if (!(cat_list.includes(category))) return { error: "Invalid Category!", success: false }
 
         // send request
@@ -275,12 +281,16 @@ function PostEditor({ post, setPost, save, type, cancel }: PostEditorProps) {
 
     const edit_time = post.publish_at?.length > 1 ? toIsoString(new Date(post.publish_at)): "";
 
+    if (categories == null) {
+        return <p>No Categories!</p>
+    }
+
     return <div className="flex-col">
         <h3 style={{ textTransform: "capitalize" }}>{type} Post</h3>
         <div className="input-grid">
             <label>Title</label><input type="text" value={post.title} onChange={(e) => updateTitle(e.target.value)} />
             <label>Slug</label><input type="text" value={post.slug} onChange={(e) => updateSlug(e.target.value)} />
-            <label>Category</label><CategoryInput value={post.category} categories={categories} setValue={(c) => setPost({ ...post, category: c })} />
+            <label>Category</label><CategoryInput value={post.category} categories={categories.categories} setValue={(c) => setPost({ ...post, category: c })} />
             <label>Publish</label><input type="datetime-local" value={edit_time} onChange={(e) => setPublishDate(new Date(e.target.value).toISOString())} />
             <label style={{ placeSelf: "stretch" }}>Content</label><textarea style={{ gridColumn: "span 3", fontFamily: "monospace" }} rows={10} value={post.content} onChange={(e) => setPost({ ...post, content: e.target.value })} />
             <label>Tags</label><TagEditor tags={post.tags} setTags={(tags) => setPost({...post, tags })} />
@@ -412,7 +422,7 @@ function FilterControl({ filters, setFilters }: { filters: PostFilters, setFilte
         <button onClick={() => setOpen(!open)}><Filter /><span>Filter</span></button>
         {open && <>
             <FolderTree />
-            <CategoryInput value={filters.category ?? ""} categories={categories} key={0} setValue={(c) => setFilters({ ...filters, category: c })}  />
+            {categories && <CategoryInput value={filters.category ?? ""} categories={categories.categories} key={0} setValue={(c) => setFilters({ ...filters, category: c })}  />}
             <Tags />
             <input type="text" value={filters.tag ?? ""} onChange={(e) => setFilters({ ...filters, tag: e.target.value }) } />
         </>}
@@ -423,34 +433,27 @@ function FilterControl({ filters, setFilters }: { filters: PostFilters, setFilte
 function CategoriesPage() {
     const { categories } = useContext(PostContext);
 
-    // construct a graph of categories
-    // let's start at the root node
-    const graph = getChildrenCategories(categories, 'root');
+    if (!categories) return <main>No Categories!</main>;
 
-    const elements = getCategoryElements(graph, 0);
+    const elements = categories.graph.children.flatMap((c) => getCategoryElements(c, 0));
 
     return <main id='category-list'>
         {elements}
     </main>
 }
 
-function getChildrenCategories(categories: { name: string, parent: string }[], root: string): any {
-    const graph: any = {};
-    for (const cat of categories) {
-        if (cat.parent == root) graph[cat.name] = getChildrenCategories(categories, cat.name);
-    }
-    return graph;
-}
-function getCategoryElements(values: any, depth: number) {
+function getCategoryElements(root: CategoryNode, depth: number) {
     const list: JSX.Element[] = [];
 
     const CategoryCard = ({ cat, depth }: { cat: string, depth: number }) => {
         return <div style={{ marginLeft: (depth * 40) + "px" }} className="category-card">{cat}</div>
     }
 
-    for (const [key, value] of Object.entries(values)) {
-        list.push(<CategoryCard cat={key} depth={depth} />);
-        list.push(...getCategoryElements(value, depth + 1));
+    list.push(<CategoryCard cat={root.name} depth={depth} />);
+    if (root.children.length > 0) {
+        for (const node of root.children) {
+            list.push(...getCategoryElements(node, depth + 1));
+        }
     }
     return list;
 }
