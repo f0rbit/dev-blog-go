@@ -38,10 +38,12 @@
 - [x] Implement publish date on posts
 
 # v0.5
-- [ ] Database connection pooling
+- [x] Database connection pooling
 - [ ] Proper graph data structure for categories
 - [ ] Refactor & simplify code bases
-    - [ ] > 85% test coverage
+    - [x] Back end
+    - [ ] Front end
+- [ ] > 85% test coverage
 - [ ] Proper input/output data validation (type safety) on backend
 - [ ] Front end typesafety w/ zod
 
