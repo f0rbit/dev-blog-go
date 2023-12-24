@@ -40,9 +40,9 @@
 # v0.5
 - [x] Database connection pooling
 - [x] Proper graph data structure for categories
-- [ ] Refactor & simplify code bases
+- [x] Refactor & simplify code bases
     - [x] Back end
-    - [ ] Front end
+    - [x] Front end
 - [x] > 80% test coverage
 - [x] Front end typesafety w/ zod
     - [x] Create zod schemas
