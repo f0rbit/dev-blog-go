@@ -7,6 +7,7 @@ const post_schema = z.object({
     title: z.string(),
     content: z.string(),
     category: z.string(),
+    tags: z.array(z.string()),
     archived: z.union([z.literal(0), z.literal(1)]),
     publish_at: z.string(),
     created_at: z.string(),

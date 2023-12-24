@@ -4,40 +4,15 @@ import React from 'react';
 import { ArrowDownNarrowWide, Edit, Filter, FolderTree, Home, LibraryBig, Plus, Save, Search, Settings, Tags, Trash, X } from 'lucide-react';
 import Modal from "./components/Modal";
 import CategoryInput from './components/CategoryInput';
-
-type Post = {
-    id: number,
-    slug: string,
-    title: string,
-    content: string,
-    category: string,
-    tags: string[],
-    archived: 0 | 1,
-    publish_at: string,
-    created_at: string,
-    updated_at: string
-}
+import { Post, PostsResponse, CategoryNode, SCHEMA, CategoryResponse } from "../schema";
 
 type PostCreation = Omit<Post, "id" | "created_at" | "updated_at">
 
-type PostResponse = {
-    posts: Post[],
-    total_pages: number,
-    current_page: number,
-    total_posts: number,
-    per_page: number,
-}
-
-type CategoryNode = {
-    name: string,
-    children: CategoryNode[]
-}
-
 interface PostContext {
-    posts: PostResponse,
-    setPosts: Dispatch<SetStateAction<PostResponse>>,
-    categories: { categories: { name: string, parent: string }[], graph: CategoryNode } | null,
-    setCategories: Dispatch<SetStateAction<any>>,
+    posts: PostsResponse,
+    setPosts: Dispatch<SetStateAction<PostsResponse>>,
+    categories: CategoryResponse
+    setCategories: Dispatch<SetStateAction<CategoryResponse>>,
     tags: string[],
     setTags: Dispatch<SetStateAction<string[]>>
 }
@@ -48,26 +23,27 @@ type Page = (typeof PAGES)[keyof typeof PAGES]
 type FunctionResponse = { success: true, error: null } | { success: false, error: string }
 
 const API_URL: string = import.meta.env.VITE_API_URL;
-const VERSION = "v0.4.0";
+const VERSION = "v0.6.0";
 console.log("Version: " + VERSION);
 
-export const PostContext = React.createContext<PostContext>({ posts: {} as PostResponse, setPosts: () => { }, categories: null, setCategories: () => { }, tags: [], setTags: () => { } });
+export const PostContext = React.createContext<PostContext>({ posts: {} as PostsResponse, setPosts: () => { }, categories: {} as CategoryResponse, setCategories: () => { }, tags: [], setTags: () => { } });
 
 function App() {
-    const [posts, setPosts] = useState<PostResponse>({} as PostResponse);
-    const [categories, setCategories] = useState(null);
+    const [posts, setPosts] = useState({} as PostsResponse);
+    const [categories, setCategories] = useState({} as CategoryResponse);
     const [page, setPage] = useState<Page>("home");
     const [tags, setTags] = useState<string[]>([]);
 
     useEffect(() => {
         (async () => {
             const response = await fetch(`${API_URL}/posts?limit=-1`);
+            if (!response.ok) throw new Error("Couldn't fetch posts");
             const result = await response.json();
-            setPosts(result);
+            setPosts(SCHEMA.POSTS_RESPONSE.parse(result));
 
             const cat_res = await fetch(`${API_URL}/categories`);
-            const cat_result = await cat_res.json();
-            setCategories(cat_result);
+            if (!cat_res.ok) throw new Error("Couldn't fetch categories");
+            setCategories(SCHEMA.CATEGORY_RESPONSE.parse(await cat_res.json()));
 
             const tag_res = await fetch(`${API_URL}/tags`);
             const tag_result = await tag_res.json();
