@@ -14,6 +14,7 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '>=1.21' # Use the Go version you need
+          cache-dependency-path: src/go.sum
       - name: Install bun
         run: curl -fsSL https://bun.sh/install | bash
       - name: Build Server
