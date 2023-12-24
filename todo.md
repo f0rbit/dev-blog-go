@@ -44,7 +44,6 @@
     - [x] Back end
     - [ ] Front end
 - [ ] > 85% test coverage
-- [ ] Proper input/output data validation (type safety) on backend
 - [ ] Front end typesafety w/ zod
 
 # v0.6
