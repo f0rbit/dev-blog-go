@@ -39,7 +39,7 @@
 
 # v0.5
 - [x] Database connection pooling
-- [ ] Proper graph data structure for categories
+- [x] Proper graph data structure for categories
 - [ ] Refactor & simplify code bases
     - [x] Back end
     - [ ] Front end
@@ -54,20 +54,20 @@
 - [ ] Login Page
     - [ ] Proper authentication token handling
 
-# v1.0
+# v0.7
 - [ ] Expose API to third-party website
 - [ ] Deploy client on public-accessible 
     - [ ] Try Github pages since there's no need for a server
     - [ ] Otherwise try vercel (free tier)
     - [ ] Finally, host client on vps alongside the server
 
-# v1.1
+# v0.8
 - [ ] Transition DB into a multi-user setup
 - [ ] Allow for multiple 'authors' on the server
 - [ ] Authentication support for each author individually
 - [ ] Client supports multiple 'authors'
 
-# v1.2
+# v1.0
 - [ ] Integration with third-party API, only support `devto` at the moment, but create a generic interface for adding more
     - [ ] devto
     - [ ] Medium's API
@@ -76,7 +76,7 @@
     - [ ] Tightly integrated, not just sharing API keys but full linking workflow that feels natural
     - [ ] Obviously for this, have to finish up media-timeline as well.
 
-# v1.3
+# v1.1
 - [ ] Light mode support & theme switcher
 - [ ] Refactor for support for multiple themes
 
