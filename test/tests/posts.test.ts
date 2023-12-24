@@ -1,13 +1,5 @@
 import { expect, test, describe, afterAll } from "bun:test";
-import type { Post } from "@client/schema";
-
-type PostsResponse = {
-    posts: Post[],
-    total_posts: number,
-    total_pages: number,
-    per_page: number,
-    current_page: number
-}
+import type { Post, PostsResponse } from "@client/schema";
 
 const test_post = {
     slug: "bun-test-post",
