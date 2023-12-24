@@ -22,27 +22,11 @@ var AUTH_TOKEN = os.Getenv("AUTH_TOKEN")
 
 func main() {
 	log.SetLevel(log.DebugLevel)
-
+    // set up database
     database.Connect()
-
+    // set up router with auth middleware
 	r := mux.NewRouter()
-    // Middleware for checking 'Auth-Token' header
-	authMiddleware := func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.Method != http.MethodGet {
-				token := r.Header.Get("Auth-Token")
-				if token != AUTH_TOKEN {
-					http.Error(w, "Unauthorized", http.StatusUnauthorized)
-					return
-				}
-			}
-			next.ServeHTTP(w, r)
-		})
-	}
-
-	// Apply the middleware to all routes
-	r.Use(authMiddleware)
-
+	r.Use(AuthMiddleware)
     // posts
 	r.HandleFunc("/posts", routes.GetPosts).Methods("GET")
 	r.HandleFunc("/posts/{category}", routes.GetPostsByCategory).Methods("GET")
@@ -58,6 +42,7 @@ func main() {
     r.HandleFunc("/post/tag", routes.DeletePostTag).Methods("DELETE")
     r.HandleFunc("/tags", routes.GetTags).Methods("GET")
 
+    // modify cors
     c := cors.New(cors.Options{
         AllowedOrigins: []string{"http://localhost:5173", "https://f0rbit.github.io"},
         AllowedHeaders: []string{"Content-Type"},
@@ -91,4 +76,16 @@ func main() {
 		log.Fatalf("HTTP shutdown error: %v", err)
 	}
 	log.Info("Graceful shutdown complete.")
+}
+
+
+// this is the header we look for in the query for auth token.
+const AUTH_HEADER = "Auth-Token";
+
+func AuthMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        if r.Method == http.MethodGet { next.ServeHTTP(w,r); return; }
+        if r.Header.Get(AUTH_HEADER) == AUTH_TOKEN { next.ServeHTTP(w,r); return; }
+        http.Error(w, "Unauthorized", http.StatusUnauthorized);
+    })
 }
