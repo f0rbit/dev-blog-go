@@ -13,7 +13,7 @@ import (
 // GetCategories handles the GET /categories route
 func GetCategories(w http.ResponseWriter, r *http.Request) {
 	// Fetch categories from the database
-	categories, err := fetchCategories()
+	categories, err := database.GetCategories()
 	if err != nil {
 		log.Error("Error fetching categories", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -34,33 +34,14 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
 	w.Write(encoded)
 }
 
-func fetchCategories() ([]types.Category, error) {
-	var categories []types.Category
-    var db = database.Connection();
-	rows, err := db.Query("SELECT name, parent FROM categories")
-	if err != nil {
-		return categories, err
-	}
-	for rows.Next() {
-		var category types.Category
-		err := rows.Scan(&category.Name, &category.Parent)
-		if err != nil {
-			return categories, err
-		}
-		categories = append(categories, category)
-	}
-
-	return categories, nil
-}
-
-func getChildrenCateogires(categories []types.Category, parent string) []types.Category {
+func getChildrenCategories(categories []types.Category, parent string) []types.Category {
 	var cats []types.Category
 
 	for i := 0; i < len(categories); i++ {
 		if categories[i].Parent == parent {
 			cats = append(cats, categories[i])
 			// add all the children as well
-			var children = getChildrenCateogires(categories, categories[i].Name)
+			var children = getChildrenCategories(categories, categories[i].Name)
 			for j := 0; j < len(children); j++ {
 				cats = append(cats, children[j])
 			}

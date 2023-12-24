@@ -12,8 +12,6 @@ import (
 )
 
 func AddPostTag(w http.ResponseWriter, r *http.Request) {
-    var db = database.Connection();
-
     id, tag, err := parseTagParams(r)
     if err != nil {
         log.Error("Error parsing params", "err", err)
@@ -21,7 +19,7 @@ func AddPostTag(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    _, err = db.Exec("INSERT INTO tags (post_id, tag) VALUES (?, ?)", id, tag)
+    err = database.CreateTag(id, tag);
 
     if err != nil {
         log.Warn("Error inserting tag", "err", err)
@@ -33,8 +31,6 @@ func AddPostTag(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeletePostTag(w http.ResponseWriter, r *http.Request) {
-    var db = database.Connection();
-
     id, tag, err := parseTagParams(r)
     if err != nil {
         log.Error("Error parsing params", "err", err)
@@ -42,7 +38,7 @@ func DeletePostTag(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    _, err = db.Exec("DELETE FROM tags WHERE post_id = ? AND tag = ?", id, tag)
+    err = database.DeleteTag(id, tag)
 
     if err != nil {
         log.Warn("Error deleting tag", "err", err)
@@ -54,32 +50,18 @@ func DeletePostTag(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTags(w http.ResponseWriter, r *http.Request) {
-    var db = database.Connection();
-
-	rows, err := db.Query("SELECT DISTINCT tag FROM tags")
-	if err != nil {
-		log.Error("Query error", "err", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	var tags []string
-	for rows.Next() {
-		var tag string
-		err := rows.Scan(&tag)
-		if err != nil {
-			log.Error("Error parsing tag", "err", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		tags = append(tags, tag)
-	}
-
+    tags, err := database.GetTags();
+    if err != nil {
+        log.Error("Error fetching tags", "err", err);
+        http.Error(w, "Internal Server Error", http.StatusInternalServerError);
+        return;
+    }
 	// and then respond with json
 	encoded, err := json.Marshal(tags)
 	if err != nil {
 		log.Error("Error marshalling categories to JSON", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
+		return;
 	}
 
 	w.Header().Set("Content-Type", "application/json")

@@ -107,7 +107,7 @@ func fetchPosts(category string, limit, offset int, tag string) ([]types.Post, i
 
 	// given a category, we want to get all the children category and include those in our select post query as an 'IN (<array of categories>)'
 	var search_categories []any
-	categories, err := fetchCategories()
+	categories, err := database.GetCategories()
 	if err != nil {
 		return posts, totalPosts, err
 	}
@@ -120,7 +120,7 @@ func fetchPosts(category string, limit, offset int, tag string) ([]types.Post, i
         }
 	} else {
 		// go through categories here (they have properties .name and .parent)
-		children := getChildrenCateogires(categories, category)
+		children := getChildrenCategories(categories, category)
 		for i := 0; i < len(children); i++ {
 			search_categories = append(search_categories, children[i].Name)
 		}
