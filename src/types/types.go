@@ -7,6 +7,11 @@ type Category struct {
 	Parent string `json:"parent"`
 }
 
+type CategoryNode struct {
+    Name string `json:"name"`
+    Children []CategoryNode `json:"children"`
+}
+
 type Post struct {
 	Id        int       `json:"id"`
 	Slug      string    `json:"slug"`

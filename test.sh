@@ -29,6 +29,11 @@ GOCOVERDIR=${COVERAGE_DIR} DATABASE=${DATABASE_FILE} ./${BINARY_NAME} 2> server.
 # Store the process ID of the Go server
 server_pid=$!
 
+# install dependencies
+cd ${ROOT_DIR}/client && ~/.bun/bin/bun i
+cd ${ROOT_DIR}/test && ~/.bun/bin/bun i
+cd ${ROOT_DIR}
+
 # Run the tests using "bun test"
 cd test && ~/.bun/bin/bun test
 

@@ -9,11 +9,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
-          go-version: 1.21.5 # Use the Go version you need
+          go-version: '>=1.21' # Use the Go version you need
+          cache-dependency-path: src/go.sum
       - name: Install bun
         run: curl -fsSL https://bun.sh/install | bash
       - name: Build Server
