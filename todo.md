@@ -58,10 +58,8 @@
 
 # v0.7
 - [ ] Expose API to third-party website
-- [ ] Deploy client on public-accessible 
-    - [ ] Try Github pages since there's no need for a server
-    - [ ] Otherwise try vercel (free tier)
-    - [ ] Finally, host client on vps alongside the server
+- [x] Deploy client on public-accessible 
+    - [x] Try Github pages since there's no need for a server
 
 # v0.8
 - [ ] Transition DB into a multi-user setup
