@@ -209,6 +209,7 @@ main {
     display: flex;
     flex-direction: row;
     gap: 5px;
+    align-items: center;
 }
 
 .flex-col {
@@ -275,6 +276,11 @@ main {
     right: 2px;
 }
 
+.bottom-right {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;    
+}
 
 .hidden-parent .hidden-child {
     visibility: hidden;

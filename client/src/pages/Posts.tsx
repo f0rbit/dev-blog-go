@@ -4,6 +4,7 @@ import { ArrowDownNarrowWide, Edit, Filter, FolderTree, Plus, Save, Search, Tags
 import Modal from "../components/Modal";
 import CategoryInput from "../components/CategoryInput";
 import { Post } from "../../schema";
+import { Oval } from "react-loader-spinner";
 
 type PostSort = "created" | "edited" | "published" | "oldest";
 const EMPTY_POST_CREATION: PostCreation = {
@@ -85,9 +86,11 @@ export function PostsPage() {
             <input type="text" id='post-search' />
             <SortControl selected={selected} setSelected={setSelected} />
             <FilterControl filters={filters} setFilters={setFilters} />
-            <button style={{ marginLeft: "auto" }} onClick={() => setOpenCreatePost(true)}><Plus /><span>Create</span></button>
+            <div style={{ marginLeft: "auto" }} className="flex-row" >
+                {loading && <Oval height={20} width={20} strokeWidth={8} /> }
+                <button style={{ marginLeft: "auto" }} onClick={() => setOpenCreatePost(true)}><Plus /><span>Create</span></button>
+            </div>
         </section>
-        {loading && <p>Loading...</p>}
         <section id='post-grid'>
             {filtered_posts.map((p: any) => <PostCard key={p.id} post={p} />)}
         </section>
@@ -246,8 +249,9 @@ function PostCard({ post }: { post: Post }) {
             <button onClick={deletePost}><Trash /></button>
             <button onClick={() => setEditorOpen(true)}><Edit /></button>
         </div>
-        {/* @ts-ignore */}
-        {post.loading && <p>Loading...</p>}
+        <div className="flex-row center bottom-right">
+            {(post as any).loading && <Oval width={16} height={16} strokeWidth={8} />}
+        </div>
         <h2>{post.title}</h2>
         <pre>{post.slug}</pre>
         <p>{post.content}</p>
