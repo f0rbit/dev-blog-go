@@ -5,6 +5,7 @@ import Modal from "../components/Modal";
 import CategoryInput from "../components/CategoryInput";
 import { Post } from "../../schema";
 import { Oval } from "react-loader-spinner";
+import TagInput from "../components/TagInput";
 
 type PostSort = "created" | "edited" | "published" | "oldest";
 const EMPTY_POST_CREATION: PostCreation = {
@@ -27,7 +28,6 @@ export function PostsPage() {
 
     if (!posts || !posts.posts) return <p>No Posts Found!</p>;
 
-
     async function createPost(): Promise<FunctionResponse> {
         // input validation
         const { slug, category } = creatingPost;
@@ -37,13 +37,13 @@ export function PostsPage() {
         if (!(cat_list.includes(category))) return { error: "Invalid Category!", success: false }
         const new_post: Post & { loading: boolean } = { ...creatingPost, id: -1, created_at: toIsoString(new Date()), updated_at: toIsoString(new Date()), loading: true };
 
-        setPosts({ ...posts, posts: [ ...posts.posts, new_post ] });
+        setPosts({ ...posts, posts: [...posts.posts, new_post] });
         // send request
         const response = await fetch(`${API_URL}/post/new`, { method: "POST", body: JSON.stringify(creatingPost) });
         const result = await response.json();
         // update state?
         setLoading(false);
-        setPosts({ ...posts, posts: [ ...posts.posts, { ...result, loading: false } as Post ] });
+        setPosts({ ...posts, posts: [...posts.posts, { ...result, loading: false } as Post] });
         return { error: null, success: true }
     }
 
@@ -87,7 +87,7 @@ export function PostsPage() {
             <SortControl selected={selected} setSelected={setSelected} />
             <FilterControl filters={filters} setFilters={setFilters} />
             <div style={{ marginLeft: "auto" }} className="flex-row" >
-                {loading && <Oval height={20} width={20} strokeWidth={8} /> }
+                {loading && <Oval height={20} width={20} strokeWidth={8} />}
                 <button style={{ marginLeft: "auto" }} onClick={() => setOpenCreatePost(true)}><Plus /><span>Create</span></button>
             </div>
         </section>
@@ -175,18 +175,10 @@ function toIsoString(date: Date) {
 
 function TagEditor({ tags, setTags }: { tags: Post['tags'], setTags: (tags: Post['tags']) => void }) {
     const [input, setInput] = useState("");
-
-    function add() {
-        setTags([...tags, input]);
-        setInput("");
-    }
+    const { tags: all_tags } = useContext(PostContext);
 
     return <div className="flex-row tag-editor">
-        <input type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key == 'Enter' || e.key == 'Tab') { add(); e.preventDefault() } }}
-        />
+        <TagInput tags={all_tags} value={input} setValue={(t) => { setTags([...tags, t]); setInput(""); }} />
         <button onClick={() => { setTags([...tags, input]); setInput("") }}><Plus /></button>
         {tags.map((tag, index) => <Tag key={index} tag={tag} remove={() => setTags(tags.toSpliced(index, 1))} />)}
     </div>
@@ -283,7 +275,7 @@ type PostFilters = {
 
 function FilterControl({ filters, setFilters }: { filters: PostFilters, setFilters: Dispatch<SetStateAction<PostFilters>> }) {
     const [open, setOpen] = useState(false);
-    const { categories } = useContext(PostContext)
+    const { categories, tags } = useContext(PostContext)
 
     const applied = filters.category || filters.tag;
 
@@ -293,7 +285,7 @@ function FilterControl({ filters, setFilters }: { filters: PostFilters, setFilte
             <FolderTree />
             {categories && <CategoryInput value={filters.category ?? ""} categories={categories.categories} key={0} setValue={(c) => setFilters({ ...filters, category: c })} />}
             <Tags />
-            <input type="text" value={filters.tag ?? ""} onChange={(e) => setFilters({ ...filters, tag: e.target.value })} />
+            <TagInput value={filters.tag ?? ""} tags={tags} setValue={(t) => setFilters({ ...filters, tag: t })} />
         </>}
         {(applied || open) && <button title="Clear" onClick={() => { setFilters({ category: null, tag: null }); setOpen(false) }}><X /></button>}
     </>
