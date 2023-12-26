@@ -10,12 +10,25 @@ function CategoryInput({ categories, setValue, value }: { categories: { name: st
 
     const cat_list = Object.values(categories).map((c) => c.name).filter((c) => c.includes(input));
 
+    function scrollView() {
+        const elements = document.querySelector(".category-input-list");
+        if (!elements) return;
+        const selected = elements?.children?.[hovering];
+        if (!selected) return;
+        selected.scrollIntoView({
+            behavior: "auto",
+            block: "center",
+            inline: "center"
+        });
+    }
+
     function handleKeyPress(e: React.KeyboardEvent<HTMLInputElement>) {
         if (e.key == 'Enter' || e.key == 'Tab') {
             if (cat_list.length > 0) {
                 const index = hovering >= 0 ? hovering : 0;
                 setValue(cat_list[index]);
                 setInput(cat_list[index]);
+                setOpen(false);
                 setHovering(-1);
             } else {
                 // cry
@@ -26,16 +39,18 @@ function CategoryInput({ categories, setValue, value }: { categories: { name: st
         } else if (e.key == 'ArrowUp') {
             setHovering(hovering - 1);
             e.preventDefault();
+            scrollView();
             return false;
         } else if (e.key == 'ArrowDown') {
             setHovering(hovering + 1);
             e.preventDefault();
+            scrollView();
             return false;
         }
     }
 
     if (hovering < -1) setHovering(-1);
-    if (hovering > cat_list.length) setHovering(cat_list.length - 1);
+    if (hovering >= cat_list.length) setHovering(cat_list.length - 1);
 
 
     return <div style={{ position: "relative" }}>
@@ -44,8 +59,7 @@ function CategoryInput({ categories, setValue, value }: { categories: { name: st
             type="text" 
             value={input} 
             onInput={() => { setHovering(-1); if (!open) setOpen(true); }} 
-            onChange={(e) => setInput(e.target.value)} 
-            onBlur={() => { setValue(input); setOpen(false); setHovering(-1); }} 
+            onChange={(e) => { setInput(e.target.value); }} 
             onKeyDown={handleKeyPress} 
         />
         {(open && cat_list.length > 0) && <div className="category-input-list flex-col">
@@ -57,7 +71,7 @@ function CategoryInput({ categories, setValue, value }: { categories: { name: st
 function CategoryOption({ category, setValue, hovered }: { category: string, setValue: CategorySetter, hovered: boolean }) {
     const { posts } = useContext(PostContext);
     const count = posts.posts.filter((p) => p.category == category).length;
-    return <button onClick={() => setValue(category)} className={hovered ? "hovered" : ""}>
+    return <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setValue(category) }} className={hovered ? "hovered" : ""}>
         <span>{category}</span>
         <span style={{ marginLeft: "auto" }} className="post-count">{count} posts</span>
     </button>;
