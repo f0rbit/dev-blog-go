@@ -20,6 +20,7 @@ export function PostsPage() {
     const { posts, setPosts, categories } = useContext(PostContext);
     const [selected, setSelected] = useState<PostSort>("created");
     const [openCreatePost, setOpenCreatePost] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [filters, setFilters] = useState<PostFilters>({ category: null, tag: null });
     const [creatingPost, setCreatingPost] = useState<PostCreation>(EMPTY_POST_CREATION);
 
@@ -33,12 +34,15 @@ export function PostsPage() {
         if (categories == null) return { error: "Not fetched categories", success: false };
         const cat_list = Object.values(categories.categories).map((cat: any) => cat.name);
         if (!(cat_list.includes(category))) return { error: "Invalid Category!", success: false }
+        const new_post: Post & { loading: boolean } = { ...creatingPost, id: -1, created_at: toIsoString(new Date()), updated_at: toIsoString(new Date()), loading: true };
 
+        setPosts({ ...posts, posts: [ ...posts.posts, new_post ] });
         // send request
         const response = await fetch(`${API_URL}/post/new`, { method: "POST", body: JSON.stringify(creatingPost) });
         const result = await response.json();
         // update state?
-        setPosts({ ...posts, posts: [...posts.posts, result] });
+        setLoading(false);
+        setPosts({ ...posts, posts: [ ...posts.posts, { ...result, loading: false } as Post ] });
         return { error: null, success: true }
     }
 
@@ -83,6 +87,7 @@ export function PostsPage() {
             <FilterControl filters={filters} setFilters={setFilters} />
             <button style={{ marginLeft: "auto" }} onClick={() => setOpenCreatePost(true)}><Plus /><span>Create</span></button>
         </section>
+        {loading && <p>Loading...</p>}
         <section id='post-grid'>
             {filtered_posts.map((p: any) => <PostCard key={p.id} post={p} />)}
         </section>
@@ -194,6 +199,7 @@ function Tag({ tag, remove }: { tag: string, remove: (() => void) | null }) {
 function PostCard({ post }: { post: Post }) {
     const [editorOpen, setEditorOpen] = useState(false);
     const [editingPost, setEditingPost] = useState<PostCreation>({ ...post });
+
     const { posts, setPosts } = useContext(PostContext);
 
     const deletePost = async (): Promise<FunctionResponse> => {
@@ -203,11 +209,17 @@ function PostCard({ post }: { post: Post }) {
 
     const savePost = async (): Promise<FunctionResponse> => {
         const id = post.id;
-        const upload_post: PostCreation & { id: number } = {
+        const upload_post: PostCreation & { id: number, loading: boolean } = {
             ...editingPost,
             id,
-            publish_at: new Date(editingPost.publish_at).toISOString()
+            loading: true,
         }
+        setPosts({
+            ...posts, posts: posts.posts.map((p) => {
+                if (p.id != id) return p;
+                return { ...p, ...upload_post, loading: true };
+            })
+        });
         // send upload post to server
         const response = await fetch(`${API_URL}/post/edit`, { method: "PUT", body: JSON.stringify(upload_post) });
         if (!response || !response.ok) return { error: "Invalid Response", success: false };
@@ -215,7 +227,7 @@ function PostCard({ post }: { post: Post }) {
         setPosts({
             ...posts, posts: posts.posts.map((p) => {
                 if (p.id != id) return p;
-                return { ...p, ...upload_post };
+                return { ...p, ...upload_post, loading: false };
             })
         });
         return { error: null, success: true };
@@ -234,6 +246,8 @@ function PostCard({ post }: { post: Post }) {
             <button onClick={deletePost}><Trash /></button>
             <button onClick={() => setEditorOpen(true)}><Edit /></button>
         </div>
+        {/* @ts-ignore */}
+        {post.loading && <p>Loading...</p>}
         <h2>{post.title}</h2>
         <pre>{post.slug}</pre>
         <p>{post.content}</p>
