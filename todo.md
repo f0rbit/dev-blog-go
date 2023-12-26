@@ -54,7 +54,9 @@
 - [x] Tag Input component like category component
 - [x] Arrow key down in dropdowns should scroll the div down 
 - [ ] Login Page
-    - [ ] Proper authentication token handling
+    - [x] Password input
+    - [ ] Route for testing token
+    - [ ] Store token and include in headers to server
 
 # v0.7
 - [ ] Expose API to third-party website
