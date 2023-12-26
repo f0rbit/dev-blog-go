@@ -52,7 +52,7 @@
 - [x] Instant Reactivity in client
     - [x] Blog updates & creation should appear instant in client, spinner while request is pending
 - [ ] Tag Input component like category component
-- [ ] Arrow key down in dropdowns should scroll the div down 
+- [x] Arrow key down in dropdowns should scroll the div down 
 - [ ] Login Page
     - [ ] Proper authentication token handling
 
