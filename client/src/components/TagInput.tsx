@@ -1,14 +1,17 @@
 import { useContext, useState } from "react";
 import { PostContext } from "../App";
 
-type CategorySetter = (category: string) => void;
+/** @todo make this structure generic so we can use the same component for categories & tags */
+/** @todo also rename all the category stuff */
 
-function CategoryInput({ categories, setValue, value }: { categories: { name: string, parent: string }[], setValue: CategorySetter, value: string }) {
+type TagSetter = (tag: string) => void;
+
+function TagInput({ tags, setValue, value }: { tags: string[], setValue: TagSetter, value: string }) {
     const [input, setInput] = useState<string>(value);
     const [open, setOpen] = useState<boolean>(false);
     const [hovering, setHovering] = useState<number>(0);
 
-    const cat_list = Object.values(categories).map((c) => c.name).filter((c) => c.includes(input));
+    const cat_list = tags.filter((c) => c.includes(input));
 
     function scrollView() {
         const elements = document.querySelector(".category-input-list");
@@ -26,15 +29,18 @@ function CategoryInput({ categories, setValue, value }: { categories: { name: st
         if (e.key == 'Enter' || e.key == 'Tab') {
             if (cat_list.length > 0) {
                 const index = hovering >= 0 ? hovering : 0;
+                setInput("");
                 setValue(cat_list[index]);
-                setInput(cat_list[index]);
                 setOpen(false);
                 setHovering(-1);
             } else {
                 // cry
+                const v = input;
+                setInput("");
+                setValue(v);
+                setOpen(false);
+                setHovering(-1);
             }
-            // typescript hack to trigger blur
-            requestAnimationFrame(() => (e.target as any).blur());
             e.preventDefault();
         } else if (e.key == 'ArrowUp') {
             setHovering(hovering - 1);
@@ -68,13 +74,13 @@ function CategoryInput({ categories, setValue, value }: { categories: { name: st
     </div>
 }
 
-function CategoryOption({ category, setValue, hovered }: { category: string, setValue: CategorySetter, hovered: boolean }) {
+function CategoryOption({ category, setValue, hovered }: { category: string, setValue: TagSetter, hovered: boolean }) {
     const { posts } = useContext(PostContext);
-    const count = posts.posts.filter((p) => p.category == category).length;
+    const count = posts.posts.filter((p) => p.tags.includes(category)).length;
     return <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setValue(category) }} className={hovered ? "hovered" : ""}>
         <span>{category}</span>
         <span style={{ marginLeft: "auto" }} className="post-count">{count} posts</span>
     </button>;
 }
 
-export default CategoryInput;
+export default TagInput;

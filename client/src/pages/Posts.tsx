@@ -1,9 +1,11 @@
 import { Dispatch, SetStateAction, useContext, useState } from "react";
-import { API_URL, FunctionResponse, PostContext, PostCreation } from "../App";
+import { API_URL, AuthContext, FunctionResponse, PostContext, PostCreation } from "../App";
 import { ArrowDownNarrowWide, Edit, Filter, FolderTree, Plus, Save, Search, Tags, Trash, X } from "lucide-react";
 import Modal from "../components/Modal";
 import CategoryInput from "../components/CategoryInput";
 import { Post } from "../../schema";
+import { Oval } from "react-loader-spinner";
+import TagInput from "../components/TagInput";
 
 type PostSort = "created" | "edited" | "published" | "oldest";
 const EMPTY_POST_CREATION: PostCreation = {
@@ -20,11 +22,12 @@ export function PostsPage() {
     const { posts, setPosts, categories } = useContext(PostContext);
     const [selected, setSelected] = useState<PostSort>("created");
     const [openCreatePost, setOpenCreatePost] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [filters, setFilters] = useState<PostFilters>({ category: null, tag: null });
     const [creatingPost, setCreatingPost] = useState<PostCreation>(EMPTY_POST_CREATION);
+    const { token } = useContext(AuthContext);
 
     if (!posts || !posts.posts) return <p>No Posts Found!</p>;
-
 
     async function createPost(): Promise<FunctionResponse> {
         // input validation
@@ -33,12 +36,15 @@ export function PostsPage() {
         if (categories == null) return { error: "Not fetched categories", success: false };
         const cat_list = Object.values(categories.categories).map((cat: any) => cat.name);
         if (!(cat_list.includes(category))) return { error: "Invalid Category!", success: false }
+        const new_post: Post & { loading: boolean } = { ...creatingPost, id: -1, created_at: toIsoString(new Date()), updated_at: toIsoString(new Date()), loading: true };
 
+        setPosts({ ...posts, posts: [...posts.posts, new_post] });
         // send request
-        const response = await fetch(`${API_URL}/post/new`, { method: "POST", body: JSON.stringify(creatingPost) });
+        const response = await fetch(`${API_URL}/post/new`, { method: "POST", body: JSON.stringify(creatingPost), headers: { 'Auth-Token': token ?? "" } });
         const result = await response.json();
         // update state?
-        setPosts({ ...posts, posts: [...posts.posts, result] });
+        setLoading(false);
+        setPosts({ ...posts, posts: [...posts.posts, { ...result, loading: false } as Post] });
         return { error: null, success: true }
     }
 
@@ -81,7 +87,10 @@ export function PostsPage() {
             <input type="text" id='post-search' />
             <SortControl selected={selected} setSelected={setSelected} />
             <FilterControl filters={filters} setFilters={setFilters} />
-            <button style={{ marginLeft: "auto" }} onClick={() => setOpenCreatePost(true)}><Plus /><span>Create</span></button>
+            <div style={{ marginLeft: "auto" }} className="flex-row" >
+                {loading && <Oval height={20} width={20} strokeWidth={8} />}
+                <button style={{ marginLeft: "auto" }} onClick={() => setOpenCreatePost(true)}><Plus /><span>Create</span></button>
+            </div>
         </section>
         <section id='post-grid'>
             {filtered_posts.map((p: any) => <PostCard key={p.id} post={p} />)}
@@ -167,18 +176,10 @@ function toIsoString(date: Date) {
 
 function TagEditor({ tags, setTags }: { tags: Post['tags'], setTags: (tags: Post['tags']) => void }) {
     const [input, setInput] = useState("");
-
-    function add() {
-        setTags([...tags, input]);
-        setInput("");
-    }
+    const { tags: all_tags } = useContext(PostContext);
 
     return <div className="flex-row tag-editor">
-        <input type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key == 'Enter' || e.key == 'Tab') { add(); e.preventDefault() } }}
-        />
+        <TagInput tags={all_tags} value={input} setValue={(t) => { setTags([...tags, t]); setInput(""); }} />
         <button onClick={() => { setTags([...tags, input]); setInput("") }}><Plus /></button>
         {tags.map((tag, index) => <Tag key={index} tag={tag} remove={() => setTags(tags.toSpliced(index, 1))} />)}
     </div>
@@ -194,6 +195,8 @@ function Tag({ tag, remove }: { tag: string, remove: (() => void) | null }) {
 function PostCard({ post }: { post: Post }) {
     const [editorOpen, setEditorOpen] = useState(false);
     const [editingPost, setEditingPost] = useState<PostCreation>({ ...post });
+    const { token } = useContext(AuthContext);
+
     const { posts, setPosts } = useContext(PostContext);
 
     const deletePost = async (): Promise<FunctionResponse> => {
@@ -203,19 +206,25 @@ function PostCard({ post }: { post: Post }) {
 
     const savePost = async (): Promise<FunctionResponse> => {
         const id = post.id;
-        const upload_post: PostCreation & { id: number } = {
+        const upload_post: PostCreation & { id: number, loading: boolean } = {
             ...editingPost,
             id,
-            publish_at: new Date(editingPost.publish_at).toISOString()
+            loading: true,
         }
+        setPosts({
+            ...posts, posts: posts.posts.map((p) => {
+                if (p.id != id) return p;
+                return { ...p, ...upload_post, loading: true };
+            })
+        });
         // send upload post to server
-        const response = await fetch(`${API_URL}/post/edit`, { method: "PUT", body: JSON.stringify(upload_post) });
+        const response = await fetch(`${API_URL}/post/edit`, { method: "PUT", body: JSON.stringify(upload_post), headers: { 'Auth-Token': token ?? "" } });
         if (!response || !response.ok) return { error: "Invalid Response", success: false };
         // update state
         setPosts({
             ...posts, posts: posts.posts.map((p) => {
                 if (p.id != id) return p;
-                return { ...p, ...upload_post };
+                return { ...p, ...upload_post, loading: false };
             })
         });
         return { error: null, success: true };
@@ -233,6 +242,9 @@ function PostCard({ post }: { post: Post }) {
         <div className='flex-row center top-right hidden-child'>
             <button onClick={deletePost}><Trash /></button>
             <button onClick={() => setEditorOpen(true)}><Edit /></button>
+        </div>
+        <div className="flex-row center bottom-right">
+            {(post as any).loading && <Oval width={16} height={16} strokeWidth={8} />}
         </div>
         <h2>{post.title}</h2>
         <pre>{post.slug}</pre>
@@ -265,7 +277,7 @@ type PostFilters = {
 
 function FilterControl({ filters, setFilters }: { filters: PostFilters, setFilters: Dispatch<SetStateAction<PostFilters>> }) {
     const [open, setOpen] = useState(false);
-    const { categories } = useContext(PostContext)
+    const { categories, tags } = useContext(PostContext)
 
     const applied = filters.category || filters.tag;
 
@@ -275,7 +287,7 @@ function FilterControl({ filters, setFilters }: { filters: PostFilters, setFilte
             <FolderTree />
             {categories && <CategoryInput value={filters.category ?? ""} categories={categories.categories} key={0} setValue={(c) => setFilters({ ...filters, category: c })} />}
             <Tags />
-            <input type="text" value={filters.tag ?? ""} onChange={(e) => setFilters({ ...filters, tag: e.target.value })} />
+            <TagInput value={filters.tag ?? ""} tags={tags} setValue={(t) => setFilters({ ...filters, tag: t })} />
         </>}
         {(applied || open) && <button title="Clear" onClick={() => { setFilters({ category: null, tag: null }); setOpen(false) }}><X /></button>}
     </>

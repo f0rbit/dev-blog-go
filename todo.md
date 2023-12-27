@@ -49,19 +49,19 @@
     - [x] Validate responses
 
 # v0.6
-- [ ] Instant Reactivity in client, consider transitioning to UUID for id's in DB
-    - [ ] Blog updates & creation should appear instant in client, some kind of spinner and validation message upon completion
-- [ ] Tag Input component like category component
-- [ ] Arrow key down in dropdowns should scroll the div down 
-- [ ] Login Page
-    - [ ] Proper authentication token handling
+- [x] Instant Reactivity in client
+    - [x] Blog updates & creation should appear instant in client, spinner while request is pending
+- [x] Tag Input component like category component
+- [x] Arrow key down in dropdowns should scroll the div down 
+- [x] Login Page
+    - [x] Password input
+    - [x] Route for testing token
+    - [x] Store token and include in headers to server
 
 # v0.7
 - [ ] Expose API to third-party website
-- [ ] Deploy client on public-accessible 
-    - [ ] Try Github pages since there's no need for a server
-    - [ ] Otherwise try vercel (free tier)
-    - [ ] Finally, host client on vps alongside the server
+- [x] Deploy client on public-accessible 
+    - [x] Try Github pages since there's no need for a server
 
 # v0.8
 - [ ] Transition DB into a multi-user setup

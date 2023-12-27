@@ -8,6 +8,7 @@ import { PostsPage } from './pages/Posts';
 import { CategoriesPage } from './pages/Categories';
 import { TagsPage } from './pages/Tags';
 import { SettingsPage } from './pages/Settings';
+import { LoginPage } from './pages/Login';
 
 export type PostCreation = Omit<Post, "id" | "created_at" | "updated_at">
 
@@ -18,6 +19,9 @@ export interface PostContext {
     setCategories: Dispatch<SetStateAction<CategoryResponse>>,
     tags: string[],
     setTags: Dispatch<SetStateAction<string[]>>
+}
+export interface AuthContext {
+    token: string | null,
 }
 
 const PAGES = ["home", "posts", "categories", "tags", "settings"] as const;
@@ -30,8 +34,34 @@ const VERSION = "v0.5.0";
 console.log("Version: " + VERSION);
 
 export const PostContext = React.createContext<PostContext>({ posts: {} as PostsResponse, setPosts: () => { }, categories: {} as CategoryResponse, setCategories: () => { }, tags: [], setTags: () => { } });
+export const AuthContext = React.createContext<AuthContext>({ token: null });
 
 function App() {
+    const [token, setToken] = useState<string | null>(null);
+    const [authError, setAuthError]= useState<string>("");
+
+    async function attemptLogin(input: string) {
+        const response = await fetch(`${API_URL}/auth/test?token=${input}`, { method: "GET" } );
+        if (response?.ok) {
+            setToken(input);
+        } else {
+            // set error?
+            setAuthError("Invalid token!");
+            setTimeout(() => setAuthError(""), 1500);
+        }
+    }
+
+    if (token == null) {
+        return <LoginPage attemptLogin={attemptLogin} error={authError} />
+    }
+
+    return <AuthContext.Provider value={{ token }}>
+        <MainContent />
+    </AuthContext.Provider>
+    
+}
+
+function MainContent() {
     const [posts, setPosts] = useState({} as PostsResponse);
     const [categories, setCategories] = useState({} as CategoryResponse);
     const [page, setPage] = useState<Page>("home");
