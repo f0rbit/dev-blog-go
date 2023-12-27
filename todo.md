@@ -55,7 +55,7 @@
 - [x] Arrow key down in dropdowns should scroll the div down 
 - [ ] Login Page
     - [x] Password input
-    - [ ] Route for testing token
+    - [x] Route for testing token
     - [ ] Store token and include in headers to server
 
 # v0.7
