@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react'
+import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import './App.css'
 import React from 'react';
 import { FolderTree, Home, LibraryBig, Settings, Tags } from 'lucide-react';
@@ -38,16 +38,24 @@ export const AuthContext = React.createContext<AuthContext>({ token: null });
 
 function App() {
     const [token, setToken] = useState<string | null>(null);
+    const [authError, setAuthError]= useState<string>("");
 
     async function attemptLogin(input: string) {
-        console.log("attempting login with input: " + input);
-        setToken(input);
+        const response = await fetch(`${API_URL}/auth/test?token=${input}`, { method: "GET" } );
+        if (response?.ok) {
+            setToken(input);
+        } else {
+            // set error?
+            setAuthError("Invalid token!");
+            setTimeout(() => setAuthError(""), 1500);
+        }
     }
 
     if (token == null) {
-        return <LoginPage attemptLogin={attemptLogin}/>
+        return <LoginPage attemptLogin={attemptLogin} error={authError} />
     }
-    return <AuthContext.Provider value={{token }}>
+
+    return <AuthContext.Provider value={{ token }}>
         <MainContent />
     </AuthContext.Provider>
     
