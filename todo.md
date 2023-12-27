@@ -53,10 +53,10 @@
     - [x] Blog updates & creation should appear instant in client, spinner while request is pending
 - [x] Tag Input component like category component
 - [x] Arrow key down in dropdowns should scroll the div down 
-- [ ] Login Page
+- [x] Login Page
     - [x] Password input
     - [x] Route for testing token
-    - [ ] Store token and include in headers to server
+    - [x] Store token and include in headers to server
 
 # v0.7
 - [ ] Expose API to third-party website
