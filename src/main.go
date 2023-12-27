@@ -39,6 +39,8 @@ func main() {
 	r.HandleFunc("/post/tag", routes.AddPostTag).Methods("PUT")
 	r.HandleFunc("/post/tag", routes.DeletePostTag).Methods("DELETE")
 	r.HandleFunc("/tags", routes.GetTags).Methods("GET")
+    // auth
+    r.HandleFunc("/auth/test", routes.TryToken).Methods("GET");
 
 	// modify cors
 	c := cors.New(cors.Options{
@@ -76,10 +78,6 @@ func main() {
 	log.Info("Graceful shutdown complete.")
 }
 
-// this is the header we look for in the query for auth token.
-const AUTH_HEADER = "Auth-Token"
-
-var AUTH_TOKEN = os.Getenv("AUTH_TOKEN")
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -87,7 +85,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		if r.Header.Get(AUTH_HEADER) == AUTH_TOKEN {
+		if r.Header.Get(routes.AUTH_HEADER) == routes.AUTH_TOKEN {
 			next.ServeHTTP(w, r)
 			return
 		}
