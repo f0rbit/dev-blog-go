@@ -59,15 +59,15 @@
     - [x] Store token and include in headers to server
 
 # v0.7
-- [ ] Expose API to third-party website
-- [x] Deploy client on public-accessible 
-    - [x] Try Github pages since there's no need for a server
-
-# v0.8
 - [ ] Transition DB into a multi-user setup
 - [ ] Allow for multiple 'authors' on the server
 - [ ] Authentication support for each author individually
 - [ ] Client supports multiple 'authors'
+
+# v0.8
+- [ ] Expose API to third-party website
+- [x] Deploy client on public-accessible 
+    - [x] Try Github pages since there's no need for a server
 
 # v1.0
 - [ ] Integration with third-party API, only support `devto` at the moment, but create a generic interface for adding more
