@@ -3,16 +3,16 @@ package routes
 import (
 	"blog-server/database"
 	"blog-server/types"
+	"blog-server/utils"
 	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"os"
 
+	"github.com/charmbracelet/log"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
-
-	"github.com/charmbracelet/log"
 )
 
 var authConfig *oauth2.Config
@@ -41,6 +41,33 @@ func TryToken(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func GetLogin(w http.ResponseWriter, r *http.Request) {
+	session, err := utils.GetStore().Get(r, "user-session")
+	if err != nil {
+		utils.LogError("Error getting session", err, http.StatusInternalServerError, w)
+		return
+	}
+
+	// Check if the user is authenticated
+	if userID, ok := session.Values["user_id"].(int); ok {
+		// You have the user's ID, you can now look up the user's data
+		user, err := database.GetUserByID(userID)
+		if err != nil {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+
+		// You can use the 'user' object in your handler
+		// ...
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("User: " + user.Username))
+	} else {
+		// User is not authenticated, handle accordingly (e.g., redirect to login)
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Not Logged In"))
+	}
+}
+
 func GithubLogin(w http.ResponseWriter, r *http.Request) {
 	url := authConfig.AuthCodeURL("state", oauth2.AccessTypeOffline)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
@@ -50,15 +77,32 @@ func GithubCallback(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	token, err := authConfig.Exchange(context.Background(), code)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.LogError("Error during github callback", err, http.StatusInternalServerError, w)
 		return
 	}
 
 	// Use token to access user's GitHub data
-	log.Info("Token: " + token.AccessToken)
-    handleGitHubUser(token);
-}
+	user, err := handleGitHubUser(token)
+	if err != nil {
+		utils.LogError("Couldn't get/create user row", err, http.StatusInternalServerError, w)
+		return
+	}
 
+	session, err := utils.GetStore().Get(r, "user-session")
+	if err != nil {
+		utils.LogError("Couldn't get session object", err, http.StatusInternalServerError, w)
+		return
+	}
+	session.Values["user_id"] = user.ID
+
+	err = session.Save(r, w)
+	if err != nil {
+		utils.LogError("Couldn't save session", err, http.StatusInternalServerError, w)
+		return
+	}
+
+	http.Redirect(w, r, "/auth/user", http.StatusSeeOther)
+}
 
 // Example logic to handle user registration or retrieval
 func handleGitHubUser(token *oauth2.Token) (*types.User, error) {
@@ -69,7 +113,7 @@ func handleGitHubUser(token *oauth2.Token) (*types.User, error) {
 	}
 
 	// Check if the user already exists in the database
-	user, err := database.GetUserByGitHubID(githubUser.ID);
+	user, err := database.GetUserByGitHubID(githubUser.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -108,4 +152,3 @@ func fetchGitHubUserDetails(token *oauth2.Token) (*types.GitHubUser, error) {
 
 	return &githubUser, nil
 }
-

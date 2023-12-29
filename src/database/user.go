@@ -43,9 +43,24 @@ func GetUserByGitHubID(githubID int) (*types.User, error) {
 	var user types.User
 
 	// Scan the row's values into the user struct
-	err := row.Scan(&user.ID, &user.GitHubID, &user.Username, &user.Email, &user.AvatarURL)
+	err := row.Scan(&user.ID, &user.GitHubID, &user.Username, &user.Email, &user.AvatarURL, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		// Handle the case when no user with the given GitHub ID is found
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil // User not found
+		}
+		return nil, err // Other database error
+	}
+
+	return &user, nil
+}
+
+func GetUserByID(userID int) (*types.User, error) {
+	row := db.QueryRow("SELECT * FROM users WHERE user_id = ?", userID)
+	var user types.User
+
+	err := row.Scan(&user.ID, &user.GitHubID, &user.Username, &user.Email, &user.AvatarURL, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil // User not found
 		}

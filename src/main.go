@@ -4,6 +4,7 @@ package main
 import (
 	"blog-server/database"
 	"blog-server/routes"
+	"blog-server/utils"
 	"context"
 	"errors"
 	"net/http"
@@ -26,6 +27,7 @@ func init() {
 	}
 
     routes.LoadAuthConfig();
+    utils.CreateStore();
 }
 
 func main() {
@@ -51,6 +53,7 @@ func main() {
 	r.HandleFunc("/tags", routes.GetTags).Methods("GET")
 	// auth
 	r.HandleFunc("/auth/test", routes.TryToken).Methods("GET")
+    r.HandleFunc("/auth/user", routes.GetLogin).Methods("GET")
 	r.HandleFunc("/auth/github/login", routes.GithubLogin).Methods("GET")
 	r.HandleFunc("/auth/github/callback", routes.GithubCallback).Methods("GET")
 
