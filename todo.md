@@ -62,6 +62,8 @@
 - [ ] Transition DB into a multi-user setup
 - [ ] Allow for multiple 'authors' on the server
 - [ ] Authentication support for each author individually
+    - [x] Backend logging in
+    - [ ] Front end log in page / logout button
 - [ ] Client supports multiple 'authors'
 
 # v0.8
