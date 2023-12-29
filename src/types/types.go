@@ -15,6 +15,7 @@ type CategoryNode struct {
 type Post struct {
 	Id        int       `json:"id"`
 	Slug      string    `json:"slug"`
+	AuthorID  int       `json:"author_id"`
 	Title     string    `json:"title"`
 	Content   string    `json:"content"`
 	Category  string    `json:"category"`

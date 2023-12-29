@@ -21,7 +21,7 @@ export interface PostContext {
     setTags: Dispatch<SetStateAction<string[]>>
 }
 export interface AuthContext {
-    token: string | null,
+    user: any | null,
 }
 
 const PAGES = ["home", "posts", "categories", "tags", "settings"] as const;
@@ -34,28 +34,35 @@ const VERSION = "v0.5.0";
 console.log("Version: " + VERSION);
 
 export const PostContext = React.createContext<PostContext>({ posts: {} as PostsResponse, setPosts: () => { }, categories: {} as CategoryResponse, setCategories: () => { }, tags: [], setTags: () => { } });
-export const AuthContext = React.createContext<AuthContext>({ token: null });
+export const AuthContext = React.createContext<AuthContext>({ user: null });
 
 function App() {
-    const [token, setToken] = useState<string | null>(null);
-    const [authError, setAuthError]= useState<string>("");
+    const [user, setUser] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
-    async function attemptLogin(input: string) {
-        const response = await fetch(`${API_URL}/auth/test?token=${input}`, { method: "GET" } );
-        if (response?.ok) {
-            setToken(input);
-        } else {
-            // set error?
-            setAuthError("Invalid token!");
-            setTimeout(() => setAuthError(""), 1500);
-        }
+    // fetch user
+    useEffect(() => {
+        (async () => {
+            const response = await fetch(`${API_URL}/auth/user`, { credentials: "include" } );
+            if (response.ok) {
+                setUser(await response.json());
+                setLoading(false);
+            } else {
+                setUser(null);
+                setLoading(false);
+            }
+        })();
+    }, []);
+
+    if (loading) {
+        return <LoadingPage />
     }
 
-    if (token == null) {
-        return <LoginPage attemptLogin={attemptLogin} error={authError} />
+    if (user == null) {
+        return <LoginPage/>
     }
 
-    return <AuthContext.Provider value={{ token }}>
+    return <AuthContext.Provider value={{ user }}>
         <MainContent />
     </AuthContext.Provider>
     
@@ -66,23 +73,28 @@ function MainContent() {
     const [categories, setCategories] = useState({} as CategoryResponse);
     const [page, setPage] = useState<Page>("home");
     const [tags, setTags] = useState<string[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         (async () => {
-            const response = await fetch(`${API_URL}/posts?limit=-1`);
+            const response = await fetch(`${API_URL}/posts?limit=-1`, { credentials: "include" });
             if (!response.ok) throw new Error("Couldn't fetch posts");
             const result = await response.json();
             setPosts(SCHEMA.POSTS_RESPONSE.parse(result));
 
-            const cat_res = await fetch(`${API_URL}/categories`);
+            const cat_res = await fetch(`${API_URL}/categories`, { credentials: "include" } );
             if (!cat_res.ok) throw new Error("Couldn't fetch categories");
             setCategories(SCHEMA.CATEGORY_RESPONSE.parse(await cat_res.json()));
 
-            const tag_res = await fetch(`${API_URL}/tags`);
+            const tag_res = await fetch(`${API_URL}/tags`, { credentials: "include" } );
             const tag_result = await tag_res.json();
             setTags(tag_result);
+
+            setLoading(false);
         })();
     }, []);
+
+    if (loading) return <LoadingPage />
 
     return (
         <PostContext.Provider value={{ posts, setPosts, categories, setCategories, tags, setTags }}>
@@ -95,6 +107,12 @@ function MainContent() {
             </section>
         </PostContext.Provider>
     )
+}
+
+function LoadingPage() {
+    return <section className='flex-col center'>
+        <h4>Loading...</h4>
+    </section>
 }
 
 function TitleBar({ page }: { page: Page }) {

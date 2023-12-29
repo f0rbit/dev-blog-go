@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/charmbracelet/log"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 )
@@ -26,8 +27,8 @@ func LoadAuthConfig() {
 	}
 }
 
+const HOMEPAGE = "http://localhost:5173/";
 const AUTH_HEADER = "Auth-Token"
-
 var AUTH_TOKEN = os.Getenv("AUTH_TOKEN")
 
 func TryToken(w http.ResponseWriter, r *http.Request) {
@@ -42,10 +43,10 @@ func TryToken(w http.ResponseWriter, r *http.Request) {
 
 func GetUserInfo(w http.ResponseWriter, r *http.Request) {
     user, ok := r.Context().Value("user").(*types.User);	
+    log.Info("User Request", "ok", ok, "user", user);
 
     if ok && user != nil {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("User: " + user.Username))
+        utils.ResponseJSON(user, w);
 	} else {
 		// User is not authenticated, handle accordingly (e.g., redirect to login)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -86,7 +87,7 @@ func GithubCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/auth/user", http.StatusSeeOther)
+	http.Redirect(w, r, HOMEPAGE, http.StatusSeeOther)
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +97,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 	session.Save(r, w)
 
-	http.Redirect(w, r, "/auth/user", http.StatusSeeOther)
+	http.Redirect(w, r, HOMEPAGE, http.StatusSeeOther)
 }
 
 // Example logic to handle user registration or retrieval

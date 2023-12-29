@@ -28,7 +28,7 @@ func FetchPosts(w http.ResponseWriter, r *http.Request) {
 
 	posts, totalPosts, err := database.GetPosts(category, tag, limit, offset)
 	if err != nil {
-        utils.LogError("Error fetching posts by categorty", err, http.StatusInternalServerError, w);
+        utils.LogError("Error fetching posts by category", err, http.StatusInternalServerError, w);
 		return
 	}
 
