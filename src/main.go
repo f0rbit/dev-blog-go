@@ -27,8 +27,8 @@ func init() {
 		log.Warn("No .env file found")
 	}
 
-    routes.LoadAuthConfig();
-    utils.CreateStore();
+	routes.LoadAuthConfig()
+	utils.CreateStore()
 }
 
 func main() {
@@ -54,10 +54,10 @@ func main() {
 	r.HandleFunc("/tags", routes.GetTags).Methods("GET")
 	// auth
 	r.HandleFunc("/auth/test", routes.TryToken).Methods("GET")
-    r.HandleFunc("/auth/user", routes.GetUserInfo).Methods("GET")
+	r.HandleFunc("/auth/user", routes.GetUserInfo).Methods("GET")
 	r.HandleFunc("/auth/github/login", routes.GithubLogin).Methods("GET")
 	r.HandleFunc("/auth/github/callback", routes.GithubCallback).Methods("GET")
-    r.HandleFunc("/auth/logout", routes.Logout).Methods("GET")
+	r.HandleFunc("/auth/logout", routes.Logout).Methods("GET")
 
 	// modify cors
 	c := cors.New(cors.Options{
@@ -95,27 +95,39 @@ func main() {
 	log.Info("Graceful shutdown complete.")
 }
 
+var EXEMPT_URL = []string{"/auth/github/login", "/auth/logout", "/auth/test", "/auth/user", "/auth/github/callback"}
+
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var user *types.User
+
 		// Retrieve the user session
 		session, err := utils.GetStore().Get(r, "user-session")
 
-        if err != nil {
-            utils.LogError("Error obtaining session", err, http.StatusInternalServerError, w);
-            return;
-        }
+		if err != nil {
+			utils.LogError("Error obtaining session", err, http.StatusInternalServerError, w)
+			return
+		}
 
-		var user *types.User
 		if userID, ok := session.Values["user_id"].(int); ok {
 			user, err = database.GetUserByID(userID)
 			if err != nil {
-                utils.LogError("User not found", err, http.StatusNotFound, w);
+				utils.LogError("User not found", err, http.StatusNotFound, w)
 				return
 			}
 		} else {
-            http.Error(w, "Unauthorized", http.StatusUnauthorized)
-            return;
-        }
+			// check if the path is exempt from auth check
+			for _, url := range EXEMPT_URL {
+				if url == r.URL.Path {
+					ctx := context.WithValue(r.Context(), "user", user)
+					next.ServeHTTP(w, r.WithContext(ctx))
+					return
+				}
+			}
+			// otherwise return 401
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
 
 		ctx := context.WithValue(r.Context(), "user", user)
 		next.ServeHTTP(w, r.WithContext(ctx))
