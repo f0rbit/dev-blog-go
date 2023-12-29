@@ -41,9 +41,9 @@ func TryToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUserInfo(w http.ResponseWriter, r *http.Request) {
-    user := r.Context().Value("user").(*types.User);	
+    user, ok := r.Context().Value("user").(*types.User);	
 
-    if user != nil {
+    if ok && user != nil {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("User: " + user.Username))
 	} else {
