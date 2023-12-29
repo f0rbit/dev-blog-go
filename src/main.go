@@ -14,9 +14,19 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/cors"
 )
+
+func init() {
+	// load .env file
+	if err := godotenv.Load(); err != nil {
+		log.Warn("No .env file found")
+	}
+
+    routes.LoadAuthConfig();
+}
 
 func main() {
 	log.SetLevel(log.DebugLevel)
@@ -39,8 +49,10 @@ func main() {
 	r.HandleFunc("/post/tag", routes.AddPostTag).Methods("PUT")
 	r.HandleFunc("/post/tag", routes.DeletePostTag).Methods("DELETE")
 	r.HandleFunc("/tags", routes.GetTags).Methods("GET")
-    // auth
-    r.HandleFunc("/auth/test", routes.TryToken).Methods("GET");
+	// auth
+	r.HandleFunc("/auth/test", routes.TryToken).Methods("GET")
+	r.HandleFunc("/auth/github/login", routes.GithubLogin).Methods("GET")
+	r.HandleFunc("/auth/github/callback", routes.GithubCallback).Methods("GET")
 
 	// modify cors
 	c := cors.New(cors.Options{
@@ -77,7 +89,6 @@ func main() {
 	}
 	log.Info("Graceful shutdown complete.")
 }
-
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
