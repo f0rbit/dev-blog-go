@@ -32,3 +32,22 @@ type PostsResponse struct {
 	PerPage     int    `json:"per_page"`
 	CurrentPage int    `json:"current_page"`
 }
+
+
+// GitHubUser represents the structure of a GitHub user's JSON response.
+type GitHubUser struct {
+	ID        int    `json:"id"`
+	Login     string `json:"login"`
+	Email     string `json:"email"`
+	AvatarURL string `json:"avatar_url"`
+	// Add other user-related fields as needed
+}
+
+// User represents a user's information.
+type User struct {
+	ID        int
+	GitHubID  int
+	Username  string
+	Email     string
+	AvatarURL string
+}
