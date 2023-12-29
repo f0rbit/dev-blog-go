@@ -40,24 +40,10 @@ func TryToken(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetLogin(w http.ResponseWriter, r *http.Request) {
-	session, err := utils.GetStore().Get(r, "user-session")
-	if err != nil {
-		utils.LogError("Error getting session", err, http.StatusInternalServerError, w)
-		return
-	}
+func GetUserInfo(w http.ResponseWriter, r *http.Request) {
+    user := r.Context().Value("user").(*types.User);	
 
-	// Check if the user is authenticated
-	if userID, ok := session.Values["user_id"].(int); ok {
-		// You have the user's ID, you can now look up the user's data
-		user, err := database.GetUserByID(userID)
-		if err != nil {
-			http.Error(w, "User not found", http.StatusNotFound)
-			return
-		}
-
-		// You can use the 'user' object in your handler
-		// ...
+    if user != nil {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("User: " + user.Username))
 	} else {

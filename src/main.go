@@ -4,6 +4,7 @@ package main
 import (
 	"blog-server/database"
 	"blog-server/routes"
+	"blog-server/types"
 	"blog-server/utils"
 	"context"
 	"errors"
@@ -53,7 +54,7 @@ func main() {
 	r.HandleFunc("/tags", routes.GetTags).Methods("GET")
 	// auth
 	r.HandleFunc("/auth/test", routes.TryToken).Methods("GET")
-    r.HandleFunc("/auth/user", routes.GetLogin).Methods("GET")
+    r.HandleFunc("/auth/user", routes.GetUserInfo).Methods("GET")
 	r.HandleFunc("/auth/github/login", routes.GithubLogin).Methods("GET")
 	r.HandleFunc("/auth/github/callback", routes.GithubCallback).Methods("GET")
     r.HandleFunc("/auth/logout", routes.Logout).Methods("GET")
@@ -96,14 +97,27 @@ func main() {
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			next.ServeHTTP(w, r)
-			return
-		}
-		if r.Header.Get(routes.AUTH_HEADER) == routes.AUTH_TOKEN {
-			next.ServeHTTP(w, r)
-			return
-		}
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		// Retrieve the user session
+		session, err := utils.GetStore().Get(r, "user-session")
+
+        if err != nil {
+            utils.LogError("Error obtaining session", err, http.StatusInternalServerError, w);
+            return;
+        }
+
+		var user *types.User
+		if userID, ok := session.Values["user_id"].(int); ok {
+			user, err = database.GetUserByID(userID)
+			if err != nil {
+                utils.LogError("User not found", err, http.StatusNotFound, w);
+				return
+			}
+		} else {
+            http.Error(w, "Unauthorized", http.StatusUnauthorized)
+            return;
+        }
+
+		ctx := context.WithValue(r.Context(), "user", user)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
