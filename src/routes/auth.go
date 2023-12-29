@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/charmbracelet/log"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 )
@@ -100,6 +99,16 @@ func GithubCallback(w http.ResponseWriter, r *http.Request) {
 		utils.LogError("Couldn't save session", err, http.StatusInternalServerError, w)
 		return
 	}
+
+	http.Redirect(w, r, "/auth/user", http.StatusSeeOther)
+}
+
+func Logout(w http.ResponseWriter, r *http.Request) {
+	session, _ := utils.GetStore().Get(r, "user-session")
+
+	delete(session.Values, "user_id")
+
+	session.Save(r, w)
 
 	http.Redirect(w, r, "/auth/user", http.StatusSeeOther)
 }
