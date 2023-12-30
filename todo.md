@@ -59,7 +59,7 @@
     - [x] Store token and include in headers to server
 
 # v0.7
-- [ ] Transition DB into a multi-user setup
+- [x] Transition DB into a multi-user setup
 - [ ] Allow for multiple 'authors' on the server
 - [ ] Client supports multiple 'authors'
 - [x] Authentication support for each author individually
