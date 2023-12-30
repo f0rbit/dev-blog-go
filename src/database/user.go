@@ -24,6 +24,8 @@ func CreateUser(githubUser *types.GitHubUser) (*types.User, error) {
 		return nil, err
 	}
 
+    /** @todo - create root category */
+
 	// Return the created user
 	return &types.User{
 		ID:        int(userID),

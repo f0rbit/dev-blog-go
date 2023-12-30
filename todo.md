@@ -60,7 +60,7 @@
 
 # v0.7
 - [x] Transition DB into a multi-user setup
-- [ ] Allow for multiple 'authors' on the server
+- [x] Allow for multiple 'authors' on the server
 - [ ] Client supports multiple 'authors'
 - [x] Authentication support for each author individually
     - [x] Backend logging in
@@ -74,6 +74,7 @@
 - [ ] Expose API to third-party website, make sure it all works
 - [x] Deploy client on public-accessible 
     - [x] Try Github pages since there's no need for a server
+- [ ] Create interface for adding/removing categories for each user
 
 # v1.0
 - [ ] Integration with third-party API, only support `devto` at the moment, but create a generic interface for adding more
