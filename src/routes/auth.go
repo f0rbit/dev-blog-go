@@ -40,6 +40,24 @@ func TryToken(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func GetUserTokens(w http.ResponseWriter, r *http.Request) {
+    user := utils.GetUser(r);
+
+    if user == nil {
+        utils.Unauthorized(w);
+        return
+    }
+
+    tokens, err := database.GetTokens(user.ID);
+    
+    if err != nil {
+        utils.LogError("Error getting tokens", err, http.StatusInternalServerError, w);
+        return;
+    }
+
+    utils.ResponseJSON(tokens, w);
+}
+
 func GetUserInfo(w http.ResponseWriter, r *http.Request) {
     user := utils.GetUser(r);
 

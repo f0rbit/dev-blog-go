@@ -58,6 +58,7 @@ func main() {
 	r.HandleFunc("/auth/github/login", routes.GithubLogin).Methods("GET")
 	r.HandleFunc("/auth/github/callback", routes.GithubCallback).Methods("GET")
 	r.HandleFunc("/auth/logout", routes.Logout).Methods("GET")
+    r.HandleFunc("/auth/tokens", routes.GetUserTokens).Methods("GET")
 
 	// modify cors
 	c := cors.New(cors.Options{

@@ -20,3 +20,6 @@ INSERT OR IGNORE INTO posts (slug, author_id, title, content, category) VALUES
 
 INSERT OR IGNORE INTO tags (post_id, tag) VALUES
     (1, 'test');
+
+INSERT OR IGNORE INTO access_keys (key_value, user_id) VALUES
+    ('hahahahahthisisatestkey', 1);
