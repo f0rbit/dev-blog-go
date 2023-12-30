@@ -71,8 +71,20 @@
 
 # v0.8
 - [ ] Client implementation of managing api tokens in settings
+- [ ] Server access tokens CRUD operations
+    - [ ] Create token
+    - [ ] Update existing token
+    - [ ] Delete tokens
+    - [x] Get tokens
 - [ ] Create interface for adding/removing categories for each user
+    - [ ] Create category
+    - [ ] Remove category
+    - [ ] Update category
+    - [x] Get categories
+
+# v0.9
 - [ ] Expose API to third-party website, make sure it all works
+- [ ] > 80% test coverage
 - [x] Deploy client on public-accessible 
     - [x] Try Github pages since there's no need for a server
 
@@ -84,9 +96,14 @@
 - [ ] Integrate with media-timeline project
     - [ ] Tightly integrated, not just sharing API keys but full linking workflow that feels natural
     - [ ] Obviously for this, have to finish up media-timeline as well.
-- [ ] > 80% test coverage
 
 # v1.1
+- [ ] Analytics on server
+    - [ ] Endpoint for "liking" a post
+- [ ] Build homepage
+    - [ ] View analytics
+
+# v1.2
 - [ ] Light mode support & theme switcher
 - [ ] Refactor for support for multiple themes
 
