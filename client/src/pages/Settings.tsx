@@ -46,7 +46,7 @@ function Profile() {
 }
 
 function Tokens() {
-    const [tokens, setTokens] = useState<AccessKey[] | null>(null);
+    const [tokens, setTokens] = useState<TokenCreation[] | null>(null);
     const [creating, setCreating] = useState(false);
     const { user } = useContext(AuthContext);
 
@@ -54,8 +54,8 @@ function Tokens() {
         (async () => {
             const response = await fetch(`${API_URL}/tokens`, { method: "GET", credentials: "include" });
             if (!response.ok) throw new Error("Couldn't fetch tokens");
-            const result = await response.json();
-            setTokens(result);
+            const result = (await response.json()) as AccessKey[];
+            setTokens(result.map((r) => ({ ...r, saving: false })));
         })();
     }, []);
 
@@ -63,19 +63,20 @@ function Tokens() {
         const mode = token.id < 0 ? "new" : "edit";
         const response = await fetch(`${API_URL}/token/${mode}`, { method: mode == "new" ? "POST" : "PUT", credentials: "include", body: JSON.stringify(token) });
         if (!response.ok) return;
-        const result = await response.json() as AccessKey;
 
         if (tokens == null) {
-            setTokens([ result ]);
+            const new_token = { ...(await response.json()), saving: false };
+            setTokens([ new_token ]);
             return;
         }
         if (mode == "new") {
-            setTokens([ ...tokens, result ]);
+            const new_token = { ...(await response.json()), saving: false };
+            setTokens([ ...tokens, new_token ]);
             setCreating(false);
         } else {
             setTokens(tokens.map((t) => {
-                if (t.id != result.id) return t;
-                return result;
+                if (t.id != token.id) return t;
+                return { ...token, saving: false };
             }));
         }
     }
@@ -100,7 +101,7 @@ function Tokens() {
     </div>;
 }
 
-type TokenCreation = Omit<AccessKey, "created_at" | "updated_at">
+type TokenCreation = Omit<AccessKey, "created_at" | "updated_at"> & { saving: boolean };
 
 const EMPTY_TOKEN: Omit<TokenCreation, "user_id"> = {
     id: -1,
@@ -108,20 +109,20 @@ const EMPTY_TOKEN: Omit<TokenCreation, "user_id"> = {
     name: "",
     note: "",
     enabled: true,
+    saving: false,
 }
 
 function TokenRow({ token, save }: { token: TokenCreation, save: (token: TokenCreation) => void }) {
     const [editing, setEditing] = useState(token);
     const mode = token.id < 0 ? "create" : "edit";
     const [enabled, setEnabled] = useState(mode == "create");
-    const [saving, setSaving] = useState(false);
-    const icon = saving ? <Oval width={18} height={18} strokeWidth={8} /> : (mode == "create" ? <Check /> : <Save />);
+    const icon = token.saving ? <Oval width={18} height={18} strokeWidth={8} /> : (mode == "create" ? <Check /> : <Save />);
 
     return <>
         <div className="api-token" style={{ fontFamily: "monospace" }}>{editing.value}</div>
         <input type="text" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} disabled={!enabled} />
         <input type="text" value={editing.note} onChange={(e) => setEditing({ ...editing, note: e.target.value })} disabled={!enabled} />
         <input type="checkbox" checked={editing.enabled} onChange={(e) => setEditing({ ...editing, enabled: e.target.checked })} disabled={!enabled} />
-        {saving ? <button>{icon}</button> : enabled ? <button onClick={() => { setEnabled(false); setSaving(true); save(editing) }}>{icon}</button> : <button onClick={() => setEnabled(true)}><Edit /></button>}
+        {token.saving ? <button>{icon}</button> : enabled ? <button onClick={() => { setEnabled(false); token.saving = true; save(editing) }}>{icon}</button> : <button onClick={() => setEnabled(true)}><Edit /></button>}
     </>;
 }
