@@ -49,6 +49,11 @@ func CreateCategory(w http.ResponseWriter, r *http.Request) {
         return;
     }
 
+    if newCategory.Name == "root" {
+        utils.LogError("Invalid category name", errors.New("Attempted to create category with name 'root'"), http.StatusBadRequest, w);
+        return;
+    }
+
     // verify that the owner_id is the same as the user_id
     if newCategory.OwnerID != user.ID {
         utils.LogError("Invalid userID", errors.New("Create category userID doesn't match userID"), http.StatusBadRequest, w);
