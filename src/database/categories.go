@@ -2,11 +2,15 @@ package database
 
 import (
 	"blog-server/types"
+	"errors"
 )
 
-func GetCategories() ([]types.Category, error) {
+func GetCategories(user *types.User) ([]types.Category, error) {
+    if user == nil {
+        return nil, errors.New("Invalid user reference")
+    }
     var categories []types.Category
-	rows, err := db.Query("SELECT name, parent FROM categories")
+	rows, err := db.Query("SELECT name, parent FROM categories WHERE owner_id = ?", user.ID)
 	if err != nil { return categories, err; }
 
 	for rows.Next() {

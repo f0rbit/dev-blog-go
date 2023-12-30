@@ -1,12 +1,9 @@
-import { useState } from "react";
+import { Github } from "lucide-react";
 
-export function LoginPage({ attemptLogin, error }: { attemptLogin: (i: string) => void, error: string }) {
-    const [input, setInput] = useState("");
-
+export function LoginPage() {
     return <section className="flex-col center">
-        <label>Password</label>
-        <input type="text" value={input} onChange={(e) => setInput(e.target.value)} />
-        <button type="button" onClick={() => attemptLogin(input)}>Login</button>
-        <p className="error-message" style={{ height: "16px"}}>{error}</p>
+        <a href="http://localhost:8080/auth/github/login" style={{textDecoration: "none"}}>
+            <button><Github /><span>Login</span></button>
+        </a>
     </section>
 }

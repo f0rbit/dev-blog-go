@@ -4,6 +4,8 @@ package main
 import (
 	"blog-server/database"
 	"blog-server/routes"
+	"blog-server/types"
+	"blog-server/utils"
 	"context"
 	"errors"
 	"net/http"
@@ -14,9 +16,20 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/cors"
 )
+
+func init() {
+	// load .env file
+	if err := godotenv.Load(); err != nil {
+		log.Warn("No .env file found")
+	}
+
+	routes.LoadAuthConfig()
+	utils.CreateStore()
+}
 
 func main() {
 	log.SetLevel(log.DebugLevel)
@@ -39,8 +52,12 @@ func main() {
 	r.HandleFunc("/post/tag", routes.AddPostTag).Methods("PUT")
 	r.HandleFunc("/post/tag", routes.DeletePostTag).Methods("DELETE")
 	r.HandleFunc("/tags", routes.GetTags).Methods("GET")
-    // auth
-    r.HandleFunc("/auth/test", routes.TryToken).Methods("GET");
+	// auth
+	r.HandleFunc("/auth/test", routes.TryToken).Methods("GET")
+	r.HandleFunc("/auth/user", routes.GetUserInfo).Methods("GET")
+	r.HandleFunc("/auth/github/login", routes.GithubLogin).Methods("GET")
+	r.HandleFunc("/auth/github/callback", routes.GithubCallback).Methods("GET")
+	r.HandleFunc("/auth/logout", routes.Logout).Methods("GET")
 
 	// modify cors
 	c := cors.New(cors.Options{
@@ -78,17 +95,59 @@ func main() {
 	log.Info("Graceful shutdown complete.")
 }
 
+var EXEMPT_URL = []string{"/auth/github/login", "/auth/logout", "/auth/test", "/auth/user", "/auth/github/callback"}
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			next.ServeHTTP(w, r)
+		var user *types.User
+
+        // first check for an "API_TOKEN" in the headers
+        auth_token := r.Header.Get(routes.AUTH_HEADER)
+        if auth_token != "" {
+            user, err := database.GetUserByToken(auth_token);
+            if err != nil {
+                utils.LogError("Error fetching user by token", err, http.StatusNotFound, w);
+                return;
+            }
+            if user != nil {
+                ctx := context.WithValue(r.Context(), "user", user);
+                next.ServeHTTP(w, r.WithContext(ctx));
+                return;
+            } else {
+                http.Error(w, "Invalid token", http.StatusUnauthorized);
+                return;
+            }
+        } 
+
+		// Retrieve the user session
+		session, err := utils.GetStore().Get(r, "user-session")
+
+		if err != nil {
+			utils.LogError("Error obtaining session", err, http.StatusInternalServerError, w)
 			return
 		}
-		if r.Header.Get(routes.AUTH_HEADER) == routes.AUTH_TOKEN {
-			next.ServeHTTP(w, r)
+
+		if userID, ok := session.Values["user_id"].(int); ok {
+			user, err = database.GetUserByID(userID)
+			if err != nil {
+				utils.LogError("User not found", err, http.StatusNotFound, w)
+				return
+			}
+		} else {
+			// check if the path is exempt from auth check
+			for _, url := range EXEMPT_URL {
+				if url == r.URL.Path {
+					ctx := context.WithValue(r.Context(), "user", user)
+					next.ServeHTTP(w, r.WithContext(ctx))
+					return
+				}
+			}
+			// otherwise return 401
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+
+		ctx := context.WithValue(r.Context(), "user", user)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

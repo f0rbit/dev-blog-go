@@ -59,15 +59,22 @@
     - [x] Store token and include in headers to server
 
 # v0.7
-- [ ] Expose API to third-party website
-- [x] Deploy client on public-accessible 
-    - [x] Try Github pages since there's no need for a server
+- [x] Transition DB into a multi-user setup
+- [x] Allow for multiple 'authors' on the server
+- [x] Client supports multiple 'authors'
+- [x] Authentication support for each author individually
+    - [x] Backend logging in
+    - [x] Front end log in page / logout button
+- [ ] Fix testing with new authentication flow
+    - [ ] Create a "test" user
+    - [ ] Have an api-keys table that allows passing through a token in header to access as a user
 
 # v0.8
-- [ ] Transition DB into a multi-user setup
-- [ ] Allow for multiple 'authors' on the server
-- [ ] Authentication support for each author individually
-- [ ] Client supports multiple 'authors'
+- [ ] Client implementation of managing api tokens in settings
+- [ ] Expose API to third-party website, make sure it all works
+- [x] Deploy client on public-accessible 
+    - [x] Try Github pages since there's no need for a server
+- [ ] Create interface for adding/removing categories for each user
 
 # v1.0
 - [ ] Integration with third-party API, only support `devto` at the moment, but create a generic interface for adding more
