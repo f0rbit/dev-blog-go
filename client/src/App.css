@@ -366,4 +366,13 @@ main {
         width: min-content;
         margin: auto;
     }
+
+    .api-token {
+        display: flex;
+        align-items: center;
+
+        border-bottom: 1px var(--border-primary) solid;
+        border-radius: 5px;
+        padding: 0px 5px;
+    }
 }
