@@ -71,10 +71,10 @@
 
 # v0.8
 - [ ] Client implementation of managing api tokens in settings
+- [ ] Create interface for adding/removing categories for each user
 - [ ] Expose API to third-party website, make sure it all works
 - [x] Deploy client on public-accessible 
     - [x] Try Github pages since there's no need for a server
-- [ ] Create interface for adding/removing categories for each user
 
 # v1.0
 - [ ] Integration with third-party API, only support `devto` at the moment, but create a generic interface for adding more
