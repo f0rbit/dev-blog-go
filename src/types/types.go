@@ -51,3 +51,14 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+type AccessKey struct {
+	ID        int       `json:"id"`
+	Value     string    `json:"value"`
+	UserID    int       `json:"user_id"`
+	Name      string    `json:"name"`
+	Note      string    `json:"note"`
+	Enabled   bool      `json:"enabled"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}

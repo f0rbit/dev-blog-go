@@ -88,17 +88,17 @@ func GetUserByToken(token string) (*types.User, error) {
 	return GetUserByID(userID)
 }
 
-func GetTokens(userID int) ([]string, error) {
-	var tokens []string
-	rows, err := db.Query("SELECT key_value FROM access_keys WHERE user_id = ?", userID)
+func GetTokens(userID int) ([]types.AccessKey, error) {
+	var tokens []types.AccessKey
+	rows, err := db.Query("SELECT * FROM access_keys WHERE user_id = ?", userID)
 
 	if err != nil {
 		return tokens, err
 	}
 
 	for rows.Next() {
-		var token string
-		err := rows.Scan(&token)
+		var token types.AccessKey
+		err := rows.Scan(&token.ID, &token.Value, &token.UserID, &token.Name, &token.Note, &token.Enabled, &token.CreatedAt, &token.UpdatedAt)
 		if err != nil {
 			return tokens, err
 		}
