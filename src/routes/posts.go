@@ -26,7 +26,14 @@ func FetchPosts(w http.ResponseWriter, r *http.Request) {
 	}
 	tag := r.URL.Query().Get("tag")
 
-	posts, totalPosts, err := database.GetPosts(category, tag, limit, offset)
+    user := utils.GetUser(r);
+
+    if user == nil {
+        utils.Unauthorized(w);
+        return;
+    }
+
+	posts, totalPosts, err := database.GetPosts(user, category, tag, limit, offset)
 	if err != nil {
         utils.LogError("Error fetching posts by category", err, http.StatusInternalServerError, w);
 		return

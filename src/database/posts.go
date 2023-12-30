@@ -156,7 +156,7 @@ func UpdatePost(updatedPost *types.Post) error {
 	return err
 }
 
-func GetPosts(category, tag string, limit, offset int) ([]types.Post, int, error) {
+func GetPosts(user *types.User, category, tag string, limit, offset int) ([]types.Post, int, error) {
 	var posts []types.Post
 	var totalPosts int
 	log.Info("Searching for posts", "category", category, "tag", tag)
@@ -192,23 +192,25 @@ func GetPosts(category, tag string, limit, offset int) ([]types.Post, int, error
 	inClause := strings.Join(placeholders, ",")
 
 	var params []any
+	params = append(params, user.ID)
+
 	for _, s := range search_categories {
 		params = append(params, s)
 	}
 
 	// get the count of total posts
 	if tag == "" {
-		err = db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM posts WHERE category IN (%s)", inClause), params...).Scan(&totalPosts)
+		err = db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM posts WHERE posts.author_id = ? AND category IN (%s)", inClause), params...).Scan(&totalPosts)
 	} else {
 		params = append(params, tag)
-		err = db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM posts LEFT JOIN tags ON tags.post_id = posts.id WHERE posts.category IN (%s) AND tags.tag = ?", inClause), params...).Scan(&totalPosts)
+		err = db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM posts LEFT JOIN tags ON tags.post_id = posts.id WHERE posts.author_id = ? AND posts.category IN (%s) AND tags.tag = ?", inClause), params...).Scan(&totalPosts)
 	}
 	if err != nil {
 		return posts, totalPosts, err
 	}
 	log.Infof("Found %d posts", totalPosts)
 
-	where := " posts.category IN (%s) "
+	where := " posts.author_id = ? AND posts.category IN (%s) "
 	if tag != "" {
 		where += " AND tags.tag = ? "
 	}
@@ -217,6 +219,7 @@ func GetPosts(category, tag string, limit, offset int) ([]types.Post, int, error
 	query := fmt.Sprintf(`
     SELECT 
         posts.id, 
+        posts.author_id,
         posts.slug, 
         posts.title, 
         posts.content, 
@@ -239,7 +242,7 @@ func GetPosts(category, tag string, limit, offset int) ([]types.Post, int, error
 
 	params = append(params, limit)
 	params = append(params, offset)
-	log.Info("Searching with limit & offset of", "limit", limit, "offset", offset)
+	log.Info("Searching with parameters", "author_id", params[0], "search_categories", search_categories, "tag", tag, "limit", limit, "offset", offset)
 
 	rows, err := db.Query(query, params...)
 	if err != nil {
@@ -249,7 +252,7 @@ func GetPosts(category, tag string, limit, offset int) ([]types.Post, int, error
 	for rows.Next() {
 		var post types.Post
 		var tags sql.NullString
-		err := rows.Scan(&post.Id, &post.Slug, &post.Title, &post.Content, &post.Category, &post.Archived, &post.PublishAt, &post.CreatedAt, &post.UpdatedAt, &tags)
+		err := rows.Scan(&post.Id, &post.AuthorID, &post.Slug, &post.Title, &post.Content, &post.Category, &post.Archived, &post.PublishAt, &post.CreatedAt, &post.UpdatedAt, &tags)
 
 		if err != nil {
 			return posts, totalPosts, err
@@ -266,5 +269,3 @@ func GetPosts(category, tag string, limit, offset int) ([]types.Post, int, error
 
 	return posts, totalPosts, nil
 }
-
-

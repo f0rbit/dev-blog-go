@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/charmbracelet/log"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 )
@@ -42,10 +41,9 @@ func TryToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUserInfo(w http.ResponseWriter, r *http.Request) {
-    user, ok := r.Context().Value("user").(*types.User);	
-    log.Info("User Request", "ok", ok, "user", user);
+    user := utils.GetUser(r);
 
-    if ok && user != nil {
+    if user != nil {
         utils.ResponseJSON(user, w);
 	} else {
 		// User is not authenticated, handle accordingly (e.g., redirect to login)

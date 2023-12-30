@@ -104,8 +104,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// Retrieve the user session
 		session, err := utils.GetStore().Get(r, "user-session")
 
-        log.Info("middleware", "session", session);
-
 		if err != nil {
 			utils.LogError("Error obtaining session", err, http.StatusInternalServerError, w)
 			return
