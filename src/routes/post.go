@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/charmbracelet/log"
 	"github.com/gorilla/mux"
 )
 
@@ -22,7 +21,7 @@ func GetPostBySlug(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var slug string = mux.Vars(r)["slug"]
-	log.Info("fetching by", "slug", slug)
+
 	if len(slug) == 0 {
 		utils.LogError("No slug specified", nil, http.StatusBadRequest, w)
 		return

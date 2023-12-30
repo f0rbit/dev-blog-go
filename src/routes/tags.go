@@ -16,6 +16,22 @@ func AddPostTag(w http.ResponseWriter, r *http.Request) {
 		return;
 	}
 
+    user := utils.GetUser(r);
+    if user == nil {
+        utils.Unauthorized(w);
+        return;
+    }
+    // check if user owns the post
+    post, err := database.FetchPost(user, database.ID, params.id);
+    if err != nil {
+        utils.LogError("Error fetching post", err, http.StatusInternalServerError, w);
+        return;
+    }
+    if post.AuthorID != user.ID {
+        utils.LogError("Unauthorized access", errors.New("userID doesn't match authorID in AddPostTag"), http.StatusUnauthorized, w);
+        return;
+    }
+
 	err = database.CreateTag(params.id, params.tag);
 
 	if err != nil {
@@ -32,6 +48,21 @@ func DeletePostTag(w http.ResponseWriter, r *http.Request) {
         utils.LogError("Error parsing params", err, http.StatusBadRequest, w);
 		return;
 	}
+    user := utils.GetUser(r);
+    if user == nil {
+        utils.Unauthorized(w);
+        return;
+    }
+    // check if user owns the post
+    post, err := database.FetchPost(user, database.ID, params.id);
+    if err != nil {
+        utils.LogError("Error fetching post", err, http.StatusInternalServerError, w);
+        return;
+    }
+    if post.AuthorID != user.ID {
+        utils.LogError("Unauthorized access", errors.New("userID doesn't match authorID in AddPostTag"), http.StatusUnauthorized, w);
+        return;
+    }
 
 	err = database.DeleteTag(params.id, params.tag)
 
@@ -44,7 +75,12 @@ func DeletePostTag(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTags(w http.ResponseWriter, r *http.Request) {
-	tags, err := database.GetTags()
+    user := utils.GetUser(r);
+    if user == nil {
+        utils.Unauthorized(w);
+        return;
+    }
+	tags, err := database.GetTags(user)
 	if err != nil {
         utils.LogError("Error fetching tags", err, http.StatusInternalServerError, w);
 		return

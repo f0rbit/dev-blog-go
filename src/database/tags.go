@@ -1,8 +1,16 @@
 package database
 
-func GetTags() ([]string, error) {
+import (
+	"blog-server/types"
+	"errors"
+)
+
+func GetTags(user *types.User) ([]string, error) {
 	var tags []string
-	rows, err := db.Query("SELECT DISTINCT tag FROM tags")
+    if user == nil {
+        return tags, errors.New("Invalid user reference")
+    }
+	rows, err := db.Query("SELECT DISTINCT tags.tag FROM posts LEFT JOIN tags ON tags.post_id = posts.id WHERE posts.author_id = ?", user.ID)
 	if err != nil {
 		return tags, err
 	}
