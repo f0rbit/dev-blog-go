@@ -2,6 +2,8 @@ name: Run Tests
 
 on:
   push:
+    branches-ignore:
+      - master
 
 jobs:
   test:
@@ -16,7 +18,7 @@ jobs:
           go-version: '>=1.21' # Use the Go version you need
           cache-dependency-path: src/go.sum
       - name: Install bun
-        run: curl -fsSL https://bun.sh/install | bash
+        uses: oven-sh/setup-bun@v1
       - name: Build Server
         run: make build-coverage
       - name: Run Tests
