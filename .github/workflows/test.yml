@@ -21,3 +21,5 @@ jobs:
         run: make build-coverage
       - name: Run Tests
         run: make test
+      - name: Server Logs
+        run: cat server.log
