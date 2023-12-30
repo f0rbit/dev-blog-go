@@ -28,35 +28,6 @@ func LoadAuthConfig() {
 
 const HOMEPAGE = "http://localhost:5173/";
 const AUTH_HEADER = "Auth-Token"
-var AUTH_TOKEN = os.Getenv("AUTH_TOKEN")
-
-func TryToken(w http.ResponseWriter, r *http.Request) {
-	token := r.URL.Query().Get("token")
-
-	if token != AUTH_TOKEN {
-		w.WriteHeader(http.StatusUnauthorized)
-	} else {
-		w.WriteHeader(http.StatusOK)
-	}
-}
-
-func GetUserTokens(w http.ResponseWriter, r *http.Request) {
-    user := utils.GetUser(r);
-
-    if user == nil {
-        utils.Unauthorized(w);
-        return
-    }
-
-    tokens, err := database.GetTokens(user.ID);
-    
-    if err != nil {
-        utils.LogError("Error getting tokens", err, http.StatusInternalServerError, w);
-        return;
-    }
-
-    utils.ResponseJSON(tokens, w);
-}
 
 func GetUserInfo(w http.ResponseWriter, r *http.Request) {
     user := utils.GetUser(r);
