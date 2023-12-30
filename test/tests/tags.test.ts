@@ -65,7 +65,7 @@ describe("tags", () => {
         expect(response).toBeTruthy();
         expect(response.ok).toBeTrue();
         // there should no longer be a "test-tag" in the tags
-        const check = await fetch("localhost:8080/tags", { method: "GET" });
+        const check = await fetch("localhost:8080/tags", { method: "GET", headers });
         const check_result = await check.json();
         expect(check_result).not.toContain("test-tag");
     })

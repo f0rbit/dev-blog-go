@@ -1,7 +1,9 @@
 import { expect, test, describe, afterAll } from "bun:test";
 import type { Post, PostsResponse } from "@client/schema";
+import { AUTH_HEADERS } from "user";
 
 const test_post = {
+    author_id: 1,
     slug: "bun-test-post",
     title: "Bun Test Post",
     content: "this post should be removed after tests completed.",
@@ -34,7 +36,7 @@ const pagination_posts = [
 ];
 const pagination_ids = new Map<string, number>();
 
-const headers = { 'Auth-Token': process.env.AUTH_TOKEN } as any as Headers;
+const headers = AUTH_HEADERS;
 
 describe("posts", () => {
     describe("simple operations", () => {
@@ -82,7 +84,7 @@ describe("posts", () => {
     describe("pagination", () => {
         test("mass-creation", async () => {
             for (const post of pagination_posts) {
-                const response = await fetch("localhost:8080/post/new", { method: "POST", body: JSON.stringify(post), headers });
+                const response = await fetch("localhost:8080/post/new", { method: "POST", body: JSON.stringify({ ...post, author_id: 1 }), headers });
                 expect(!!response).toBeTrue();
                 expect(response.ok).toBeTrue();
                 const result = (await response.json()) as Post;
