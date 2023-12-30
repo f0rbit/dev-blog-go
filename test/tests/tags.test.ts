@@ -1,6 +1,8 @@
 import { beforeAll, expect, test, describe } from "bun:test";
+import { AUTH_HEADERS } from "user";
 
 const test_post = {
+    author_id: 1,
     slug: 'tag-test-post',
     title: "Tag Test Post",
     content: "this post should be removed after tests complete.",
@@ -9,7 +11,7 @@ const test_post = {
 let test_id = null as number | null;
 
 const tags = ["tag-1", "tag-2", "tag-3"] as const;
-const headers = { 'Auth-Token': process.env.AUTH_TOKEN } as any as Headers;
+const headers = AUTH_HEADERS;
 
 beforeAll(async () => {
     // insert a fresh post so we have something to test against
@@ -40,7 +42,7 @@ describe("tags", () => {
         }
     })
     test("get tags", async () => {
-        const response = await fetch("localhost:8080/tags", { method: "GET" });
+        const response = await fetch("localhost:8080/tags", { method: "GET", headers });
         expect(response).toBeTruthy();
         expect(response.ok).toBeTrue();
         const result = await response.json() as string[];
@@ -50,7 +52,7 @@ describe("tags", () => {
         expect(result).toContain("test-tag");
     })
     test("get tagged posts", async () => {
-        const response = await fetch("localhost:8080/posts?tag=test-tag", { method: "GET" });
+        const response = await fetch("localhost:8080/posts?tag=test-tag", { method: "GET", headers });
         expect(response).toBeTruthy();
         expect(response.ok).toBeTrue();
         const result = await response.json();

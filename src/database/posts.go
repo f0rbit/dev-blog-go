@@ -24,16 +24,16 @@ func FetchPost(user *types.User, identifier Identifier, needle interface{}) (typ
         return post, errors.New("No user specified")
     }
     var where string
-	if identifier == ID {
-		where = " posts.id = ?"
-	} else if identifier == Slug {
-		where = " posts.slug = ?"
+	if identifier == "id" {
+		where = "posts.id = ?"
+	} else if identifier == "slug" {
+		where = "posts.slug = ?"
 	}
 
 	var base = `
     SELECT
         posts.id,
-        posts.author_id
+        posts.author_id,
         posts.slug,
         posts.title,
         posts.content,
@@ -48,7 +48,7 @@ func FetchPost(user *types.User, identifier Identifier, needle interface{}) (typ
     LEFT JOIN
         tags ON posts.id = tags.post_id
     WHERE
-        posts.author = ? AND
+        posts.author_id = ? AND
         `+where+`;
     `
 	var tags sql.NullString

@@ -7,9 +7,9 @@ import (
 
 func GetTags(user *types.User) ([]string, error) {
 	var tags []string
-    if user == nil {
-        return tags, errors.New("Invalid user reference")
-    }
+	if user == nil {
+		return tags, errors.New("Invalid user reference")
+	}
 	rows, err := db.Query("SELECT DISTINCT tags.tag FROM posts LEFT JOIN tags ON tags.post_id = posts.id WHERE posts.author_id = ?", user.ID)
 	if err != nil {
 		return tags, err
