@@ -174,7 +174,7 @@ func GetPosts(user *types.User, category, tag string, limit, offset int) ([]type
 
 	// given a category, we want to get all the children category and include those in our select post query as an 'IN (<array of categories>)'
 	var search_categories []string
-	categories, err := GetCategories()
+	categories, err := GetCategories(user)
 	if err != nil {
 		return posts, totalPosts, err
 	}
