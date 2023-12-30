@@ -1,6 +1,9 @@
-import { Palette, Plus, Search, Shield, User } from "lucide-react";
-import { useEffect, useState } from "react";
-import { API_URL } from "../App";
+import { Check, Edit, Palette, Plus, Save, Search, Shield, User } from "lucide-react";
+import { useContext, useEffect, useState } from "react";
+import { API_URL, AuthContext } from "../App";
+import { AccessKey } from "../../schema";
+import { Oval } from "react-loader-spinner";
+import { BuildingPage } from "../components/Building";
 
 const subpages = ["profile", "theme", "tokens"] as const;
 
@@ -35,15 +38,17 @@ export function SettingsPage() {
 }
 
 function Theme() {
-    return <div>Theme</div>;
+    return <BuildingPage />
 }
 
 function Profile() {
-    return <div>Profile</div>
+    return <BuildingPage />
 }
 
 function Tokens() {
-    const [tokens, setTokens] = useState(null);
+    const [tokens, setTokens] = useState<AccessKey[] | null>(null);
+    const [creating, setCreating] = useState(false);
+    const { user } = useContext(AuthContext);
 
     useEffect(() => {
         (async () => {
@@ -53,14 +58,48 @@ function Tokens() {
             setTokens(result);
         })();
     }, []);
+
+    if (tokens == null) return <section className="page-center"><Oval height={20} width={20} strokeWidth={8} /></section>
+
     return <div className="flex-col">
         <div className="flex-row">
             <Search />
             <input type="text" />
-            <button style={{ marginLeft: "auto"}}><Plus /><span>Create</span></button>
+            <button style={{ marginLeft: "auto"}} onClick={() => setCreating(true)}><Plus /><span>Create</span></button>
         </div>
-        <div>
-            <pre>{JSON.stringify(tokens, null, 2)}</pre>
+        <div className="token-grid">
+            <div>Token</div>
+            <div>Name</div>
+            <div>Note</div>
+            <div>Enabled</div>
+            <div></div>
+            {tokens.map((t) => <TokenRow token={t} />)}
+            {creating && <TokenRow token={{ ...EMPTY_TOKEN, user_id: user.id }} />}
         </div>
     </div>;
+}
+
+type TokenCreation = Omit<AccessKey, "created_at" | "updated_at">
+
+const EMPTY_TOKEN: Omit<TokenCreation, "user_id"> = {
+    id: -1,
+    value: "",
+    name: "",
+    note: "",
+    enabled: true,
+}
+
+function TokenRow({ token }: { token: TokenCreation }) {
+    const [editing, setEditing] = useState(token);
+    const mode = token.id < 0 ? "create" : "edit";
+    const [enabled, setEnabled] = useState(mode == "create");
+    const icon = mode == "create" ? <Check /> : <Save />
+
+    return <>
+        <input type="text" value={editing.value} onChange={(e) => setEditing({ ...editing, value: e.target.value})} disabled={!enabled}/>
+        <input type="text" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} disabled={!enabled}/>
+        <input type="text" value={editing.note} onChange={(e) => setEditing({ ...editing, note: e.target.value })} disabled={!enabled}/>
+        <input type="checkbox" checked={editing.enabled} onChange={(e) => setEditing({...editing, enabled: e.target.checked})} disabled={!enabled}/>
+        {enabled ? <button onClick={() => {setEnabled(false)}}>{icon}</button> : <button onClick={() => setEnabled(true)}><Edit /></button>}
+    </>;
 }

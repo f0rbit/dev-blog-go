@@ -97,6 +97,10 @@ input, select, textarea {
     border-radius: 5px;
     padding: 4px 6px;
 }
+input:disabled, select:disabled, textarea:disabled {
+    color: var(--text-dark);
+    background: var(--bg-primary);
+}
 input:focus, select:focus {
     background: var(--accent-secondary);
     border: 1px solid var(--border-secondary);
@@ -338,5 +342,28 @@ main {
     .lucide {
         width: 18px;
         height: 18px;
+    }
+}
+
+.page-center {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.token-grid {
+   display: grid;
+    grid-template-columns: 1fr 1fr 1fr 0.1fr 0.1fr;
+    gap: 5px;
+
+    button {
+        justify-content: center;
+    }
+
+    input[type="checkbox"] {
+        width: min-content;
+        margin: auto;
     }
 }

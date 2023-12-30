@@ -25,7 +25,6 @@ export function PostsPage() {
     const [loading, setLoading] = useState(false);
     const [filters, setFilters] = useState<PostFilters>({ category: null, tag: null });
     const [creatingPost, setCreatingPost] = useState<PostCreation>(EMPTY_POST_CREATION);
-    const { token } = useContext(AuthContext);
 
     if (!posts || !posts.posts) return <p>No Posts Found!</p>;
 
@@ -40,7 +39,7 @@ export function PostsPage() {
 
         setPosts({ ...posts, posts: [...posts.posts, new_post] });
         // send request
-        const response = await fetch(`${API_URL}/post/new`, { method: "POST", body: JSON.stringify(creatingPost), headers: { 'Auth-Token': token ?? "" } });
+        const response = await fetch(`${API_URL}/post/new`, { method: "POST", body: JSON.stringify(creatingPost), credentials: "include" });
         const result = await response.json();
         // update state?
         setLoading(false);
