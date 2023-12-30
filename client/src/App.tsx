@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import './App.css'
 import React from 'react';
-import { FolderTree, Home, LibraryBig, Settings, Tags } from 'lucide-react';
+import { FolderTree, Home, LibraryBig, LogOut, Settings, Tags } from 'lucide-react';
 import { Post, PostsResponse, SCHEMA, CategoryResponse } from "../schema";
 import { HomePage } from './pages/Home';
 import { PostsPage } from './pages/Posts';
@@ -170,6 +170,7 @@ function Sidebar({ page, setPage }: { page: Page, setPage: Dispatch<SetStateActi
     // render the icons for each page
     return <>
         {PAGES.map((p) => (<button key={p} data-page={p} className={page == p ? "selected" : ""} onClick={() => setPage(p)}><LinkContent page={p} /></button>))}
+        {<button onClick={() => window.location.href=`${API_URL}/auth/logout`}><LogOut /><span>Logout</span></button>}
     </>;
 }
 
