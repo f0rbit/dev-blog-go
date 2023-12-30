@@ -4,6 +4,7 @@ import (
 	"blog-server/types"
 	"blog-server/utils"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -17,10 +18,22 @@ const (
 	Slug Identifier = "slug"
 )
 
-func FetchPost(identifier Identifier, needle interface{}) (types.Post, error) {
-	const base = `
+func FetchPost(user *types.User, identifier Identifier, needle interface{}) (types.Post, error) {
+	var post types.Post
+    if user == nil {
+        return post, errors.New("No user specified")
+    }
+    var where string
+	if identifier == ID {
+		where = " posts.id = ?"
+	} else if identifier == Slug {
+		where = " posts.slug = ?"
+	}
+
+	var base = `
     SELECT
         posts.id,
+        posts.author_id
         posts.slug,
         posts.title,
         posts.content,
@@ -34,19 +47,15 @@ func FetchPost(identifier Identifier, needle interface{}) (types.Post, error) {
         posts
     LEFT JOIN
         tags ON posts.id = tags.post_id
+    WHERE
+        posts.author = ? AND
+        `+where+`;
     `
-	var query string
-	if identifier == "id" {
-		query = base + " WHERE posts.id = ?"
-	} else if identifier == "slug" {
-		query = base + " WHERE posts.slug = ?"
-	}
-
-	var post types.Post
 	var tags sql.NullString
 
-	err := db.QueryRow(query, needle).Scan(
+	err := db.QueryRow(base, user.ID, needle).Scan(
 		&post.Id,
+        &post.AuthorID,
 		&post.Slug,
 		&post.Title,
 		&post.Content,
@@ -70,11 +79,13 @@ func FetchPost(identifier Identifier, needle interface{}) (types.Post, error) {
 	return post, nil
 }
 
-func CreatePost(post *types.Post) (int, error) {
+// author_id should be inside the post object
+func CreatePost(post types.Post) (int, error) {
 	var err error
 	// Insert the new post into the database
 	_, err = db.Exec(
-		`INSERT INTO posts (slug, title, content, category, publish_at) VALUES (?, ?, ?, ?, ?)`,
+		`INSERT INTO posts (author_id, slug, title, content, category, publish_at) VALUES (?, ?, ?, ?, ?, ?)`,
+        post.AuthorID,
 		post.Slug,
 		post.Title,
 		post.Content,
