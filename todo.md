@@ -65,9 +65,9 @@
 - [x] Authentication support for each author individually
     - [x] Backend logging in
     - [x] Front end log in page / logout button
-- [ ] Fix testing with new authentication flow
-    - [ ] Create a "test" user
-    - [ ] Have an api-keys table that allows passing through a token in header to access as a user
+- [x] Fix testing with new authentication flow
+    - [x] Create a "test" user
+    - [x] Have an api-keys table that allows passing through a token in header to access as a user
 
 # v0.8
 - [ ] Client implementation of managing api tokens in settings
@@ -84,6 +84,7 @@
 - [ ] Integrate with media-timeline project
     - [ ] Tightly integrated, not just sharing API keys but full linking workflow that feels natural
     - [ ] Obviously for this, have to finish up media-timeline as well.
+- [ ] > 80% test coverage
 
 # v1.1
 - [ ] Light mode support & theme switcher
