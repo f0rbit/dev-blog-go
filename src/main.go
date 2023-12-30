@@ -101,6 +101,24 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var user *types.User
 
+        // first check for an "API_TOKEN" in the headers
+        auth_token := r.Header.Get(routes.AUTH_HEADER)
+        if auth_token != "" {
+            user, err := database.GetUserByToken(auth_token);
+            if err != nil {
+                utils.LogError("Error fetching user by token", err, http.StatusNotFound, w);
+                return;
+            }
+            if user != nil {
+                ctx := context.WithValue(r.Context(), "user", user);
+                next.ServeHTTP(w, r.WithContext(ctx));
+                return;
+            } else {
+                http.Error(w, "Invalid token", http.StatusUnauthorized);
+                return;
+            }
+        } 
+
 		// Retrieve the user session
 		session, err := utils.GetStore().Get(r, "user-session")
 

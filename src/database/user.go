@@ -71,3 +71,20 @@ func GetUserByID(userID int) (*types.User, error) {
 
 	return &user, nil
 }
+
+
+func GetUserByToken(token string) (*types.User, error) {
+    row := db.QueryRow("SELECT access_keys.user_id FROM access_keys WHERE key_value = ?", token);
+
+    var userID int;
+
+    err := row.Scan(&userID) 
+    if err != nil {
+        if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil // User not found
+		}
+		return nil, err // Other database error
+    }
+
+    return GetUserByID(userID)
+}
