@@ -3,13 +3,15 @@ package types
 import "time"
 
 type Category struct {
-	Name   string `json:"name"`
-	Parent string `json:"parent"`
+	Name    string `json:"name"`
+	Parent  string `json:"parent"`
+	OwnerID int    `json:"owner_id"`
 }
 
 type CategoryNode struct {
 	Name     string         `json:"name"`
 	Children []CategoryNode `json:"children"`
+	OwnerID  int            `json:"owner_id"`
 }
 
 type Post struct {

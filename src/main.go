@@ -48,6 +48,8 @@ func main() {
 	r.HandleFunc("/post/delete/{id}", routes.DeletePost).Methods("DELETE")
 	// category
 	r.HandleFunc("/categories", routes.GetCategories).Methods("GET")
+    r.HandleFunc("/category/new", routes.CreateCategory).Methods("POST")
+    r.HandleFunc("/category/delete/{name}", routes.DeleteCategory).Methods("DELETE")
 	// tags
 	r.HandleFunc("/post/tag", routes.AddPostTag).Methods("PUT")
 	r.HandleFunc("/post/tag", routes.DeletePostTag).Methods("DELETE")

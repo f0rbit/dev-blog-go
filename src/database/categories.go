@@ -15,6 +15,7 @@ func GetCategories(user *types.User) ([]types.Category, error) {
 
 	for rows.Next() {
 		var category types.Category
+        category.OwnerID = user.ID
 		err := rows.Scan(&category.Name, &category.Parent)
 		if err != nil { return categories, err }
 		categories = append(categories, category)
@@ -26,6 +27,7 @@ func ConstructCategoryGraph(categories []types.Category, root string) types.Cate
     var node = types.CategoryNode{
         Name: root,
         Children: make([]types.CategoryNode, 0),
+        OwnerID: categories[0].OwnerID,
     }
 	for _, cat := range categories {
 		if cat.Parent == node.Name {
@@ -33,4 +35,9 @@ func ConstructCategoryGraph(categories []types.Category, root string) types.Cate
 		}
 	}
 	return node;
+}
+
+func CreateCategory(category types.Category) error {
+    _, err := db.Exec(`INSERT INTO categories (owner_id, name, parent) VALUES (?, ?, ?)`, category.OwnerID, category.Name, category.Parent);
+    return err;
 }
