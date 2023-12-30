@@ -61,13 +61,17 @@
 # v0.7
 - [ ] Transition DB into a multi-user setup
 - [ ] Allow for multiple 'authors' on the server
+- [ ] Client supports multiple 'authors'
 - [x] Authentication support for each author individually
     - [x] Backend logging in
     - [x] Front end log in page / logout button
-- [ ] Client supports multiple 'authors'
+- [ ] Fix testing with new authentication flow
+    - [ ] Create a "test" user
+    - [ ] Have an api-keys table that allows passing through a token in header to access as a user
 
 # v0.8
-- [ ] Expose API to third-party website
+- [ ] Client implementation of managing api tokens in settings
+- [ ] Expose API to third-party website, make sure it all works
 - [x] Deploy client on public-accessible 
     - [x] Try Github pages since there's no need for a server
 
