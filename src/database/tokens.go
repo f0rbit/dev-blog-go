@@ -77,3 +77,11 @@ func UpdateToken(token types.AccessKey) error {
     log.Info("Updated token", "id", token.ID)
     return nil;
 }
+
+func DeleteToken(tokenID int) error {
+    _, err := db.Exec("DELETE FROM access_keys WHERE key_id = ?", tokenID);
+    if err == nil {
+        log.Info("Delete token", "id", tokenID);
+    }
+    return err
+}

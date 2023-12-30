@@ -71,10 +71,13 @@
 
 # v0.8
 - [ ] Client implementation of managing api tokens in settings
-- [ ] Server access tokens CRUD operations
+    - [x] Create
+    - [x] Edit
+    - [ ] Delete
+- [x] Server access tokens CRUD operations
     - [x] Create token
     - [x] Update existing token
-    - [ ] Delete tokens
+    - [x] Delete tokens
     - [x] Get tokens
 - [ ] Create interface for adding/removing categories for each user
     - [ ] Create category

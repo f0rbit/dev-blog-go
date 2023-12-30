@@ -7,8 +7,10 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/charmbracelet/log"
+	"github.com/gorilla/mux"
 )
 
 // GET /tokens
@@ -99,5 +101,36 @@ func EditToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteToken(w http.ResponseWriter, r *http.Request) {
-    // TODO: delete route
+    user := utils.GetUser(r);
+    if user == nil {
+        utils.Unauthorized(w);
+        return;
+    }
+
+    tokenIDStr := mux.Vars(r)["id"]
+    tokenID, err := strconv.Atoi(tokenIDStr);
+    if err != nil {
+        utils.LogError("Error parsing token ID", err, http.StatusBadRequest, w);
+        return;
+    }
+
+    token, err := database.GetToken(tokenID);
+    if err != nil {
+        utils.LogError("Error fetching token", err, http.StatusInternalServerError, w);
+        return;
+    }
+
+    if token.ID != tokenID {
+        utils.LogError("Invalid tokenID", errors.New("Delete post authorID doesn't match user"), http.StatusBadRequest, w);
+        return;
+    }
+
+    // delete the token
+    err = database.DeleteToken(tokenID)
+    if err != nil {
+        utils.LogError("Error deleting token", err, http.StatusInternalServerError, w);
+        return;
+    }
+
+    w.WriteHeader(http.StatusOK)
 }
