@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+
+	"github.com/charmbracelet/log"
 )
 
 // GET /tokens
@@ -66,7 +68,34 @@ func CreateToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func EditToken(w http.ResponseWriter, r *http.Request) {
-    // TODO: edit route
+    user := utils.GetUser(r);
+    if user == nil {
+        utils.Unauthorized(w);
+        return;
+    }
+
+    var updateToken types.AccessKey;
+    err := json.NewDecoder(r.Body).Decode(&updateToken)
+    if err != nil {
+        utils.LogError("Error decoding new post", err, http.StatusBadRequest, w)
+        return;
+    }
+
+    // verify that the user_id of the token is the logged in user
+    if updateToken.UserID != user.ID {
+        utils.LogError("Invalid userID", errors.New("Create Token userID doesn't match userID"), http.StatusBadRequest, w);
+        return;
+    }
+
+    log.Info("Updating token", "token", updateToken);
+
+    err = database.UpdateToken(updateToken)
+    if err != nil {
+        utils.LogError("Error updating token", err, http.StatusInternalServerError, w);
+        return;
+    }
+
+    w.WriteHeader(http.StatusOK);
 }
 
 func DeleteToken(w http.ResponseWriter, r *http.Request) {

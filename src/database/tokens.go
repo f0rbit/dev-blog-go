@@ -56,3 +56,24 @@ func GetToken(id int) (types.AccessKey, error) {
     }
     return token, nil;
 }
+
+func UpdateToken(token types.AccessKey) error {
+    _, err := db.Exec(`
+    UPDATE
+        access_keys
+    SET
+        name = ?,
+        note = ?,
+        enabled = ?,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE
+        key_id = ? AND
+        user_id = ?;
+    `, token.Name, token.Note, token.Enabled, token.ID, token.UserID)
+    
+    if err != nil {
+        return err
+    }
+    log.Info("Updated token", "id", token.ID)
+    return nil;
+}
