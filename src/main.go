@@ -53,12 +53,15 @@ func main() {
 	r.HandleFunc("/post/tag", routes.DeletePostTag).Methods("DELETE")
 	r.HandleFunc("/tags", routes.GetTags).Methods("GET")
 	// auth
-	r.HandleFunc("/auth/test", routes.TryToken).Methods("GET")
 	r.HandleFunc("/auth/user", routes.GetUserInfo).Methods("GET")
 	r.HandleFunc("/auth/github/login", routes.GithubLogin).Methods("GET")
 	r.HandleFunc("/auth/github/callback", routes.GithubCallback).Methods("GET")
 	r.HandleFunc("/auth/logout", routes.Logout).Methods("GET")
-    r.HandleFunc("/auth/tokens", routes.GetUserTokens).Methods("GET")
+    // api tokens
+    r.HandleFunc("/tokens", routes.GetUserTokens).Methods("GET")
+    r.HandleFunc("/token/new", routes.CreateToken).Methods("POST")
+    r.HandleFunc("/token/edit", routes.EditToken).Methods("PUT")
+    r.HandleFunc("/token/delete/{id}", routes.DeleteToken).Methods("DELETE")
 
 	// modify cors
 	c := cors.New(cors.Options{
