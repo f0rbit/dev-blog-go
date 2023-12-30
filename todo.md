@@ -80,9 +80,8 @@
     - [x] Delete tokens
     - [x] Get tokens
 - [ ] Create interface for adding/removing categories for each user
-    - [ ] Create category
+    - [x] Create category
     - [ ] Remove category
-    - [ ] Update category
     - [x] Get categories
 
 # v0.9
