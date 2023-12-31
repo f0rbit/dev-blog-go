@@ -19,4 +19,4 @@ jobs:
           USERNAME: ${{ secrets.USER }}
           PORT: ${{ secrets.PORT }}
           KEY: ${{ secrets.SSHKEY }}
-          script: /home/github/devblog.sh
+          script: /home/github/devblog.sh && /home/github/devblog-client.sh
