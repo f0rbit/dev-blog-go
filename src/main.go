@@ -149,7 +149,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				}
 			}
 			// otherwise return 401
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+            utils.Unauthorized(w);
 			return
 		}
 

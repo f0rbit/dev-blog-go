@@ -54,3 +54,8 @@ reset-database:
 coverage: 
 	@PORT=${TEST_PORT} AUTH_TOKEN=${TEST_TOKEN} ./test.sh > /dev/null 2> /dev/null
 	@go tool covdata func -i=${COVERAGE_DIR} | grep total | awk '{print $$3}'
+
+coverage-report:
+	@PORT=${TEST_PORT} AUTH_TOKEN=${TEST_TOKEN} ./test.sh > /dev/null 2> /dev/null
+	@go tool covdata func -i=${COVERAGE_DIR}
+
