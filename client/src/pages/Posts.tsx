@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useContext, useState } from "react";
-import { API_URL, AuthContext, FunctionResponse, PostContext, PostCreation } from "../App";
+import { API_URL, FunctionResponse, PostContext, PostCreation } from "../App";
 import { ArrowDownNarrowWide, Edit, Filter, FolderTree, Plus, Save, Search, Tags, Trash, X } from "lucide-react";
 import Modal from "../components/Modal";
 import CategoryInput from "../components/CategoryInput";
@@ -194,7 +194,6 @@ function Tag({ tag, remove }: { tag: string, remove: (() => void) | null }) {
 function PostCard({ post }: { post: Post }) {
     const [editorOpen, setEditorOpen] = useState(false);
     const [editingPost, setEditingPost] = useState<PostCreation>({ ...post });
-    const { token } = useContext(AuthContext);
 
     const { posts, setPosts } = useContext(PostContext);
 
@@ -217,7 +216,7 @@ function PostCard({ post }: { post: Post }) {
             })
         });
         // send upload post to server
-        const response = await fetch(`${API_URL}/post/edit`, { method: "PUT", body: JSON.stringify(upload_post), headers: { 'Auth-Token': token ?? "" } });
+        const response = await fetch(`${API_URL}/post/edit`, { method: "PUT", body: JSON.stringify(upload_post), credentials: "include" });
         if (!response || !response.ok) return { error: "Invalid Response", success: false };
         // update state
         setPosts({
