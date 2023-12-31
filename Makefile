@@ -61,4 +61,4 @@ coverage-report:
 	@go tool covdata func -i=${COVERAGE_DIR}
 
 build-client:
-	cd client && npm run build
+	cd client && npm i && npm run build
