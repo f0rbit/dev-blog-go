@@ -86,9 +86,9 @@
 
 # v0.9
 - [x] Expose API to third-party website, make sure it all works
-- [ ] Add test coverage
+- [x] Add test coverage
     - [x] Tokens
-    - [ ] Categories
+    - [x] Categories
 - [x] Deploy client on public-accessible 
     - [x] Try Github pages since there's no need for a server
 
