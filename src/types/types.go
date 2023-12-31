@@ -3,13 +3,15 @@ package types
 import "time"
 
 type Category struct {
-	Name   string `json:"name"`
-	Parent string `json:"parent"`
+	Name    string `json:"name"`
+	Parent  string `json:"parent"`
+	OwnerID int    `json:"owner_id"`
 }
 
 type CategoryNode struct {
 	Name     string         `json:"name"`
 	Children []CategoryNode `json:"children"`
+	OwnerID  int            `json:"owner_id"`
 }
 
 type Post struct {
@@ -48,6 +50,17 @@ type User struct {
 	Email     string `json:"email"`
 	AvatarURL string `json:"avatar_url"`
 
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type AccessKey struct {
+	ID        int       `json:"id"`
+	Value     string    `json:"value"`
+	UserID    int       `json:"user_id"`
+	Name      string    `json:"name"`
+	Note      string    `json:"note"`
+	Enabled   bool      `json:"enabled"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

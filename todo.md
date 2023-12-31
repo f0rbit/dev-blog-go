@@ -65,16 +65,30 @@
 - [x] Authentication support for each author individually
     - [x] Backend logging in
     - [x] Front end log in page / logout button
-- [ ] Fix testing with new authentication flow
-    - [ ] Create a "test" user
-    - [ ] Have an api-keys table that allows passing through a token in header to access as a user
+- [x] Fix testing with new authentication flow
+    - [x] Create a "test" user
+    - [x] Have an api-keys table that allows passing through a token in header to access as a user
 
 # v0.8
-- [ ] Client implementation of managing api tokens in settings
+- [x] Client implementation of managing api tokens in settings
+    - [x] Create
+    - [x] Edit
+    - [x] Delete
+- [x] Server access tokens CRUD operations
+    - [x] Create token
+    - [x] Update existing token
+    - [x] Delete tokens
+    - [x] Get tokens
+- [x] Create interface for adding/removing categories for each user
+    - [x] Create category
+    - [x] Remove category
+    - [x] Get categories
+
+# v0.9
 - [ ] Expose API to third-party website, make sure it all works
+- [ ] > 80% test coverage
 - [x] Deploy client on public-accessible 
     - [x] Try Github pages since there's no need for a server
-- [ ] Create interface for adding/removing categories for each user
 
 # v1.0
 - [ ] Integration with third-party API, only support `devto` at the moment, but create a generic interface for adding more
@@ -86,6 +100,12 @@
     - [ ] Obviously for this, have to finish up media-timeline as well.
 
 # v1.1
+- [ ] Analytics on server
+    - [ ] Endpoint for "liking" a post
+- [ ] Build homepage
+    - [ ] View analytics
+
+# v1.2
 - [ ] Light mode support & theme switcher
 - [ ] Refactor for support for multiple themes
 

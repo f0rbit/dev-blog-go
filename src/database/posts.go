@@ -277,6 +277,28 @@ func GetPosts(user *types.User, category, tag string, limit, offset int) ([]type
 
 		posts = append(posts, post)
 	}
+    if posts == nil {
+        posts = make([]types.Post, 0)
+    }
 
 	return posts, totalPosts, nil
+}
+
+func RemoveCategoryFromPosts(user *types.User, cat_list []string) error {
+    params := make([]any, len(cat_list) + 1);
+    params[0] = user.ID;
+    for i, c := range cat_list {
+        params[i + 1] = c;
+    }
+    // Build the IN clause with placeholders
+	placeholders := make([]string, len(cat_list))
+	for i := range cat_list {
+		placeholders[i] = "?"
+	}
+	inClause := strings.Join(placeholders, ",")
+
+    query := fmt.Sprintf("UPDATE posts SET category = 'root' WHERE author_id = ? AND category IN (%s)", inClause);
+    log.Info("Removing category from posts", "query", query, "params", params)
+    _, err := db.Exec(query, params...);
+    return err
 }

@@ -24,7 +24,7 @@ func CreateUser(githubUser *types.GitHubUser) (*types.User, error) {
 		return nil, err
 	}
 
-    /** @todo - create root category */
+	/** @todo - create root category */
 
 	// Return the created user
 	return &types.User{
@@ -72,19 +72,40 @@ func GetUserByID(userID int) (*types.User, error) {
 	return &user, nil
 }
 
-
 func GetUserByToken(token string) (*types.User, error) {
-    row := db.QueryRow("SELECT access_keys.user_id FROM access_keys WHERE key_value = ?", token);
+	row := db.QueryRow("SELECT access_keys.user_id FROM access_keys WHERE key_value = ?", token)
 
-    var userID int;
+	var userID int
 
-    err := row.Scan(&userID) 
-    if err != nil {
-        if errors.Is(err, sql.ErrNoRows) {
+	err := row.Scan(&userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil // User not found
 		}
 		return nil, err // Other database error
-    }
+	}
 
-    return GetUserByID(userID)
+	return GetUserByID(userID)
+}
+
+func GetTokens(userID int) ([]types.AccessKey, error) {
+	var tokens []types.AccessKey
+	rows, err := db.Query("SELECT * FROM access_keys WHERE user_id = ?", userID)
+
+	if err != nil {
+		return tokens, err
+	}
+
+	for rows.Next() {
+		var token types.AccessKey
+		err := rows.Scan(&token.ID, &token.Value, &token.UserID, &token.Name, &token.Note, &token.Enabled, &token.CreatedAt, &token.UpdatedAt)
+		if err != nil {
+			return tokens, err
+		}
+		tokens = append(tokens, token)
+	}
+    if tokens == nil {
+        tokens = make([]types.AccessKey, 0)
+    }
+	return tokens, err
 }
