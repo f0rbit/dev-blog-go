@@ -20,7 +20,7 @@ func LoadAuthConfig() {
 	authConfig = &oauth2.Config{
 		ClientID:     os.Getenv("GITHUB_CLIENT"),
 		ClientSecret: os.Getenv("GITHUB_SECRET"),
-		RedirectURL:  "http://localhost:8080/auth/github/callback",
+		RedirectURL:  os.Getenv("GITHUB_CALLBACK"),
 		Scopes:       []string{"read:user"},
 		Endpoint:     github.Endpoint,
 	}
