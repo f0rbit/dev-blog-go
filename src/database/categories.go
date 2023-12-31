@@ -25,6 +25,9 @@ func GetCategories(user *types.User) ([]types.Category, error) {
 		}
 		categories = append(categories, category)
 	}
+    if categories == nil {
+        categories = make([]types.Category, 0)
+    }
 	return categories, nil
 }
 
@@ -41,15 +44,15 @@ func GetCategory(user *types.User, name string) (types.Category, error) {
 
 }
 
-func ConstructCategoryGraph(categories []types.Category, root string) types.CategoryNode {
+func ConstructCategoryGraph(categories []types.Category, root string, userID int) types.CategoryNode {
 	var node = types.CategoryNode{
 		Name:     root,
 		Children: make([]types.CategoryNode, 0),
-		OwnerID:  categories[0].OwnerID,
+		OwnerID:  userID,
 	}
 	for _, cat := range categories {
 		if cat.Parent == node.Name {
-			node.Children = append(node.Children, ConstructCategoryGraph(categories, cat.Name))
+			node.Children = append(node.Children, ConstructCategoryGraph(categories, cat.Name, userID))
 		}
 	}
 	return node

@@ -60,12 +60,22 @@ function CategoryCreator({ parent, right, open, setOpen }: { right: boolean, ope
         setCategories(cat_response);
     }
 
+    async function remove() {
+        setSaving(true);
+        setOpen(false);
+        const response = await fetch(`${API_URL}/category/delete/${parent}`, { method: "DELETE", credentials: "include" });
+        if (!response.ok) return;
+        const cat_response = SCHEMA.CATEGORY_RESPONSE.parse((await response.json()));
+        setSaving(false);
+        setCategories(cat_response);
+    }
+
     if (saving) return <div className={"flex-row center" + (right ? "right" : "")}>
         <Oval width={16} height={16} strokeWidth={8} />
     </div>
 
     if (!open) return <div className={"flex-row center " + (right ? "right" : "")}>
-        {right && <button title="Delete category"><Trash /></button>}
+        {right && <button title="Delete category" onClick={remove}><Trash /></button>}
         <button onClick={() => setOpen(true)} title="Create child category"><Plus /></button>
     </div>
 
@@ -74,6 +84,6 @@ function CategoryCreator({ parent, right, open, setOpen }: { right: boolean, ope
     return <div className={`flex-row ${right ? "right" : ""}`}>
         <input type="text" autoFocus={true} onChange={(e) => setInput(e.target.value)} />
         {valid ? <Check color="green" /> : <X className="error-message" />}
-        <button onClick={() => save()} disabled={!valid}><Save /></button>
+        <button onClick={save} disabled={!valid}><Save /></button>
     </div>
 }

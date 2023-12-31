@@ -19,21 +19,8 @@ func GetCategories(w http.ResponseWriter, r *http.Request) {
         utils.Unauthorized(w);
         return;
     }
-	// Fetch categories from the database
-	categories, err := database.GetCategories(user)
-	if err != nil {
-        utils.LogError("Error fetching categories", err, http.StatusInternalServerError, w);
-		return
-	}
 
-    graph := database.ConstructCategoryGraph(categories, "root");
-
-    response :=  map[string]interface{}{
-        "categories": categories,
-        "graph": graph,
-    }
-
-    utils.ResponseJSON(response, w);
+    serveCategories(user, w)
 }
 
 func CreateCategory(w http.ResponseWriter, r *http.Request) {
@@ -68,21 +55,7 @@ func CreateCategory(w http.ResponseWriter, r *http.Request) {
         return;
     }
 
-    // Fetch categories from the database
-	categories, err := database.GetCategories(user)
-	if err != nil {
-        utils.LogError("Error fetching categories after creation", err, http.StatusInternalServerError, w);
-		return
-	}
-
-    graph := database.ConstructCategoryGraph(categories, "root");
-
-    response :=  map[string]interface{}{
-        "categories": categories,
-        "graph": graph,
-    }
-
-    utils.ResponseJSON(response, w);
+    serveCategories(user, w)
     
 }
 
@@ -116,7 +89,11 @@ func DeleteCategory(w http.ResponseWriter, r *http.Request) {
         utils.LogError("Error deleting category", err, http.StatusInternalServerError, w);
         return;
     }
+    
+    serveCategories(user, w)
+}
 
+func serveCategories(user *types.User, w http.ResponseWriter) {
     // Fetch categories from the database
 	categories, err := database.GetCategories(user)
 	if err != nil {
@@ -124,7 +101,7 @@ func DeleteCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    graph := database.ConstructCategoryGraph(categories, "root");
+    graph := database.ConstructCategoryGraph(categories, "root", user.ID);
 
     response :=  map[string]interface{}{
         "categories": categories,
