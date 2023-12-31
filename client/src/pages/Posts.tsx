@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useContext, useState } from "react";
-import { API_URL, FunctionResponse, PostContext, PostCreation } from "../App";
+import { API_URL, AuthContext, FunctionResponse, PostContext, PostCreation } from "../App";
 import { ArrowDownNarrowWide, Edit, Filter, FolderTree, Plus, Save, Search, Tags, Trash, X } from "lucide-react";
 import Modal from "../components/Modal";
 import CategoryInput from "../components/CategoryInput";
@@ -9,6 +9,7 @@ import TagInput from "../components/TagInput";
 
 type PostSort = "created" | "edited" | "published" | "oldest";
 const EMPTY_POST_CREATION: PostCreation = {
+    author_id: -1,
     slug: "",
     title: "",
     content: "",
@@ -24,6 +25,7 @@ export function PostsPage() {
     const [openCreatePost, setOpenCreatePost] = useState(false);
     const [loading, setLoading] = useState(false);
     const [filters, setFilters] = useState<PostFilters>({ category: null, tag: null });
+    const { user } = useContext(AuthContext);
     const [creatingPost, setCreatingPost] = useState<PostCreation>(EMPTY_POST_CREATION);
 
     if (!posts || !posts.posts) return <p>No Posts Found!</p>;
@@ -39,7 +41,7 @@ export function PostsPage() {
 
         setPosts({ ...posts, posts: [...posts.posts, new_post] });
         // send request
-        const response = await fetch(`${API_URL}/post/new`, { method: "POST", body: JSON.stringify(creatingPost), credentials: "include" });
+        const response = await fetch(`${API_URL}/post/new`, { method: "POST", body: JSON.stringify({ ...creatingPost, author_id: user.user_id }), credentials: "include" });
         const result = await response.json();
         // update state?
         setLoading(false);
