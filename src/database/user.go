@@ -104,5 +104,8 @@ func GetTokens(userID int) ([]types.AccessKey, error) {
 		}
 		tokens = append(tokens, token)
 	}
+    if tokens == nil {
+        tokens = make([]types.AccessKey, 0)
+    }
 	return tokens, err
 }

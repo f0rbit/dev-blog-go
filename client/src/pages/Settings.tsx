@@ -1,4 +1,4 @@
-import { Check, Edit, Palette, Plus, Save, Search, Shield, User } from "lucide-react";
+import { Check, Edit, Palette, Plus, Save, Search, Shield, Trash, User } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import { API_URL, AuthContext } from "../App";
 import { AccessKey } from "../../schema";
@@ -29,7 +29,7 @@ export function SettingsPage() {
     const [page, setPage] = useState<SubPage>(subpages[0]);
     return <section className="flex-row settings-container">
         <nav className="flex-col">
-            {subpages.map((p) => <button onClick={() => setPage(p)}><SubPageIcon page={p} /></button>)}
+            {subpages.map((p) => <button key={p} onClick={() => setPage(p)}><SubPageIcon page={p} /></button>)}
         </nav>
         <main>
             <SubPageContent page={page} />
@@ -59,6 +59,7 @@ function Tokens() {
         })();
     }, []);
 
+
     async function save(token: TokenCreation) {
         const mode = token.id < 0 ? "new" : "edit";
         const response = await fetch(`${API_URL}/token/${mode}`, { method: mode == "new" ? "POST" : "PUT", credentials: "include", body: JSON.stringify(token) });
@@ -66,12 +67,12 @@ function Tokens() {
 
         if (tokens == null) {
             const new_token = { ...(await response.json()), saving: false };
-            setTokens([ new_token ]);
+            setTokens([new_token]);
             return;
         }
         if (mode == "new") {
             const new_token = { ...(await response.json()), saving: false };
-            setTokens([ ...tokens, new_token ]);
+            setTokens([...tokens, new_token]);
             setCreating(false);
         } else {
             setTokens(tokens.map((t) => {
@@ -79,6 +80,13 @@ function Tokens() {
                 return { ...token, saving: false };
             }));
         }
+    }
+
+    async function remove(token: TokenCreation) {
+        const response = await fetch(`${API_URL}/token/delete/${token.id}`, { method: "DELETE", credentials: "include" });
+        if (!response.ok) return;
+        if (tokens == null) return;
+        setTokens(tokens.filter((t) => t.id != token.id));
     }
 
     if (tokens == null) return <section className="page-center"><Oval height={20} width={20} strokeWidth={8} /></section>
@@ -94,9 +102,9 @@ function Tokens() {
             <div>Name</div>
             <div>Note</div>
             <div>Enabled</div>
-            <div></div>
-            {tokens.map((t) => <TokenRow token={t} save={save} />)}
-            {creating && <TokenRow token={{ ...EMPTY_TOKEN, user_id: user.user_id }} save={save} />}
+            <div style={{ gridColumn: "span 2" }}></div>
+            {tokens.map((t) => <TokenRow key={t.id} token={t} save={save} remove={remove} />)}
+            {creating && <TokenRow token={{ ...EMPTY_TOKEN, user_id: user.user_id }} save={save} remove={remove} />}
         </div>
     </div>;
 }
@@ -112,7 +120,7 @@ const EMPTY_TOKEN: Omit<TokenCreation, "user_id"> = {
     saving: false,
 }
 
-function TokenRow({ token, save }: { token: TokenCreation, save: (token: TokenCreation) => void }) {
+function TokenRow({ token, save, remove }: { token: TokenCreation, save: (token: TokenCreation) => void, remove: (token: TokenCreation) => void }) {
     const [editing, setEditing] = useState(token);
     const mode = token.id < 0 ? "create" : "edit";
     const [enabled, setEnabled] = useState(mode == "create");
@@ -123,6 +131,6 @@ function TokenRow({ token, save }: { token: TokenCreation, save: (token: TokenCr
         <input type="text" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} disabled={!enabled} />
         <input type="text" value={editing.note} onChange={(e) => setEditing({ ...editing, note: e.target.value })} disabled={!enabled} />
         <input type="checkbox" checked={editing.enabled} onChange={(e) => setEditing({ ...editing, enabled: e.target.checked })} disabled={!enabled} />
-        {token.saving ? <button>{icon}</button> : enabled ? <button onClick={() => { setEnabled(false); token.saving = true; save(editing) }}>{icon}</button> : <button onClick={() => setEnabled(true)}><Edit /></button>}
+        {token.saving ? <button style={{ gridColumn: "span 2" }}>{icon}</button> : enabled ? <button onClick={() => { setEnabled(false); token.saving = true; save(editing) }} style={{ gridColumn: "span 2" }}>{icon}</button> : <><button onClick={() => setEnabled(true)}><Edit /></button><button onClick={() => { setEnabled(false); token.saving = true; remove(editing) }}><Trash /></button></>}
     </>;
 }
