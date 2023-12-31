@@ -10,7 +10,7 @@ touch ${DATABASE_FILE}
 
 # setup the database
 sqlite3 ${DATABASE_FILE} < sql/setup.sql
-${ROOT_DIR}/apply_migrations.sh ${DATABASE_FILE}
+${ROOT_DIR}/sql/apply_migrations.sh ${DATABASE_FILE}
 sqlite3 ${DATABASE_FILE} < sql/base_seed.sql
 sqlite3 ${DATABASE_FILE} < sql/test_seed.sql
 
