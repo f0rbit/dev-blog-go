@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 // GetCategories handles the GET /categories route
@@ -85,5 +87,49 @@ func CreateCategory(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteCategory(w http.ResponseWriter, r *http.Request) {
-    // TODO: implement delete function
+    user := utils.GetUser(r);
+    if user == nil {
+        utils.Unauthorized(w);
+        return;
+    }
+    
+    category := mux.Vars(r)["name"]
+
+    if category == "" {
+        utils.LogError("No category provided", errors.New("No category provided in delete"), http.StatusBadRequest, w);
+        return;
+    }
+
+    fetched, err := database.GetCategory(user, category);
+    if err != nil {
+        utils.LogError("Error fetching category", err, http.StatusInternalServerError, w);
+        return;
+    }
+
+    if fetched.OwnerID != user.ID {
+        utils.LogError("Invalid user ID", errors.New("User does not own the category for deletion"), http.StatusUnauthorized, w);
+        return;
+    }
+
+    err = database.DeleteCategory(user, category)
+    if err != nil {
+        utils.LogError("Error deleting category", err, http.StatusInternalServerError, w);
+        return;
+    }
+
+    // Fetch categories from the database
+	categories, err := database.GetCategories(user)
+	if err != nil {
+        utils.LogError("Error fetching categories after creation", err, http.StatusInternalServerError, w);
+		return
+	}
+
+    graph := database.ConstructCategoryGraph(categories, "root");
+
+    response :=  map[string]interface{}{
+        "categories": categories,
+        "graph": graph,
+    }
+
+    utils.ResponseJSON(response, w);
 }
