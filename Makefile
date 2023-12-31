@@ -20,6 +20,7 @@ clean:
 	@rm -f logs/app.log
 	@rm -rf ${COVERAGE_DIR}
 	@rm -f server.log
+	@rm -rf client/dist
 	@echo "Cleaned files"
 
 run: clean build
@@ -59,3 +60,5 @@ coverage-report:
 	@PORT=${TEST_PORT} AUTH_TOKEN=${TEST_TOKEN} ./test.sh > /dev/null 2> /dev/null
 	@go tool covdata func -i=${COVERAGE_DIR}
 
+build-client:
+	cd client && npm run build
