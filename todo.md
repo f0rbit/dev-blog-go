@@ -70,10 +70,10 @@
     - [x] Have an api-keys table that allows passing through a token in header to access as a user
 
 # v0.8
-- [ ] Client implementation of managing api tokens in settings
+- [x] Client implementation of managing api tokens in settings
     - [x] Create
     - [x] Edit
-    - [ ] Delete
+    - [x] Delete
 - [x] Server access tokens CRUD operations
     - [x] Create token
     - [x] Update existing token
