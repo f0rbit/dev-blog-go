@@ -76,6 +76,8 @@ func FetchPost(user *types.User, identifier Identifier, needle interface{}) (typ
 		post.Tags = []string{}
 	}
 
+    post.Description = utils.GetDescription(post.Content)
+
 	return post, nil
 }
 
@@ -274,6 +276,8 @@ func GetPosts(user *types.User, category, tag string, limit, offset int) ([]type
 		} else {
 			post.Tags = []string{}
 		}
+
+        post.Description = utils.GetDescription(post.Content)
 
 		posts = append(posts, post)
 	}
