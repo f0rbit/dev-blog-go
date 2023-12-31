@@ -40,7 +40,7 @@ database:
 	@touch ${DATABASE_DIR}
 	@sqlite3 ${DATABASE_DIR} < sql/setup.sql
 	@echo "Setup SQL"
-	@./apply_migrations.sh ${DATABASE_DIR}
+	@./sql/apply_migrations.sh ${DATABASE_DIR}
 	@sqlite3 ${DATABASE_DIR} < sql/base_seed.sql
 	@echo "Executed base_seed.sql"
 
@@ -49,7 +49,7 @@ reset-database:
 	mkdir -p db
 	touch ${DATABASE_DIR}
 	sqlite3 ${DATABASE_DIR} < sql/setup.sql
-	./apply_migrations.sh ${DATABASE_DIR}
+	./sql/apply_migrations.sh ${DATABASE_DIR}
 	sqlite3 ${DATABASE_DIR} < sql/base_seed.sql
 
 coverage: 
