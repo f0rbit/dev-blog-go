@@ -93,9 +93,9 @@
     - [x] Try Github pages since there's no need for a server
 
 # v0.10
-- [ ] Description in GET posts,
-    - [ ] strip markdown from content
-    - [ ] show first 3 lines
+- [x] Description in GET posts,
+    - [x] strip markdown from content
+    - [x] show first 3 lines
 
 # v1.0
 - [ ] Integration with third-party API, only support `devto` at the moment, but create a generic interface for adding more
