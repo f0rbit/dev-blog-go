@@ -79,9 +79,9 @@
     - [x] Update existing token
     - [x] Delete tokens
     - [x] Get tokens
-- [ ] Create interface for adding/removing categories for each user
+- [x] Create interface for adding/removing categories for each user
     - [x] Create category
-    - [ ] Remove category
+    - [x] Remove category
     - [x] Get categories
 
 # v0.9
