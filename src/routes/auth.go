@@ -26,7 +26,6 @@ func LoadAuthConfig() {
 	}
 }
 
-const HOMEPAGE = "http://localhost:5173/";
 const AUTH_HEADER = "Auth-Token"
 
 func GetUserInfo(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +73,7 @@ func GithubCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, HOMEPAGE, http.StatusSeeOther)
+    http.Redirect(w, r, os.Getenv("CLIENT_URL"), http.StatusSeeOther)
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +83,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 	session.Save(r, w)
 
-	http.Redirect(w, r, HOMEPAGE, http.StatusSeeOther)
+	http.Redirect(w, r, os.Getenv("CLIENT_URL"), http.StatusSeeOther)
 }
 
 // Example logic to handle user registration or retrieval
