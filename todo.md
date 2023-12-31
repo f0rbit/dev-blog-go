@@ -103,6 +103,7 @@
     - [ ] Medium's API
     - [ ] Substack's API
 - [ ] Periodically fetch from these api's cache the results so that when we get a request for /posts, it is near-instant
+- [ ] Proper README document with instructions on how to self-host/deploy & test locally
 
 # v1.1
 - [ ] Analytics on server
