@@ -15,17 +15,18 @@ type CategoryNode struct {
 }
 
 type Post struct {
-	Id        int       `json:"id"`
-	Slug      string    `json:"slug"`
-	AuthorID  int       `json:"author_id"`
-	Title     string    `json:"title"`
-	Content   string    `json:"content"`
-	Category  string    `json:"category"`
-	Tags      []string  `json:"tags"`
-	Archived  bool      `json:"archived"`
-	PublishAt time.Time `json:"publish_at" time_format:"sql_datetime"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Id          int       `json:"id"`
+	Slug        string    `json:"slug"`
+	AuthorID    int       `json:"author_id"`
+	Title       string    `json:"title"`
+	Content     string    `json:"content"`
+	Category    string    `json:"category"`
+	Tags        []string  `json:"tags"`
+	Archived    bool      `json:"archived"`
+	Description string    `json:"description"`
+	PublishAt   time.Time `json:"publish_at" time_format:"sql_datetime"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type PostsResponse struct {

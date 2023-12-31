@@ -3,9 +3,13 @@ package utils
 import (
 	"blog-server/types"
 	"encoding/json"
+	"html"
 	"net/http"
+	"regexp"
+	"strings"
 
 	"github.com/charmbracelet/log"
+	"github.com/russross/blackfriday/v2"
 )
 
 func LogError(message string, err error, status int, writer http.ResponseWriter) {
@@ -14,7 +18,7 @@ func LogError(message string, err error, status int, writer http.ResponseWriter)
 }
 
 func Unauthorized(writer http.ResponseWriter) {
-    http.Error(writer, "Unauthorized access", http.StatusUnauthorized);
+	http.Error(writer, "Unauthorized access", http.StatusUnauthorized)
 }
 
 func ResponseJSON(data interface{}, writer http.ResponseWriter) {
@@ -47,10 +51,44 @@ func GetChildrenCategories(categories []types.Category, parent string) []types.C
 }
 
 func GetUser(r *http.Request) *types.User {
-    user, ok := r.Context().Value("user").(*types.User);
-    if ok && user != nil {
-        return user
-    } else {
-        return nil
-    }
+	user, ok := r.Context().Value("user").(*types.User)
+	if ok && user != nil {
+		return user
+	} else {
+		return nil
+	}
+}
+
+func GetDescription(content string) string {
+    // parses content markdown to html
+	bytes := blackfriday.Run([]byte(content))
+	text := string(bytes)
+
+    // replaces all html tags
+	r := regexp.MustCompile("<[^>]*>")
+    // removes \n
+	text = strings.ReplaceAll(text, "\n", " ")
+	stripped := r.ReplaceAllString(text, "")
+    // removes any html escaped characters
+	stripped = html.UnescapeString(stripped)
+    // limits the length
+	description := firstNLinesOrChars(stripped, 3, 80)
+    // adds "..."
+	return description + "..."
+}
+
+// firstNLinesOrChars returns the first n lines or first numChars characters of the string, whichever is smaller.
+func firstNLinesOrChars(s string, n, numChars int) string {
+	var lineCount, charCount int
+	for i, rune := range s {
+		if rune == '\n' {
+			lineCount++
+		}
+		if lineCount >= n || charCount >= numChars {
+			return s[:i]
+		}
+		charCount++
+	}
+	// Return the entire string if it's shorter than the specified lengths
+	return s
 }
