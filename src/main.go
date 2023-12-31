@@ -67,7 +67,7 @@ func main() {
 
 	// modify cors
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173", "https://f0rbit.github.io"},
+        AllowedOrigins:   []string{"http://localhost:5173", "https://f0rbit.github.io", "https://blog.forbit.dev", "http://blog.forbit.dev", "blog.forbit.dev"},
 		AllowedHeaders:   []string{"Content-Type"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowCredentials: true,
