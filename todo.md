@@ -85,21 +85,24 @@
     - [x] Get categories
 
 # v0.9
-- [ ] Expose API to third-party website, make sure it all works
+- [x] Expose API to third-party website, make sure it all works
 - [ ] Add test coverage
     - [x] Tokens
     - [ ] Categories
 - [x] Deploy client on public-accessible 
     - [x] Try Github pages since there's no need for a server
 
+# v0.10
+- [ ] Description in GET posts,
+    - [ ] strip markdown from content
+    - [ ] show first 3 lines
+
 # v1.0
 - [ ] Integration with third-party API, only support `devto` at the moment, but create a generic interface for adding more
     - [ ] devto
     - [ ] Medium's API
     - [ ] Substack's API
-- [ ] Integrate with media-timeline project
-    - [ ] Tightly integrated, not just sharing API keys but full linking workflow that feels natural
-    - [ ] Obviously for this, have to finish up media-timeline as well.
+- [ ] Periodically fetch from these api's cache the results so that when we get a request for /posts, it is near-instant
 
 # v1.1
 - [ ] Analytics on server
@@ -108,6 +111,11 @@
     - [ ] View analytics
 
 # v1.2
+- [ ] Integrate with media-timeline project
+    - [ ] Tightly integrated, not just sharing API keys but full linking workflow that feels natural
+    - [ ] Obviously for this, have to finish up media-timeline as well.
+
+# v1.3
 - [ ] Light mode support & theme switcher
 - [ ] Refactor for support for multiple themes
 
