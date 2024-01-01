@@ -92,7 +92,7 @@
 - [x] Deploy client on public-accessible 
     - [x] Try Github pages since there's no need for a server
 
-# v0.10
+# v0.9.1
 - [x] Description in GET posts,
     - [x] strip markdown from content
     - [x] show first 3 lines
