@@ -21,6 +21,9 @@
     --border-primary: #2a2c3b;
     --border-secondary: #35374a;
     --border-tertiary: #373b57;
+
+    --error-red: #d97e7e;
+    --success-green: #7ed97e;
 }
 
 body {
@@ -256,7 +259,7 @@ main {
 
 .error-message {
     text-align: center;
-    color: #d97e7e;
+    color: var(--error-red); 
 }
 
 .category-input-list {
@@ -346,6 +349,9 @@ main {
     border: 1px var(--border-primary) solid;
     border-radius: 5px;
     height: calc(100vh - 85px);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 
     nav {
         min-width: 12%;
@@ -361,6 +367,7 @@ main {
     main {
         width: 100%;
         height: 100%;
+        padding: unset;
     }
 
     .lucide {
@@ -375,6 +382,20 @@ main {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.status-indicator {
+    width: 20px;
+    height: 7px;
+    border-radius: 25%;
+}
+
+.status-indicator.ok {
+    background: var(--success-green);
+}
+
+.status-indicator.bad {
+    background: var(--error-red);
 }
 
 .token-grid {
@@ -400,3 +421,36 @@ main {
         padding: 0px 5px;
     }
 }
+
+#integration-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 5px;
+    padding: 10px 20px;
+    padding-top: 20px;
+
+    .integration-card {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 10px 20px;
+        min-height: 200px;
+        border: 1px solid var(--border-primary);
+        border-radius: 5px;
+    }    
+}
+
+#integration-container {
+    height: 100%;
+    
+    .divider {
+        border-top: 1px solid var(--border-primary);
+        height: 1px;
+    }
+
+    .building {
+        height: 100%;
+    }
+}
+
+

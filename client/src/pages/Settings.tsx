@@ -1,11 +1,11 @@
-import { Check, Edit, Palette, Plus, Save, Search, Shield, Trash, User } from "lucide-react";
+import { Check, Edit, Link, Palette, Plus, RefreshCw, Save, Search, Shield, Trash, Unlink, User } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import { API_URL, AuthContext } from "../App";
 import { AccessKey } from "../../schema";
 import { Oval } from "react-loader-spinner";
 import { BuildingPage } from "../components/Building";
 
-const subpages = ["profile", "theme", "tokens"] as const;
+const subpages = ["profile", "theme", "integrations", "tokens"] as const;
 
 type SubPage = (typeof subpages)[keyof typeof subpages];
 
@@ -14,6 +14,7 @@ function SubPageIcon({ page }: { page: SubPage }) {
         case "theme": return <><Palette /><span>Theme</span></>;
         case "profile": return <><User /><span>Profile</span></>;
         case "tokens": return <><Shield /><span>Tokens</span></>;
+        case "integrations": return <><Link /><span>Integrations</span></>;
     }
 }
 
@@ -22,12 +23,13 @@ function SubPageContent({ page }: { page: SubPage }) {
         case "theme": return <Theme />;
         case "profile": return <Profile />;
         case "tokens": return <Tokens />
+        case "integrations": return <Integrations />;
     }
 }
 
 export function SettingsPage() {
     const [page, setPage] = useState<SubPage>(subpages[0]);
-    return <section className="flex-row settings-container">
+    return <section className="settings-container">
         <nav className="flex-col">
             {subpages.map((p) => <button key={p} onClick={() => setPage(p)}><SubPageIcon page={p} /></button>)}
         </nav>
@@ -43,6 +45,63 @@ function Theme() {
 
 function Profile() {
     return <BuildingPage />
+}
+
+const integrations = {
+    devto: {
+        name: "devto",
+        enabled: true
+    },
+    medium: {
+        name: "medium",
+        enabled: false,
+    },
+    substack: {
+        name: "substack",
+        enabled: false
+    }
+} as const;
+
+function Integrations() {
+    return <div id="integration-container" className="flex-col">
+        <div id="integration-grid">
+            {Object.entries(integrations).map(([key, data]) => (<IntegrationCard key={key} name={data.name} enabled={data.enabled} />))}
+        </div>
+        <div className="divider" />
+        <div className="building" >
+            <BuildingPage />
+        </div>
+    </div>
+}
+
+function IntegrationCard({ name, enabled }: { name: string, enabled: boolean }) {
+    const [linked, setLinked] = useState(false);
+
+    const Header = () => <div className="flex-row">
+        <span className={"status-indicator " + (enabled ? "ok" : "bad")}></span>
+        <h2>{name}</h2>
+    </div>;
+
+    const Content = () => {
+        if (!enabled) return <BuildingPage />;
+        if (!linked) return <div className="flex-row center" style={{ height: "100%" }}><button onClick={() => setLinked(true)}><Link /><span>Link</span></button></div>;
+        return <div className="flex-col" style={{ height: "100%" }}>
+            <div style={{ height: "100%" }}>
+                <p>Linked Posts: 123123</p>
+                <p>Last Fetched: 123123123</p>
+            </div>
+            <div className="flex-row center">
+                <button><RefreshCw />Fetch</button>
+                <button onClick={() => setLinked(false)}><Unlink /><span>Unlink</span></button>
+            </div>
+        </div>
+    }
+
+
+    return <div className="integration-card">
+        <Header />
+        <Content />
+    </div>
 }
 
 function Tokens() {
