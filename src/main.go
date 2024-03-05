@@ -64,6 +64,9 @@ func main() {
     r.HandleFunc("/token/new", routes.CreateToken).Methods("POST")
     r.HandleFunc("/token/edit", routes.EditToken).Methods("PUT")
     r.HandleFunc("/token/delete/{id}", routes.DeleteToken).Methods("DELETE")
+    // integrations
+    r.HandleFunc("/links", routes.GetUserIntegrations).Methods("GET")
+    r.HandleFunc("/links/upsert", routes.UpsertIntegrations).Methods("PUT")
 
 	// modify cors
 	c := cors.New(cors.Options{
