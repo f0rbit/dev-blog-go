@@ -49,6 +49,17 @@ const access_key = z.object({
     updated_at: z.string(),
 });
 
+const integration_link = z.object({
+    id: z.number(),
+    user_id: z.number(),
+    last_fetch: z.string(),
+    location: z.string(),
+    source: z.string(),
+    data: z.any(),
+    created_at: z.string(),
+    updated_at: z.string(),
+});
+
 export type Post = z.infer<typeof post_schema>;
 
 export type PostsResponse = z.infer<typeof posts_response_schema>;
@@ -56,6 +67,8 @@ export type PostsResponse = z.infer<typeof posts_response_schema>;
 export type AccessKey = z.infer<typeof access_key>;
 
 export type Category = z.infer<typeof category_schema>;
+
+export type IntegrationLink = z.infer<typeof integration_link>;
 
 // i don't think there's a way for zod to do self-recursive types yet.
 export type CategoryNode = { name: string, children: CategoryNode[] };

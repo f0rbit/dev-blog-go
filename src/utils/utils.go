@@ -60,20 +60,20 @@ func GetUser(r *http.Request) *types.User {
 }
 
 func GetDescription(content string) string {
-    // parses content markdown to html
+	// parses content markdown to html
 	bytes := blackfriday.Run([]byte(content))
 	text := string(bytes)
 
-    // replaces all html tags
+	// replaces all html tags
 	r := regexp.MustCompile("<[^>]*>")
-    // removes \n
+	// removes \n
 	text = strings.ReplaceAll(text, "\n", " ")
 	stripped := r.ReplaceAllString(text, "")
-    // removes any html escaped characters
+	// removes any html escaped characters
 	stripped = html.UnescapeString(stripped)
-    // limits the length
+	// limits the length
 	description := firstNLinesOrChars(stripped, 3, 80)
-    // adds "..."
+	// adds "..."
 	return description + "..."
 }
 
@@ -91,4 +91,14 @@ func firstNLinesOrChars(s string, n, numChars int) string {
 	}
 	// Return the entire string if it's shorter than the specified lengths
 	return s
+}
+
+func GetLocation(source string) string {
+	// create the 'location' from the given source
+	var location string
+	switch source {
+	case "devto":
+		location = "https://dev.to/api/articles/me"
+	}
+	return location
 }

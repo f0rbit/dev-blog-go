@@ -64,10 +64,13 @@ func main() {
     r.HandleFunc("/token/new", routes.CreateToken).Methods("POST")
     r.HandleFunc("/token/edit", routes.EditToken).Methods("PUT")
     r.HandleFunc("/token/delete/{id}", routes.DeleteToken).Methods("DELETE")
+    // integrations
+    r.HandleFunc("/links", routes.GetUserIntegrations).Methods("GET")
+    r.HandleFunc("/links/upsert", routes.UpsertIntegrations).Methods("PUT")
 
 	// modify cors
 	c := cors.New(cors.Options{
-        AllowedOrigins:   []string{"http://localhost:5173", "https://f0rbit.github.io", "https://blog.forbit.dev", "http://blog.forbit.dev", "blog.forbit.dev"},
+        AllowedOrigins:   []string{"http://localhost:5173", "https://f0rbit.github.io", "https://blog.forbit.dev", "http://blog.forbit.dev", "blog.forbit.dev", "http://forbit.dev", "https://forbit.dev", "http://www.forbit.dev", "https://www.forbit.dev" },
 		AllowedHeaders:   []string{"Content-Type"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowCredentials: true,

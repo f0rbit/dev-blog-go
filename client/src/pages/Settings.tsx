@@ -1,11 +1,13 @@
-import { Check, Edit, Palette, Plus, Save, Search, Shield, Trash, User } from "lucide-react";
+import { Check, Edit, Link, Palette, Plus, RefreshCw, Save, Search, Shield, Trash, Unlink, User, X } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import { API_URL, AuthContext } from "../App";
 import { AccessKey } from "../../schema";
 import { Oval } from "react-loader-spinner";
 import { BuildingPage } from "../components/Building";
+import React from "react";
+import { type IntegrationLink } from "../../schema";
 
-const subpages = ["profile", "theme", "tokens"] as const;
+const subpages = ["profile", "theme", "integrations", "tokens"] as const;
 
 type SubPage = (typeof subpages)[keyof typeof subpages];
 
@@ -14,6 +16,7 @@ function SubPageIcon({ page }: { page: SubPage }) {
         case "theme": return <><Palette /><span>Theme</span></>;
         case "profile": return <><User /><span>Profile</span></>;
         case "tokens": return <><Shield /><span>Tokens</span></>;
+        case "integrations": return <><Link /><span>Integrations</span></>;
     }
 }
 
@@ -22,12 +25,13 @@ function SubPageContent({ page }: { page: SubPage }) {
         case "theme": return <Theme />;
         case "profile": return <Profile />;
         case "tokens": return <Tokens />
+        case "integrations": return <Integrations />;
     }
 }
 
 export function SettingsPage() {
     const [page, setPage] = useState<SubPage>(subpages[0]);
-    return <section className="flex-row settings-container">
+    return <section className="settings-container">
         <nav className="flex-col">
             {subpages.map((p) => <button key={p} onClick={() => setPage(p)}><SubPageIcon page={p} /></button>)}
         </nav>
@@ -43,6 +47,129 @@ function Theme() {
 
 function Profile() {
     return <BuildingPage />
+}
+
+const INTEGRATION_STATES = {
+    devto: { name: "devto", enabled: true },
+    medium: { name: "medium", enabled: false },
+    substack: { name: "substack", enabled: false }
+} as const;
+
+const DEFAULT_INTEGRATIONS_CONTEXT = {
+    links: [] as IntegrationLink[],
+    refetch: (() => { })
+}
+
+const IntegrationsContext = React.createContext<typeof DEFAULT_INTEGRATIONS_CONTEXT>(DEFAULT_INTEGRATIONS_CONTEXT);
+
+function Integrations() {
+    const [links, setLinks] = useState<IntegrationLink[]>([]);
+
+    const refetch = async () => {
+        const response = await fetch(`${API_URL}/links`, { method: "GET", credentials: "include" });
+        if (!response.ok) throw new Error("Couldn't fetch integrations");
+        const result = await response.json() as IntegrationLink[];
+        setLinks(result);
+    }
+
+    useEffect(() => {
+        refetch();
+    }, []);
+
+    return <IntegrationsContext.Provider value={{ links, refetch }}>
+        <div id="integration-container" className="flex-col">
+            <div id="integration-grid">
+                {Object.entries(INTEGRATION_STATES).map(([key, data]) => (<IntegrationCard key={key} name={data.name} enabled={data.enabled} link={links.find((l) => l.source == data.name)} />))}
+            </div>
+            <div className="divider" />
+            <div style={{ height: "100%" }}>
+                <BuildingPage />
+            </div>
+        </div>
+    </IntegrationsContext.Provider>
+}
+
+function IntegrationCard({ name, enabled, link }: { name: string, enabled: boolean, link: IntegrationLink | undefined }) {
+    const Header = () => <div className="flex-row">
+        <span className={"status-indicator " + (enabled ? "ok" : "bad")}></span>
+        <h2>{name}</h2>
+    </div>;
+
+    const unlink = () => {
+        // make delete request to server
+    }
+
+    const Content = () => {
+        if (!enabled) return <BuildingPage />;
+        if (!link) return <LinkingInterface name={name as "devto" | "medium" | "substack"} />;
+        // if (!linked) return <div className="flex-row center" style={{ height: "100%" }}><button onClick={() => setLinked(true)}><Link /><span>Link</span></button></div>;
+        return <div className="flex-col" style={{ height: "100%" }}>
+            <div style={{ height: "100%" }}>
+                <pre>{JSON.stringify(link, null, 2)}</pre>
+            </div>
+            <div className="flex-row center">
+                <button><RefreshCw />Fetch</button>
+                <button onClick={unlink}><Unlink /><span>Unlink</span></button>
+            </div>
+        </div>
+    }
+
+
+    return <div className="integration-card">
+        <Header />
+        <Content />
+    </div>
+}
+
+function LinkingInterface({ name }: { name: "devto" | "medium" | "substack" }) {
+    const [open, setOpen] = useState(false);
+    const [pending, setPending] = useState(false);
+    const { refetch } = useContext(IntegrationsContext);
+
+    const devto = () => {
+        const [token, setToken] = useState("");
+
+        async function upload() {
+            setPending(true);
+            // push token to server
+            // on success, update the context with body from response
+            const input = { data: JSON.stringify({ token }), source: name };
+            const response = await fetch(`${API_URL}/links/upsert`, { method: "PUT", body: JSON.stringify(input), credentials: "include" });
+            if (!response.ok) {
+                setPending(false);
+                return false;
+            }
+            refetch();
+            return true;
+        }
+
+
+        return open ?
+            <div className="flex-col center" style={{ justifyContent: "space-between", height: "100%" }}>
+                <input type="text" placeholder="API Key" value={token} onChange={(e) => setToken(e.target.value)} style={{ width: "100%" }} />
+                <div className="flex-row center">
+                    {pending ? <button disabled><Oval width={18} height={18} strokeWidth={8} />Confirm</button> : <button onClick={upload}><Check />Confirm</button>}
+                    <button onClick={() => setOpen(false)}><X />Cancel</button>
+                </div>
+            </div>
+            :
+            <div className="flex-row center" style={{ height: "100%" }}>
+                <button onClick={() => setOpen(true)}>
+                    <Link />
+                    <span>Link</span>
+                </button>
+            </div>;
+    }
+
+
+
+    switch (name) {
+        case "devto": return devto();
+        case "medium": return <BuildingPage />;
+        case "substack": return <BuildingPage />;
+    }
+
+    return <p>Internal Error! Couldn't find integration for {name}</p>;
 }
 
 function Tokens() {
@@ -91,7 +218,7 @@ function Tokens() {
 
     if (tokens == null) return <section className="page-center"><Oval height={20} width={20} strokeWidth={8} /></section>
 
-    return <div className="flex-col">
+    return <div className="flex-col" style={{ padding: "10px" }}>
         <div className="flex-row">
             <Search />
             <input type="text" />
