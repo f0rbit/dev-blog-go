@@ -65,3 +65,14 @@ type AccessKey struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+type Integration struct {
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
+	LastFetch time.Time `json:"last_fetch"`
+	Location  string    `json:"location"`
+	Source    string    `json:"source"`
+	Data      string    `json:"data"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}

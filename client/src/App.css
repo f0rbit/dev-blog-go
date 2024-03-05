@@ -385,9 +385,9 @@ main {
 }
 
 .status-indicator {
-    width: 20px;
-    height: 7px;
-    border-radius: 25%;
+    width: 10px;
+    height: 10px;
+    border-radius: 45%;
 }
 
 .status-indicator.ok {
