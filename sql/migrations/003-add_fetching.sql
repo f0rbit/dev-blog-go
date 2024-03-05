@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS fetch_queue (
     location TEXT NOT NULL, -- url
     source TEXT NOT NULL, -- group
     data JSON NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
