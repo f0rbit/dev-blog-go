@@ -62,3 +62,6 @@ coverage-report:
 
 build-client:
 	cd client && npm i && npm run build
+
+run-client:
+	cd client && npm run dev
