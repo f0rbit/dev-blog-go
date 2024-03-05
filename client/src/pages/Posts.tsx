@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useContext, useState } from "react";
 import { API_URL, AuthContext, FunctionResponse, PostContext, PostCreation } from "../App";
-import { ArrowDownNarrowWide, Edit, Filter, FolderTree, Plus, Save, Search, Tags, Trash, X } from "lucide-react";
+import { ArrowDownNarrowWide, Edit, Filter, FolderTree, Plus, RefreshCw, Save, Search, Tags, Trash, X } from "lucide-react";
 import Modal from "../components/Modal";
 import CategoryInput from "../components/CategoryInput";
 import { Post } from "../../schema";
@@ -200,8 +200,15 @@ function PostCard({ post }: { post: Post }) {
     const { posts, setPosts } = useContext(PostContext);
 
     const deletePost = async (): Promise<FunctionResponse> => {
-        setEditingPost({ ...editingPost, archived: true });
-        return savePost();
+        editingPost.archived = true;
+        setEditingPost({ ...editingPost });
+        return await savePost();
+    }
+
+    const revivePost = async (): Promise<FunctionResponse> => {
+        editingPost.archived = false;
+        setEditingPost({ ...editingPost });
+        return await savePost();
     }
 
     const savePost = async (): Promise<FunctionResponse> => {
@@ -240,7 +247,7 @@ function PostCard({ post }: { post: Post }) {
             <PostEditor post={editingPost} setPost={setEditingPost} save={savePost} type={"edit"} cancel={close} />
         </Modal>
         <div className='flex-row center top-right hidden-child'>
-            <button onClick={deletePost}><Trash /></button>
+            {post.archived == true ? <button onClick={() => revivePost()}><RefreshCw /></button> : <button onClick={() => deletePost()}><Trash /></button>}
             <button onClick={() => setEditorOpen(true)}><Edit /></button>
         </div>
         <div className="flex-row center bottom-right">
