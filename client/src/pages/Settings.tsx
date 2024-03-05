@@ -1,9 +1,10 @@
-import { Check, Edit, Link, Palette, Plus, RefreshCw, Save, Search, Shield, Trash, Unlink, User } from "lucide-react";
+import { Check, Edit, Link, Palette, Plus, RefreshCw, Save, Search, Shield, Trash, Unlink, User, X } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import { API_URL, AuthContext } from "../App";
 import { AccessKey } from "../../schema";
 import { Oval } from "react-loader-spinner";
 import { BuildingPage } from "../components/Building";
+import React from "react";
 
 const subpages = ["profile", "theme", "integrations", "tokens"] as const;
 
@@ -62,16 +63,34 @@ const integrations = {
     }
 } as const;
 
+const IntegrationsContext = React.createContext<any>({});
+
 function Integrations() {
-    return <div id="integration-container" className="flex-col">
-        <div id="integration-grid">
-            {Object.entries(integrations).map(([key, data]) => (<IntegrationCard key={key} name={data.name} enabled={data.enabled} />))}
+    const [links, setLinks] = useState<any>(null);
+
+    const refetch = async () => {
+        const response = await fetch(`${API_URL}/links`, { method: "GET", credentials: "include" });
+        if (!response.ok) throw new Error("Couldn't fetch integrations");
+        const result = await response.json();
+        setLinks(result);
+    }
+
+    useEffect(() => {
+        refetch();
+    }, []);
+
+    return <IntegrationsContext.Provider value={{ links, refetch }}>
+        <pre>{links}</pre>
+        <div id="integration-container" className="flex-col">
+            <div id="integration-grid">
+                {Object.entries(integrations).map(([key, data]) => (<IntegrationCard key={key} name={data.name} enabled={data.enabled} />))}
+            </div>
+            <div className="divider" />
+            <div style={{ height: "100%" }}>
+                <BuildingPage />
+            </div>
         </div>
-        <div className="divider" />
-        <div className="building" >
-            <BuildingPage />
-        </div>
-    </div>
+    </IntegrationsContext.Provider>
 }
 
 function IntegrationCard({ name, enabled }: { name: string, enabled: boolean }) {
@@ -84,7 +103,8 @@ function IntegrationCard({ name, enabled }: { name: string, enabled: boolean }) 
 
     const Content = () => {
         if (!enabled) return <BuildingPage />;
-        if (!linked) return <div className="flex-row center" style={{ height: "100%" }}><button onClick={() => setLinked(true)}><Link /><span>Link</span></button></div>;
+        if (!linked) return <LinkingInterface name={name as "devto" | "medium" | "substack"} />;
+        // if (!linked) return <div className="flex-row center" style={{ height: "100%" }}><button onClick={() => setLinked(true)}><Link /><span>Link</span></button></div>;
         return <div className="flex-col" style={{ height: "100%" }}>
             <div style={{ height: "100%" }}>
                 <p>Linked Posts: 123123</p>
@@ -102,6 +122,57 @@ function IntegrationCard({ name, enabled }: { name: string, enabled: boolean }) 
         <Header />
         <Content />
     </div>
+}
+
+function LinkingInterface({ name }: { name: "devto" | "medium" | "substack" }) {
+    const [open, setOpen] = useState(false);
+    const [pending, setPending] = useState(false);
+    const { refetch } = useContext(IntegrationsContext);
+
+    const devto = () => {
+        const [token, setToken] = useState("");
+
+        async function upload() {
+            setPending(true);
+            // push token to server
+            // on success, update the context with body from response
+            const input = { token, source: name };
+            const response = await fetch(`${API_URL}/links/upsert`, { method: "PUT", body: JSON.stringify(input), credentials: "include" });
+            if (!response.ok) {
+                setPending(false);
+                return false;
+            }
+            refetch();
+            return true;
+        }
+
+
+        return open ?
+            <div className="flex-col center" style={{ justifyContent: "space-between", height: "100%" }}>
+                <input type="text" placeholder="API Key" value={token} onChange={(e) => setToken(e.target.value)} style={{ width: "100%" }} />
+                <div className="flex-row center">
+                    {pending ? <button disabled><Oval width={18} height={18} strokeWidth={8} />Confirm</button> : <button onClick={upload}><Check />Confirm</button>}
+                    <button onClick={() => setOpen(false)}><X />Cancel</button>
+                </div>
+            </div>
+            :
+            <div className="flex-row center" style={{ height: "100%" }}>
+                <button onClick={() => setOpen(true)}>
+                    <Link />
+                    <span>Link</span>
+                </button>
+            </div>;
+    }
+
+
+
+    switch (name) {
+        case "devto": return devto();
+        case "medium": return <BuildingPage />;
+        case "substack": return <BuildingPage />;
+    }
+
+    return <p>Internal Error! Couldn't find integration for {name}</p>;
 }
 
 function Tokens() {
@@ -150,7 +221,7 @@ function Tokens() {
 
     if (tokens == null) return <section className="page-center"><Oval height={20} width={20} strokeWidth={8} /></section>
 
-    return <div className="flex-col">
+    return <div className="flex-col" style={{ padding: "10px" }}>
         <div className="flex-row">
             <Search />
             <input type="text" />
