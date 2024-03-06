@@ -1,4 +1,4 @@
-package routes;
+package routes
 
 import (
 	"blog-server/actions"
@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/charmbracelet/log"
 	"github.com/gorilla/mux"
@@ -69,6 +70,47 @@ func UpsertIntegrations(w http.ResponseWriter, r *http.Request) {
     err = database.UpsertIntegration(integration);
     if err != nil {
         utils.LogError("Error upserting integration", err, http.StatusInternalServerError, w);
+        return;
+    }
+
+    w.WriteHeader(http.StatusOK);
+}
+
+func DeleteIntegration(w http.ResponseWriter, r *http.Request) {
+    user := utils.GetUser(r);
+    if user == nil {
+        utils.Unauthorized(w);
+        return;
+    }
+
+    source_str := mux.Vars(r)["id"];
+    id, err := strconv.Atoi(source_str);
+    if err != nil {
+        utils.LogError("Error parsing id", err, http.StatusBadRequest, w);
+        return;
+    }
+
+    // check that the user owns the integration 
+    integration, err := database.GetIntegrationByID(id);
+    if err != nil {
+        utils.LogError("Error fetching integration", err, http.StatusInternalServerError, w);
+        return;
+    }
+
+    if integration == nil {
+        utils.LogError("Integration not found", errors.New("Integration not found"), http.StatusNotFound, w);
+        return;
+    }
+
+    // check that user_id of the integration is the logged in user
+    if integration.UserID != user.ID {
+        utils.LogError("Invalid userID", errors.New("Delete Integration userID doesn't match userID"), http.StatusBadRequest, w);
+        return;
+    }
+
+    err = database.DeleteIntegration(id);
+    if err != nil {
+        utils.LogError("Error deleting integration", err, http.StatusInternalServerError, w);
         return;
     }
 

@@ -20,7 +20,7 @@ func SyncUserDevTo(userID int) error {
         return err
     }
 	// get all integrations for the user
-	link, err := database.GetIntegration(userID, "devto")
+	link, err := database.GetIntegrationBySource(userID, "devto")
 	if err != nil {
 		return err
 	}
