@@ -33,54 +33,55 @@ type FetchLink struct {
 	PostID     int    `json:"post_id"`
 	Identifier string `json:"identifier"`
 }
-type IntegrationWithRawLinks struct {
-	types.Integration `json:",inline"`
-	FetchLinks        string `json:"fetch_links"`
-}
+
 type IntegrationWithLinks struct {
-    types.Integration `json:",inline"`
-    FetchLinks        []FetchLink `json:"fetch_links"`
+	types.Integration `json:",inline"`
+	FetchLinks        []FetchLink `json:"fetch_links,omitempty"`
 }
 
 func GetUserIntegrations(userID int) ([]IntegrationWithLinks, error) {
 	var integrations []IntegrationWithLinks
-	// old query -- rows, err := db.Query("SELECT * FROM fetch_queue WHERE user_id = ?", userID)
-	// in the new query we want to include the fetch_links as well as a property "fetch_links" under each integration as a subquery
-    // note sqlite3 is being used
-    rows, err := db.Query("SELECT fetch_queue.*, (SELECT json_group_array(json_object('post_id', fetch_links.post_id, 'identifier', fetch_links.identifier)) FROM fetch_links WHERE fetch_links.fetch_source = fetch_queue.id) as fetch_links FROM fetch_queue WHERE user_id = ?", userID)
+    // fetch integrations include aggregated fetch_links
+	rows, err := db.Query(`
+    SELECT 
+        fetch_queue.*,
+        IFNULL(
+            (SELECT json_group_array(json_object('post_id', fetch_links.post_id, 'identifier', fetch_links.identifier))
+            FROM fetch_links 
+            WHERE fetch_links.fetch_source = fetch_queue.id),
+        '[]') AS aggregated_links
+    FROM 
+        fetch_queue
+    WHERE 
+        fetch_queue.user_id = ?
+    GROUP BY 
+        fetch_queue.id;`, userID)
 
-	if err != nil {
-		return integrations, err
-	}
-	defer rows.Close()
 
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
 
-    
-	for rows.Next() {
-		var integration IntegrationWithRawLinks
-		err := rows.Scan(&integration.ID, &integration.UserID, &integration.LastFetch, &integration.Location, &integration.Source, &integration.Data, &integration.CreatedAt, &integration.UpdatedAt, &integration.FetchLinks)
-		if err != nil {
-			return nil, err // Updated for clarity
-		}
+    for rows.Next() {
+        var integration IntegrationWithLinks
+        var aggregatedLinks string // This will store the JSON array of fetch_links
 
-		// Additional handling for the FetchLinks field
-		var fetchLinks []FetchLink
-		if err := json.Unmarshal([]byte(integration.FetchLinks), &fetchLinks); err == nil {
-			integration.FetchLinks = "" // Resetting to empty if necessary, or handle appropriately
-			// Assume you have a way to associate these back if needed, or change the struct accordingly.
-		} else {
-			log.Error("Error unmarshalling fetch links", "error", err)
-            continue
+        // Update scanning according to your fetch_queue structure
+        err := rows.Scan(&integration.ID, &integration.UserID, &integration.LastFetch, &integration.Location, &integration.Source, &integration.Data, &integration.CreatedAt, &integration.UpdatedAt, &aggregatedLinks)
+        if err != nil {
+            return nil, err
         }
 
-        // copy integration into integrationWithLinks, getting FetchLinks from fetchLinks
-        integrationWithLinks := IntegrationWithLinks{
-            Integration: integration.Integration,
-            FetchLinks: fetchLinks,
+        // Unmarshal the JSON array into the FetchLinks slice
+        if err := json.Unmarshal([]byte(aggregatedLinks), &integration.FetchLinks); err != nil {
+            log.Printf("Error unmarshalling fetch links: %v", err)
+            // Depending on your error handling policy, you might want to continue or abort
+            continue // For example, but make sure this aligns with how you want to handle errors
         }
 
-        integrations = append(integrations, integrationWithLinks)
-	}
+        integrations = append(integrations, integration)
+    }
 
 	return integrations, nil
 }
