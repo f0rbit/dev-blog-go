@@ -49,6 +49,12 @@ func SyncUserDevTo(userID int) error {
 		return err
 	}
 
+    // update last_fetched on the link
+    err = database.SetIntegrationLastFetched(link.ID)
+    if err != nil {
+        return err
+    }
+
     /**
      * with this data we then want to cross check against the existing posts
      * so for each post we are going to check to see if there is already a hard link in fetch_links

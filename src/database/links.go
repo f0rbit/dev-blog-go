@@ -100,3 +100,8 @@ func DeleteIntegration(id int) error {
     _, err = db.Exec("DELETE FROM fetch_links WHERE fetch_source = ?", id)
     return err
 }
+
+func SetIntegrationLastFetched(linkID int) error {
+    _, err := db.Exec("UPDATE fetch_queue SET last_fetch = CURRENT_TIMESTAMP WHERE id = ?", linkID)
+    return err
+}
