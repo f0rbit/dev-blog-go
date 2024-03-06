@@ -79,7 +79,7 @@ function Integrations() {
     return <IntegrationsContext.Provider value={{ links, refetch }}>
         <div id="integration-container" className="flex-col">
             <div id="integration-grid">
-                {Object.entries(INTEGRATION_STATES).map(([key, data]) => (<IntegrationCard key={key} name={data.name} enabled={data.enabled} link={links.find((l) => l.source == data.name )} refetch={refetch} />))}
+                {Object.entries(INTEGRATION_STATES).map(([key, data]) => (<IntegrationCard key={key} name={data.name} enabled={data.enabled} link={links.find((l) => l.source == data.name)} refetch={refetch} />))}
             </div>
             <div className="divider" />
             <div style={{ height: "100%" }}>
@@ -105,18 +105,28 @@ function IntegrationCard({ name, enabled, link, refetch }: { name: string, enabl
 
     const sync = async () => {
         // make get request to "/links/fetch/{source}"
-        const response = await fetch(`${API_URL}/links/fetch/${name}`, { method: "GET", credentials: "include" }); 
+        const response = await fetch(`${API_URL}/links/fetch/${name}`, { method: "GET", credentials: "include" });
         if (!response || !response.ok) return;
         await refetch();
-        
+
     }
 
     const Content = () => {
         if (!enabled) return <BuildingPage />;
         if (!link) return <LinkingInterface name={name as "devto" | "medium" | "substack"} />;
+        const last_fetch = link.last_fetch ? new Date(link.last_fetch).toLocaleString() : "Never";
+
+
         return <div className="flex-col" style={{ height: "100%" }}>
-            <div style={{ height: "100%" }}>
-                <pre>{JSON.stringify(link, null, 2)}</pre>
+            <div style={{ height: "100%" }} className="flex-col">
+                <div className="flex-row">
+                    <span>Last Fetch:</span>
+                    <span>{last_fetch}</span>
+                </div>
+                <div className="flex-row">
+                    <span>URL:</span>
+                    <span>{link.location}</span>
+                </div>
             </div>
             <div className="flex-row center">
                 <button onClick={sync}><RefreshCw />Fetch</button>
