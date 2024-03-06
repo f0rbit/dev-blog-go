@@ -79,7 +79,7 @@ function Integrations() {
     return <IntegrationsContext.Provider value={{ links, refetch }}>
         <div id="integration-container" className="flex-col">
             <div id="integration-grid">
-                {Object.entries(INTEGRATION_STATES).map(([key, data]) => (<IntegrationCard key={key} name={data.name} enabled={data.enabled} link={links.find((l) => l.source == data.name )} />))}
+                {Object.entries(INTEGRATION_STATES).map(([key, data]) => (<IntegrationCard key={key} name={data.name} enabled={data.enabled} link={links.find((l) => l.source == data.name )} refetch={refetch} />))}
             </div>
             <div className="divider" />
             <div style={{ height: "100%" }}>
@@ -89,34 +89,37 @@ function Integrations() {
     </IntegrationsContext.Provider>
 }
 
-function IntegrationCard({ name, enabled, link }: { name: string, enabled: boolean, link: IntegrationLink | undefined }) {
+function IntegrationCard({ name, enabled, link, refetch }: { name: string, enabled: boolean, link: IntegrationLink | undefined, refetch: () => Promise<void> }) {
     const Header = () => <div className="flex-row">
         <span className={"status-indicator " + (enabled ? "ok" : "bad")}></span>
         <h2>{name}</h2>
     </div>;
 
-    const unlink = () => {
+    const unlink = async () => {
+        if (!link) return;
         // make delete request to server
+        const response = await fetch(`${API_URL}/links/delete/${link.id}`, { method: "DELETE", credentials: "include" });
+        if (!response.ok) return;
+        await refetch();
     }
 
-    const refetch = async () => {
+    const sync = async () => {
         // make get request to "/links/fetch/{source}"
         const response = await fetch(`${API_URL}/links/fetch/${name}`, { method: "GET", credentials: "include" }); 
         if (!response || !response.ok) return;
-        console.log("fetch", response.ok);
+        await refetch();
         
     }
 
     const Content = () => {
         if (!enabled) return <BuildingPage />;
         if (!link) return <LinkingInterface name={name as "devto" | "medium" | "substack"} />;
-        // if (!linked) return <div className="flex-row center" style={{ height: "100%" }}><button onClick={() => setLinked(true)}><Link /><span>Link</span></button></div>;
         return <div className="flex-col" style={{ height: "100%" }}>
             <div style={{ height: "100%" }}>
                 <pre>{JSON.stringify(link, null, 2)}</pre>
             </div>
             <div className="flex-row center">
-                <button onClick={refetch}><RefreshCw />Fetch</button>
+                <button onClick={sync}><RefreshCw />Fetch</button>
                 <button onClick={unlink}><Unlink /><span>Unlink</span></button>
             </div>
         </div>
