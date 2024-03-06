@@ -255,7 +255,7 @@ function PostCard({ post }: { post: Post }) {
         </div>
         <h2>{post.title}</h2>
         <pre>{post.slug}</pre>
-        <p>{post.content}</p>
+        <p className="clamp-text-3">{post.content}</p>
     </div>
 }
 
