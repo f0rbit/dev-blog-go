@@ -10,7 +10,7 @@ func GetTags(user *types.User) ([]string, error) {
 	if user == nil {
 		return tags, errors.New("Invalid user reference")
 	}
-	rows, err := db.Query("SELECT DISTINCT tags.tag FROM posts LEFT JOIN tags ON tags.post_id = posts.id WHERE posts.author_id = ?", user.ID)
+	rows, err := db.Query("SELECT DISTINCT tags.tag FROM posts LEFT JOIN tags ON tags.post_id = posts.id WHERE posts.author_id = ? AND tags.tag IS NOT NULL", user.ID)
 	if err != nil {
 		return tags, err
 	}

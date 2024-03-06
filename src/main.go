@@ -67,6 +67,8 @@ func main() {
     // integrations
     r.HandleFunc("/links", routes.GetUserIntegrations).Methods("GET")
     r.HandleFunc("/links/upsert", routes.UpsertIntegrations).Methods("PUT")
+    r.HandleFunc("/links/fetch/{source}", routes.FetchIntegration).Methods("GET")
+    r.HandleFunc("/links/delete/{id}", routes.DeleteIntegration).Methods("DELETE")
 
 	// modify cors
 	c := cors.New(cors.Options{

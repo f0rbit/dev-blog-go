@@ -192,6 +192,13 @@ main {
     }
 }
 
+.clamp-text-3 {
+    display: -webkit-inline-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
 #post-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;

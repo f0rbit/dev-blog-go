@@ -98,8 +98,8 @@
     - [x] show first 3 lines
 
 # v1.0
-- [ ] Integration with third-party API, only support `devto` at the moment, but create a generic interface for adding more
-    - [ ] devto
+- [x] Integration with third-party API, only support `devto` at the moment, but create a generic interface for adding more
+    - [x] devto
     - [ ] Medium's API
     - [ ] Substack's API
 - [ ] Periodically fetch from these api's cache the results so that when we get a request for /posts, it is near-instant

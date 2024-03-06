@@ -68,7 +68,7 @@ function Integrations() {
     const refetch = async () => {
         const response = await fetch(`${API_URL}/links`, { method: "GET", credentials: "include" });
         if (!response.ok) throw new Error("Couldn't fetch integrations");
-        const result = await response.json() as IntegrationLink[];
+        const result = ((await response.json()) ?? []) as IntegrationLink[];
         setLinks(result);
     }
 
@@ -79,7 +79,7 @@ function Integrations() {
     return <IntegrationsContext.Provider value={{ links, refetch }}>
         <div id="integration-container" className="flex-col">
             <div id="integration-grid">
-                {Object.entries(INTEGRATION_STATES).map(([key, data]) => (<IntegrationCard key={key} name={data.name} enabled={data.enabled} link={links.find((l) => l.source == data.name)} />))}
+                {Object.entries(INTEGRATION_STATES).map(([key, data]) => (<IntegrationCard key={key} name={data.name} enabled={data.enabled} link={links.find((l) => l.source == data.name)} refetch={refetch} />))}
             </div>
             <div className="divider" />
             <div style={{ height: "100%" }}>
@@ -89,26 +89,51 @@ function Integrations() {
     </IntegrationsContext.Provider>
 }
 
-function IntegrationCard({ name, enabled, link }: { name: string, enabled: boolean, link: IntegrationLink | undefined }) {
+function IntegrationCard({ name, enabled, link, refetch }: { name: string, enabled: boolean, link: IntegrationLink | undefined, refetch: () => Promise<void> }) {
     const Header = () => <div className="flex-row">
         <span className={"status-indicator " + (enabled ? "ok" : "bad")}></span>
         <h2>{name}</h2>
     </div>;
 
-    const unlink = () => {
+    const unlink = async () => {
+        if (!link) return;
         // make delete request to server
+        const response = await fetch(`${API_URL}/links/delete/${link.id}`, { method: "DELETE", credentials: "include" });
+        if (!response.ok) return;
+        await refetch();
+    }
+
+    const sync = async () => {
+        // make get request to "/links/fetch/{source}"
+        const response = await fetch(`${API_URL}/links/fetch/${name}`, { method: "GET", credentials: "include" });
+        if (!response || !response.ok) return;
+        await refetch();
+
     }
 
     const Content = () => {
         if (!enabled) return <BuildingPage />;
         if (!link) return <LinkingInterface name={name as "devto" | "medium" | "substack"} />;
-        // if (!linked) return <div className="flex-row center" style={{ height: "100%" }}><button onClick={() => setLinked(true)}><Link /><span>Link</span></button></div>;
+        const last_fetch = link.last_fetch ? new Date(link.last_fetch).toLocaleString() : "Never";
+
+
         return <div className="flex-col" style={{ height: "100%" }}>
-            <div style={{ height: "100%" }}>
-                <pre>{JSON.stringify(link, null, 2)}</pre>
+            <div style={{ height: "100%" }} className="flex-col">
+                <div className="flex-row">
+                    <span>Last Fetch:</span>
+                    <span>{last_fetch}</span>
+                </div>
+                <div className="flex-row">
+                    <span>URL:</span>
+                    <span>{link.location}</span>
+                </div>
+                <div className="flex-row">
+                    <span>Posts:</span>
+                    <span>{link.fetch_links?.length ?? "0"}</span>
+                </div>
             </div>
             <div className="flex-row center">
-                <button><RefreshCw />Fetch</button>
+                <button onClick={sync}><RefreshCw />Fetch</button>
                 <button onClick={unlink}><Unlink /><span>Unlink</span></button>
             </div>
         </div>
