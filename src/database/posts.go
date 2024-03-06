@@ -306,3 +306,57 @@ func RemoveCategoryFromPosts(user *types.User, cat_list []string) error {
     _, err := db.Exec(query, params...);
     return err
 }
+
+func GetPostsByTitle(user *types.User, title string) (*types.Post, error) {
+    var post types.Post
+    var tags sql.NullString
+    err := db.QueryRow(`
+    SELECT 
+        posts.id, 
+        posts.author_id,
+        posts.slug, 
+        posts.title, 
+        posts.content, 
+        posts.category, 
+        posts.archived,
+        posts.publish_at,
+        posts.created_at, 
+        posts.updated_at,
+        GROUP_CONCAT(tags.tag) AS tags
+    FROM 
+        posts 
+    LEFT JOIN
+        tags ON posts.id = tags.post_id
+    WHERE 
+        posts.author_id = ? AND posts.title = ?
+    GROUP BY
+        posts.id`, user.ID, title).Scan(
+        &post.Id,
+        &post.AuthorID,
+        &post.Slug,
+        &post.Title,
+        &post.Content,
+        &post.Category,
+        &post.Archived,
+        &post.PublishAt,
+        &post.CreatedAt,
+        &post.UpdatedAt,
+        &tags)
+
+    if err != nil {
+        if errors.Is(err, sql.ErrNoRows) {
+            return nil, nil
+        }
+        return nil, err
+    }
+
+    if tags.Valid {
+        post.Tags = strings.Split(tags.String, ",")
+    } else {
+        post.Tags = []string{}
+    }
+
+    post.Description = utils.GetDescription(post.Content)
+
+    return &post, nil
+}

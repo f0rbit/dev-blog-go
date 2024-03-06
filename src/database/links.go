@@ -4,6 +4,8 @@ import (
 	"blog-server/types"
 	"database/sql"
 	"errors"
+
+	"github.com/charmbracelet/log"
 )
 
 func UpsertIntegration(integration types.Integration) error {
@@ -58,4 +60,23 @@ func GetIntegration(userID int, source string) (*types.Integration, error) {
         return nil, err
     }
     return &integration, nil
+}
+
+func GetFetchLinkBySlug(linkID int, slug string) (*types.FetchLink, error) {
+    row := db.QueryRow("SELECT * FROM fetch_links WHERE fetch_source = ? AND identifier = ?", linkID, slug)
+    var link types.FetchLink
+    err := row.Scan(&link.PostID, &link.FetchSource, &link.Identifier, &link.CreatedAt, &link.UpdatedAt)
+    if err != nil {
+        if errors.Is(err, sql.ErrNoRows) {
+            return nil, nil
+        }
+        return nil, err
+    }
+    return &link, nil
+}
+
+func CreateFetchLink(link types.FetchLink) error {
+    _, err := db.Exec("INSERT INTO fetch_links (post_id, fetch_source, identifier) VALUES (?, ?, ?)", link.PostID, link.FetchSource, link.Identifier)
+    log.Info("Created fetch link", "link", link)
+    return err
 }

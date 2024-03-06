@@ -2,6 +2,7 @@ package actions
 
 import (
 	"blog-server/database"
+	"blog-server/types"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -56,9 +57,101 @@ func SyncUserDevTo(userID int) error {
      * if we find a post with the same name then we just create a fetch_link instance linking that post to this integration
      * otherwise we create a new post based on the data from the devto api and then create a fetch_link instance linking that post to this integration
      */
+
+    // iterate over devto articles
+    articles, ok := result.([]interface{})
+    if !ok {
+        return errors.New("Invalid response from DevTo API")
+    }
+
+    for _, article := range articles {
+        article_data, ok := article.(map[string]interface{})
+        if !ok {
+            return errors.New("Invalid article data from DevTo API")
+        }
+        err := handleDevToArticle(article_data, user, link)
+        if err != nil {
+            log.Error("Error handling DevTo article", "error", err)
+            continue
+        }
+    }
     
 	return nil
+}
 
+func handleDevToArticle(article interface{}, user *types.User, integration *types.Integration) error {
+    // get the slug of the artcile
+    slug, ok := article.(map[string]interface{})["slug"].(string)
+    if !ok {
+        return errors.New("Couldn't decode slug from article")
+    }
+
+    // check if there is a fetch_link with the same identifier and fetch_source
+    link, err := database.GetFetchLinkBySlug(integration.ID, slug)
+    if err != nil {
+        return err
+    }
+
+    if link != nil {
+        // we already have this article
+        // TODO: update existing post
+        return nil
+    }
+
+    // check if there is a post with the same name
+    title, ok := article.(map[string]interface{})["title"].(string)
+    if !ok {
+        return errors.New("Couldn't decode title from article")
+    }
+
+    post, err := database.GetPostsByTitle(user, title)
+    if err != nil {
+        return err
+    }
+
+    if post != nil {
+        // we already have this article
+        // create fetch_link
+        new_link := types.FetchLink{
+            PostID: post.Id,
+            FetchSource: integration.ID,
+            Identifier: slug,
+        }
+        err = database.CreateFetchLink(new_link)
+        if err != nil {
+            return err
+        }
+        return nil
+    }
+
+    // create a new post
+    newPost := types.Post{
+        Title: title,
+        Content: article.(map[string]interface{})["body_markdown"].(string),
+        AuthorID: user.ID,
+        Archived: false,
+        Slug: slug,
+        Category: "devlog",
+        Tags: []string{},
+        Description: article.(map[string]interface{})["description"].(string),
+    }
+    post_id, err := database.CreatePost(newPost)
+    if err != nil {
+        return err
+    }
+
+    // create fetch_link
+    new_link := types.FetchLink{
+        PostID: post_id,
+        FetchSource: integration.ID,
+        Identifier: slug,
+    }
+    err = database.CreateFetchLink(new_link)
+    if err != nil {
+        return err
+    }
+
+    return nil
 }
 
 func fetchDevToAPI(url string, token string) (interface{}, error) {
