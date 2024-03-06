@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"blog-server/actions"
 	"blog-server/database"
 	"blog-server/types"
 	"blog-server/utils"
@@ -191,6 +192,32 @@ func UpsertIntegrations(w http.ResponseWriter, r *http.Request) {
     err = database.UpsertIntegration(integration);
     if err != nil {
         utils.LogError("Error upserting integration", err, http.StatusInternalServerError, w);
+        return;
+    }
+
+    w.WriteHeader(http.StatusOK);
+}
+
+func FetchIntegration(w http.ResponseWriter, r *http.Request) {
+    user := utils.GetUser(r);
+    if user == nil {
+        utils.Unauthorized(w);
+        return;
+    }
+
+    source := mux.Vars(r)["source"];
+    log.Info("Fetching integration", "source", source);
+    
+    switch source {
+    case "devto":
+        err := actions.SyncUserDevTo(user.ID);
+        if err != nil {
+            utils.LogError("Error syncing devto", err, http.StatusInternalServerError, w);
+            return;
+        }
+        break;
+    default:
+        utils.LogError("Invalid source", errors.New("Invalid source"), http.StatusBadRequest, w);
         return;
     }
 

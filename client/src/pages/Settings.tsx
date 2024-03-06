@@ -79,7 +79,7 @@ function Integrations() {
     return <IntegrationsContext.Provider value={{ links, refetch }}>
         <div id="integration-container" className="flex-col">
             <div id="integration-grid">
-                {Object.entries(INTEGRATION_STATES).map(([key, data]) => (<IntegrationCard key={key} name={data.name} enabled={data.enabled} link={links.find((l) => l.source == data.name)} />))}
+                {Object.entries(INTEGRATION_STATES).map(([key, data]) => (<IntegrationCard key={key} name={data.name} enabled={data.enabled} link={links.find((l) => l.source == data.name )} />))}
             </div>
             <div className="divider" />
             <div style={{ height: "100%" }}>
@@ -99,6 +99,14 @@ function IntegrationCard({ name, enabled, link }: { name: string, enabled: boole
         // make delete request to server
     }
 
+    const refetch = async () => {
+        // make get request to "/links/fetch/{source}"
+        const response = await fetch(`${API_URL}/links/fetch/${name}`, { method: "GET", credentials: "include" }); 
+        if (!response || !response.ok) return;
+        console.log("fetch", response.ok);
+        
+    }
+
     const Content = () => {
         if (!enabled) return <BuildingPage />;
         if (!link) return <LinkingInterface name={name as "devto" | "medium" | "substack"} />;
@@ -108,7 +116,7 @@ function IntegrationCard({ name, enabled, link }: { name: string, enabled: boole
                 <pre>{JSON.stringify(link, null, 2)}</pre>
             </div>
             <div className="flex-row center">
-                <button><RefreshCw />Fetch</button>
+                <button onClick={refetch}><RefreshCw />Fetch</button>
                 <button onClick={unlink}><Unlink /><span>Unlink</span></button>
             </div>
         </div>

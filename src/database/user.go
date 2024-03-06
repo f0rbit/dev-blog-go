@@ -150,3 +150,16 @@ func GetUserIntegrations(userID int) ([]types.Integration, error) {
     }
     return integrations, err
 }
+
+func GetIntegration(userID int, source string) (*types.Integration, error) {
+    row := db.QueryRow("SELECT * FROM fetch_queue WHERE user_id = ? AND source = ?", userID, source)
+    var integration types.Integration
+    err := row.Scan(&integration.ID, &integration.UserID, &integration.LastFetch, &integration.Location, &integration.Source, &integration.Data, &integration.CreatedAt, &integration.UpdatedAt)
+    if err != nil {
+        if errors.Is(err, sql.ErrNoRows) {
+            return nil, nil
+        }
+        return nil, err
+    }
+    return &integration, nil
+}
