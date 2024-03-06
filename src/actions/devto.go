@@ -13,6 +13,11 @@ import (
 // this file is responsible for taking a queue_link (integration) and fetching data from API and syncing posts to database
 
 func SyncUserDevTo(userID int) error {
+    // first fetch user account
+    user, err := database.GetUserByID(userID)
+    if err != nil {
+        return err
+    }
 	// get all integrations for the user
 	link, err := database.GetIntegration(userID, "devto")
 	if err != nil {
@@ -43,9 +48,15 @@ func SyncUserDevTo(userID int) error {
 		return err
 	}
 
-    // do something with result, for now just print out to console
-    log.Info("DevTo API resul", "result", result)
-
+    /**
+     * with this data we then want to cross check against the existing posts
+     * so for each post we are going to check to see if there is already a hard link in fetch_links
+     * fetch_links has column 'identifier' which we will take from the devto api ('slug') and 'fetch_source' which is the id of the integration (link.ID)
+     * if there is no match then we want to check against existing posts with the same name
+     * if we find a post with the same name then we just create a fetch_link instance linking that post to this integration
+     * otherwise we create a new post based on the data from the devto api and then create a fetch_link instance linking that post to this integration
+     */
+    
 	return nil
 
 }

@@ -40,7 +40,7 @@ func FetchPost(user *types.User, identifier Identifier, needle interface{}) (typ
         posts.category,
         posts.archived,
         posts.publish_at,
-        posts.created_at,
+        posts.created_at, 
         posts.updated_at,
         GROUP_CONCAT(tags.tag) AS tags
     FROM
