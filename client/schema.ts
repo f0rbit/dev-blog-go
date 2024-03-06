@@ -58,6 +58,7 @@ const integration_link = z.object({
     data: z.any(),
     created_at: z.string(),
     updated_at: z.string(),
+    fetch_links: z.array(z.object({ post_id: z.number(), identifier: z.string() })).optional()
 });
 
 export type Post = z.infer<typeof post_schema>;

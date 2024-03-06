@@ -68,7 +68,7 @@ function Integrations() {
     const refetch = async () => {
         const response = await fetch(`${API_URL}/links`, { method: "GET", credentials: "include" });
         if (!response.ok) throw new Error("Couldn't fetch integrations");
-        const result = await response.json() as IntegrationLink[];
+        const result = ((await response.json()) ?? []) as IntegrationLink[];
         setLinks(result);
     }
 
@@ -126,6 +126,10 @@ function IntegrationCard({ name, enabled, link, refetch }: { name: string, enabl
                 <div className="flex-row">
                     <span>URL:</span>
                     <span>{link.location}</span>
+                </div>
+                <div className="flex-row">
+                    <span>Posts:</span>
+                    <span>{link.fetch_links?.length ?? "0"}</span>
                 </div>
             </div>
             <div className="flex-row center">
