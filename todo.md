@@ -100,9 +100,8 @@
 # v1.0
 - [x] Integration with third-party API, only support `devto` at the moment, but create a generic interface for adding more
     - [x] devto
-    - [ ] Medium's API
-    - [ ] Substack's API
-- [ ] Periodically fetch from these api's cache the results so that when we get a request for /posts, it is near-instant
+- [x] Fetch from these api's cache the results so that when we get a request for /posts, it is near-instant
+    - [x] For now, just have a manual 'fetch' button which will ping the API
 - [ ] Proper README document with instructions on how to self-host/deploy & test locally
 
 # v1.1
@@ -110,6 +109,7 @@
     - [ ] Endpoint for "liking" a post
 - [ ] Build homepage
     - [ ] View analytics
+    - [ ] Add 'action' table for when someone requests a post (count each request as a 'view')
 
 # v1.2
 - [ ] Integrate with media-timeline project
@@ -120,3 +120,8 @@
 - [ ] Light mode support & theme switcher
 - [ ] Refactor for support for multiple themes
 
+# Backlog
+- [ ] Integrate Medium's API
+- [ ] Integrate Substack's API
+- [ ] Figure out if we can listen for devto post events and then fetch from there
+    - [ ] Otherwise have a task running on the server every hour to refetch all integrations
