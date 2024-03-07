@@ -102,7 +102,7 @@
     - [x] devto
 - [x] Fetch from these api's cache the results so that when we get a request for /posts, it is near-instant
     - [x] For now, just have a manual 'fetch' button which will ping the API
-- [ ] Proper README document with instructions on how to self-host/deploy & test locally
+- [x] Proper README document with instructions on how to self-host/deploy & test locally
 
 # v1.1
 - [ ] Analytics on server
