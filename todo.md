@@ -105,18 +105,29 @@
 - [x] Proper README document with instructions on how to self-host/deploy & test locally
 
 # v1.1
+- [ ] Post Editor redesign
+    - [ ] Have a dedicated sub-page for editing/creating posts
+    - [ ] Have a 'Preview' section where we can see the content rendered in HTML
+    - [ ] Use tailwind-prose for rendering
+- [ ] Add support for .adoc files
+    - [ ] Have the filetype configurable per-post
+- [ ] Have a section to write the description for the post in plain text
+    - [ ] Update description
+    - [ ] If left blank, infer description from post
+
+# v1.2
 - [ ] Analytics on server
     - [ ] Endpoint for "liking" a post
 - [ ] Build homepage
     - [ ] View analytics
     - [ ] Add 'action' table for when someone requests a post (count each request as a 'view')
 
-# v1.2
+# v1.3
 - [ ] Integrate with media-timeline project
     - [ ] Tightly integrated, not just sharing API keys but full linking workflow that feels natural
     - [ ] Obviously for this, have to finish up media-timeline as well.
 
-# v1.3
+# v1.4
 - [ ] Light mode support & theme switcher
 - [ ] Refactor for support for multiple themes
 
@@ -125,3 +136,4 @@
 - [ ] Integrate Substack's API
 - [ ] Figure out if we can listen for devto post events and then fetch from there
     - [ ] Otherwise have a task running on the server every hour to refetch all integrations
+
