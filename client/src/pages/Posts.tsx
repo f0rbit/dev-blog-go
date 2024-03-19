@@ -6,6 +6,7 @@ import CategoryInput from "../components/CategoryInput";
 import { Post } from "../../schema";
 import { Oval } from "react-loader-spinner";
 import TagInput from "../components/TagInput";
+import { PostEdit } from "./PostEdit";
 
 type PostSort = "created" | "edited" | "published" | "oldest";
 const EMPTY_POST_CREATION: PostCreation = {
@@ -20,16 +21,16 @@ const EMPTY_POST_CREATION: PostCreation = {
 }
 
 export function PostsPage() {
-    const { posts, setPosts, categories } = useContext(PostContext);
+    const { posts } = useContext(PostContext);
     const [selected, setSelected] = useState<PostSort>("created");
-    const [openCreatePost, setOpenCreatePost] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [loading, _] = useState(false);
     const [filters, setFilters] = useState<PostFilters>({ category: null, tag: null });
-    const { user } = useContext(AuthContext);
-    const [creatingPost, setCreatingPost] = useState<PostCreation>(EMPTY_POST_CREATION);
+    // const { user } = useContext(AuthContext);
+    const [isEditing, setIsEditing] = useState<boolean>(false);
 
     if (!posts || !posts.posts) return <p>No Posts Found!</p>;
 
+    /*
     async function createPost(): Promise<FunctionResponse> {
         // input validation
         const { slug, category } = creatingPost;
@@ -48,6 +49,7 @@ export function PostsPage() {
         setPosts({ ...posts, posts: [...posts.posts, { ...result, loading: false } as Post] });
         return { error: null, success: true }
     }
+    */
 
     // sort posts
     let sorted_posts = structuredClone(posts.posts);
@@ -77,10 +79,7 @@ export function PostsPage() {
         return true;
     });
 
-    function closeEditor() {
-        setOpenCreatePost(false);
-        setCreatingPost(EMPTY_POST_CREATION);
-    }
+    if (isEditing) return <PostEdit />
 
     return <main>
         <section id="post-filters">
@@ -96,9 +95,6 @@ export function PostsPage() {
         <section id='post-grid'>
             {filtered_posts.map((p: any) => <PostCard key={p.id} post={p} />)}
         </section>
-        <Modal openModal={openCreatePost} closeModal={closeEditor}>
-            <PostEditor post={creatingPost} setPost={setCreatingPost} save={createPost} type={"create"} cancel={closeEditor} />
-        </Modal>
     </main>
 }
 
