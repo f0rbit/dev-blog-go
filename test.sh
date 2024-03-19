@@ -3,6 +3,7 @@ ROOT_DIR=$(pwd)
 BINARY_NAME=server.out
 COVERAGE_DIR=src/coverage
 DATABASE_FILE=db/test.db
+BUN_DIR=$(which bun)
 
 mkdir -p db
 rm -f ${DATABASE_FILE}
@@ -31,12 +32,12 @@ GOCOVERDIR=${COVERAGE_DIR} DATABASE=${DATABASE_FILE} ./${BINARY_NAME} 2> server.
 server_pid=$!
 
 # install dependencies
-cd ${ROOT_DIR}/client && ~/.bun/bin/bun i
-cd ${ROOT_DIR}/test && ~/.bun/bin/bun i
+cd ${ROOT_DIR}/client && ${BUN_DIR} i
+cd ${ROOT_DIR}/test && ${BUN_DIR} i
 cd ${ROOT_DIR}
 
 # Run the tests using "bun test"
-cd test && ~/.bun/bin/bun test
+cd test && ${BUN_DIR} test
 
 # Capture the exit code of "bun test"
 test_exit_code=$?
