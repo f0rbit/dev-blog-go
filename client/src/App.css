@@ -258,10 +258,16 @@ main {
 
 .input-grid {
     display: grid;
-    grid-template-columns: 6vw 20vw 6vw 20vw;
+    grid-template-columns: min-content 1fr min-content 1fr;
     row-gap: 5px;
     column-gap: 20px;
     align-items: center;
+
+    #content-label {
+        grid-column: span 4;
+        margin-top: 5px;
+        text-align: center;
+    }
 }
 
 .error-message {

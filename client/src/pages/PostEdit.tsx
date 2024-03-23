@@ -37,18 +37,19 @@ export function PostEdit({ initial, save, cancel }: { initial: PostUpdate, save:
     }
 
     return <main className="flex-col input-grid">
-        <h3>{post.id ? `Editing Post ${post.title}` : "Creating New Post"}</h3>
+        <h3 style={{ gridColumn: "span 4" }}>{post.id ? `Editing Post ${post.title}` : "Creating New Post"}</h3>
 
         <label>Title</label><input type="text" value={post.title} onChange={(e) => updateTitle(e.target.value)} />
         <label>Slug</label><input type="text" value={post.slug} onChange={(e) => updateSlug(e.target.value)} />
         <label>Category</label><CategoryInput value={post.category} categories={categories.categories} setValue={(c) => setPost({ ...post, category: c })} />
         <label>Publish</label><input type="datetime-local" value={edit_time} onChange={(e) => setPublishDate(new Date(e.target.value).toISOString())} />
 
-        <label style={{ placeSelf: "stretch" }}>Content</label><textarea style={{ gridColumn: "span 3", fontFamily: "monospace" }} rows={10} value={post.content} onChange={(e) => setPost({ ...post, content: e.target.value })} />
+        <label id="content-label">Content</label>
+        <textarea style={{ gridColumn: "span 4", fontFamily: "monospace", height: "50vh" }} value={post.content} onChange={(e) => setPost({ ...post, content: e.target.value })} />
         <label>Tags</label><TagEditor tags={post.tags} setTags={(tags) => setPost({ ...post, tags })} />
 
         {error && <p className="error-message">{error}</p>}
-        <div className="flex-row center">
+        <div className="flex-row center" style={{ gridColumn: "span 4"}}>
             <button onClick={() => save().then((res) => setError(res.error))}><SaveContent /></button><button onClick={cancel}><X />Cancel</button>
         </div>
 
