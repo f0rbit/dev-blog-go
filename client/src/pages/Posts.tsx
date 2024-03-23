@@ -2,7 +2,7 @@ import { Dispatch, SetStateAction, useContext, useState } from "react";
 import { API_URL, AuthContext, FunctionResponse, PostContext } from "../App";
 import { ArrowDownNarrowWide, Edit, Filter, FolderTree, Plus, RefreshCw, Search, Tags, Trash, X } from "lucide-react";
 import CategoryInput from "../components/CategoryInput";
-import { Post, PostCreation, PostUpdate, toIsoString } from "../../schema";
+import { Post, PostUpdate } from "../../schema";
 import { Oval } from "react-loader-spinner";
 import TagInput from "../components/TagInput";
 import { PostEdit } from "./PostEdit";
@@ -21,44 +21,56 @@ const EMPTY_POST_CREATION: PostUpdate = {
 }
 
 export function PostsPage() {
-    const { posts } = useContext(PostContext);
     const [sort, setSort] = useState<PostSort>("created");
     const [loading, _] = useState(false);
     const [filters, setFilters] = useState<PostFilters>({ category: null, tag: null });
     const [editingPost, setEditingPost] = useState<PostUpdate | null>(null);
-    const { categories, setPosts } = useContext(PostContext)
+    const { posts, categories, setPosts } = useContext(PostContext)
     const { user } = useContext(AuthContext)
 
+    if (editingPost != null) return <PostEdit initial={editingPost} save={save} cancel={() => setEditingPost(null)} />
 
-
-    function newPost() {
-        setEditingPost(EMPTY_POST_CREATION)
-    }
-
-    if (editingPost != null) return <PostEdit initial={editingPost} save={(post) => createPost(post)} cancel={() => setEditingPost(null) } />
-
-    if (!posts || !posts.posts) return <div>
-        <button style={{ marginLeft: "auto" }} onClick={newPost}><Plus /><span>Create</span></button>
+    if (!posts || !posts.posts) return <div className="flex-col">
         <p>No Posts Found!</p>
-    </div>;
+        <button onClick={() => setEditingPost(EMPTY_POST_CREATION)}><Plus /><span>Create</span></button>
+    </div>
 
-    async function createPost(post: PostUpdate): Promise<FunctionResponse> {
-        if (!post) throw new Error("Called createPost() without having an updated post");
+    async function save(post: PostUpdate): Promise<FunctionResponse> {
+        if (!post) throw new Error("Called save() without having an updated post");
         // input validation
         const { slug, category } = post;
         if (slug.includes(" ")) return { error: "Invalid Slug!", success: false }
         if (categories == null) return { error: "Not fetched categories", success: false };
         const cat_list = Object.values(categories.categories).map((cat: any) => cat.name);
         if (!(cat_list.includes(category))) return { error: "Invalid Category!", success: false }
-        const new_post: Post & { loading: boolean } = { ...post, id: -1, created_at: toIsoString(new Date()), updated_at: toIsoString(new Date()), loading: true };
 
-        setPosts({ ...posts, posts: [...posts.posts, new_post] });
-        // send request
-        const response = await fetch(`${API_URL}/post/new`, { method: "POST", body: JSON.stringify({ ...post, author_id: user.user_id }), credentials: "include" });
-        const result = await response.json();
-        // update state?
-        setPosts({ ...posts, posts: [...posts.posts, { ...result, loading: false } as Post] });
-        return { error: null, success: true }
+        if (post.id == null || post.id < 0) post.id = -1;
+        if (post.id < 0) post.author_id = user.user_id;
+
+        const url = API_URL + (post.id < 0 ? "/post/new" : "/post/edit");
+        const method = post.id < 0 ? "POST" : "PUT";
+        const response = await fetch(url, { method, body: JSON.stringify(post), credentials: "include" });
+
+        try {
+            if (!post.id || post.id < 0) {
+                const result = await response.json();
+                setPosts({ ...posts, posts: [...posts.posts, { ...result } as Post] });
+            } else {
+                const update_post = post as (Omit<PostUpdate, "id"> & { id: number });
+                if (!response || !response.ok) return { error: "Invalid Response", success: false };
+
+                setPosts({
+                    ...posts, posts: posts.posts.map((p) => {
+                        if (p.id != post.id) return p;
+                        return { ...p, ...update_post };
+                    })
+                });
+            }
+            return { error: null, success: true }
+        } catch (err) {
+            console.error(err);
+            return { error: "Failed to decode response", success: false };
+        }
     }
 
     // sort posts
@@ -98,11 +110,11 @@ export function PostsPage() {
             <FilterControl filters={filters} setFilters={setFilters} />
             <div style={{ marginLeft: "auto" }} className="flex-row" >
                 {loading && <Oval height={20} width={20} strokeWidth={8} />}
-                <button style={{ marginLeft: "auto" }} onClick={newPost}><Plus /><span>Create</span></button>
+                <button style={{ marginLeft: "auto" }} onClick={() => setEditingPost(null)}><Plus /><span>Create</span></button>
             </div>
         </section>
         <section id='post-grid'>
-            {filtered_posts.map((p: any) => <PostCard key={p.id} post={p} edit={() => setEditingPost(p) }/>)}
+            {filtered_posts.map((p: any) => <PostCard key={p.id} post={p} edit={() => setEditingPost(p)} save={save} />)}
         </section>
     </main>
 }
@@ -126,53 +138,24 @@ function Tag({ tag, remove }: { tag: string, remove: (() => void) | null }) {
     </div>;
 }
 
-function PostCard({ post, edit }: { post: Post, edit: () => void }) {
-    const [editingPost, setEditingPost] = useState<PostCreation>({ ...post });
+function PostCard({ post: initial, edit, save }: { post: Post, edit: () => void, save: (post: PostUpdate) => Promise<FunctionResponse> }) {
+    const [post, setPost] = useState<PostUpdate>({ ...initial });
 
-    const { posts, setPosts } = useContext(PostContext);
-
-    const deletePost = async (): Promise<FunctionResponse> => {
-        editingPost.archived = true;
-        setEditingPost({ ...editingPost });
-        return await savePost();
+    const trash = async (): Promise<FunctionResponse> => {
+        post.archived = true;
+        setPost({ ...post });
+        return await save(post);
     }
 
-    const revivePost = async (): Promise<FunctionResponse> => {
-        editingPost.archived = false;
-        setEditingPost({ ...editingPost });
-        return await savePost();
+    const revive = async (): Promise<FunctionResponse> => {
+        post.archived = false;
+        setPost({ ...post });
+        return await save(post);
     }
-
-    const savePost = async (): Promise<FunctionResponse> => {
-        const id = post.id;
-        const upload_post: PostCreation & { id: number, loading: boolean } = {
-            ...editingPost,
-            id,
-            loading: true,
-        }
-        setPosts({
-            ...posts, posts: posts.posts.map((p) => {
-                if (p.id != id) return p;
-                return { ...p, ...upload_post, loading: true };
-            })
-        });
-        // send upload post to server
-        const response = await fetch(`${API_URL}/post/edit`, { method: "PUT", body: JSON.stringify(upload_post), credentials: "include" });
-        if (!response || !response.ok) return { error: "Invalid Response", success: false };
-        // update state
-        setPosts({
-            ...posts, posts: posts.posts.map((p) => {
-                if (p.id != id) return p;
-                return { ...p, ...upload_post, loading: false };
-            })
-        });
-        return { error: null, success: true };
-    }
-
 
     return <div className='post-card hidden-parent'>
         <div className='flex-row center top-right hidden-child'>
-            {post.archived == true ? <button onClick={() => revivePost()}><RefreshCw /></button> : <button onClick={() => deletePost()}><Trash /></button>}
+            {post.archived == true ? <button onClick={revive}><RefreshCw /></button> : <button onClick={trash}><Trash /></button>}
             <button onClick={edit}><Edit /></button>
         </div>
         <div className="flex-row center bottom-right">
