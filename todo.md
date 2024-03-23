@@ -108,7 +108,7 @@
 - [ ] Post Editor redesign
     - [x] Have a dedicated sub-page for editing/creating posts
         - [x] Creation working
-        - [ ] Editing working
+        - [x] Editing working
     - [ ] Have a 'Preview' section where we can see the content rendered in HTML
     - [ ] Use tailwind-prose for rendering
 - [ ] Add support for .adoc files
