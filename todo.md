@@ -106,7 +106,9 @@
 
 # v1.1
 - [ ] Post Editor redesign
-    - [ ] Have a dedicated sub-page for editing/creating posts
+    - [x] Have a dedicated sub-page for editing/creating posts
+        - [x] Creation working
+        - [ ] Editing working
     - [ ] Have a 'Preview' section where we can see the content rendered in HTML
     - [ ] Use tailwind-prose for rendering
 - [ ] Add support for .adoc files
