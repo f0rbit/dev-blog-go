@@ -1,12 +1,12 @@
 import { useContext, useState } from "react";
-import { PostUpdate } from "../../schema"
+import { PostUpdate, toIsoString } from "../../schema"
 import { PostContext, FunctionResponse } from "../App"
 import CategoryInput from "../components/CategoryInput";
 import { TagEditor } from "./Posts";
 import { Save, X } from "lucide-react";
 
 
-export function PostEdit({ initial, save, cancel }: { initial: PostUpdate, save: () => Promise<FunctionResponse>, cancel: () => void }) {
+export function PostEdit({ initial, save, cancel }: { initial: PostUpdate, save: (post: PostUpdate) => Promise<FunctionResponse>, cancel: () => void }) {
     const [post, setPost] = useState<PostUpdate>(initial);
     const [manual_slug, setManualSlug] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
@@ -50,21 +50,9 @@ export function PostEdit({ initial, save, cancel }: { initial: PostUpdate, save:
 
         {error && <p className="error-message">{error}</p>}
         <div className="flex-row center" style={{ gridColumn: "span 4"}}>
-            <button onClick={() => save().then((res) => setError(res.error))}><SaveContent /></button><button onClick={cancel}><X />Cancel</button>
+            <button onClick={() => save(post).then((res) => setError(res.error))}><SaveContent /></button><button onClick={cancel}><X />Cancel</button>
         </div>
 
     </main>
 }
 
-function toIsoString(date: Date) {
-    const pad = function(num: number) {
-        return (num < 10 ? '0' : '') + num;
-    };
-
-    return date.getFullYear() +
-        '-' + pad(date.getMonth() + 1) +
-        '-' + pad(date.getDate()) +
-        'T' + pad(date.getHours()) +
-        ':' + pad(date.getMinutes()) +
-        ':' + pad(date.getSeconds())
-}

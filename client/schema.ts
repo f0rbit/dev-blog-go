@@ -92,3 +92,17 @@ export const SCHEMA = {
 export type PostCreation = Omit<Post, "id" | "created_at" | "updated_at">
 
 export type PostUpdate = PostCreation & { id: Post['id'] | null }
+
+
+export function toIsoString(date: Date) {
+    const pad = function(num: number) {
+        return (num < 10 ? '0' : '') + num;
+    };
+
+    return date.getFullYear() +
+        '-' + pad(date.getMonth() + 1) +
+        '-' + pad(date.getDate()) +
+        'T' + pad(date.getHours()) +
+        ':' + pad(date.getMinutes()) +
+        ':' + pad(date.getSeconds())
+}

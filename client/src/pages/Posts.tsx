@@ -1,8 +1,8 @@
 import { Dispatch, SetStateAction, useContext, useState } from "react";
-import { API_URL, FunctionResponse, PostContext } from "../App";
+import { API_URL, AuthContext, FunctionResponse, PostContext } from "../App";
 import { ArrowDownNarrowWide, Edit, Filter, FolderTree, Plus, RefreshCw, Search, Tags, Trash, X } from "lucide-react";
 import CategoryInput from "../components/CategoryInput";
-import { Post, PostCreation, PostUpdate } from "../../schema";
+import { Post, PostCreation, PostUpdate, toIsoString } from "../../schema";
 import { Oval } from "react-loader-spinner";
 import TagInput from "../components/TagInput";
 import { PostEdit } from "./PostEdit";
@@ -26,39 +26,40 @@ export function PostsPage() {
     const [loading, _] = useState(false);
     const [filters, setFilters] = useState<PostFilters>({ category: null, tag: null });
     const [editingPost, setEditingPost] = useState<PostUpdate | null>(null);
+    const { categories, setPosts } = useContext(PostContext)
+    const { user } = useContext(AuthContext)
+
 
 
     function newPost() {
         setEditingPost(EMPTY_POST_CREATION)
     }
 
-    if (editingPost != null) return <PostEdit initial={editingPost} save={async () => ({ success: false, error: 'test' })} cancel={() => setEditingPost(null) } />
+    if (editingPost != null) return <PostEdit initial={editingPost} save={(post) => createPost(post)} cancel={() => setEditingPost(null) } />
 
     if (!posts || !posts.posts) return <div>
         <button style={{ marginLeft: "auto" }} onClick={newPost}><Plus /><span>Create</span></button>
         <p>No Posts Found!</p>
     </div>;
 
-    /*
-    async function createPost(): Promise<FunctionResponse> {
+    async function createPost(post: PostUpdate): Promise<FunctionResponse> {
+        if (!post) throw new Error("Called createPost() without having an updated post");
         // input validation
-        const { slug, category } = creatingPost;
+        const { slug, category } = post;
         if (slug.includes(" ")) return { error: "Invalid Slug!", success: false }
         if (categories == null) return { error: "Not fetched categories", success: false };
         const cat_list = Object.values(categories.categories).map((cat: any) => cat.name);
         if (!(cat_list.includes(category))) return { error: "Invalid Category!", success: false }
-        const new_post: Post & { loading: boolean } = { ...creatingPost, id: -1, created_at: toIsoString(new Date()), updated_at: toIsoString(new Date()), loading: true };
+        const new_post: Post & { loading: boolean } = { ...post, id: -1, created_at: toIsoString(new Date()), updated_at: toIsoString(new Date()), loading: true };
 
         setPosts({ ...posts, posts: [...posts.posts, new_post] });
         // send request
-        const response = await fetch(`${API_URL}/post/new`, { method: "POST", body: JSON.stringify({ ...creatingPost, author_id: user.user_id }), credentials: "include" });
+        const response = await fetch(`${API_URL}/post/new`, { method: "POST", body: JSON.stringify({ ...post, author_id: user.user_id }), credentials: "include" });
         const result = await response.json();
         // update state?
-        setLoading(false);
         setPosts({ ...posts, posts: [...posts.posts, { ...result, loading: false } as Post] });
         return { error: null, success: true }
     }
-    */
 
     // sort posts
     let sorted_posts = structuredClone(posts.posts);
