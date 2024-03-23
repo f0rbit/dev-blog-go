@@ -89,4 +89,6 @@ export const SCHEMA = {
     ACCESS_KEY: access_key
 }
 
+export type PostCreation = Omit<Post, "id" | "created_at" | "updated_at">
 
+export type PostUpdate = PostCreation & { id: Post['id'] | null }
