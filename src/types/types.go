@@ -20,6 +20,7 @@ type Post struct {
 	AuthorID    int       `json:"author_id"`
 	Title       string    `json:"title"`
 	Content     string    `json:"content"`
+	Format      string    `json:"format"`
 	Category    string    `json:"category"`
 	Tags        []string  `json:"tags"`
 	Archived    bool      `json:"archived"`
@@ -78,9 +79,9 @@ type Integration struct {
 }
 
 type FetchLink struct {
-    PostID      int       `json:"post_id"`
-    FetchSource int       `json:"fetch_source"`
-    Identifier  string    `json:"identifier"`
-    CreatedAt   time.Time `json:"created_at"`
-    UpdatedAt   time.Time `json:"updated_at"`
+	PostID      int       `json:"post_id"`
+	FetchSource int       `json:"fetch_source"`
+	Identifier  string    `json:"identifier"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }

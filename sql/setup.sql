@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS posts (
     slug TEXT NOT NULL UNIQUE,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
+    format TEXT NOT NULL DEFAULT "md",
     category TEXT NOT NULL,
     archived BOOLEAN DEFAULT 0,
     publish_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
