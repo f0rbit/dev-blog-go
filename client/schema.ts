@@ -4,6 +4,7 @@ const post_schema = z.object({
     id: z.number(),
     slug: z.string(),
     title: z.string(),
+    description: z.string(),
     content: z.string(),
     format: z.union([z.literal('md'), z.literal('adoc')]),
     category: z.string(),

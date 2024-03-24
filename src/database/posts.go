@@ -36,8 +36,9 @@ func FetchPost(user *types.User, identifier Identifier, needle interface{}) (typ
         posts.author_id,
         posts.slug,
         posts.title,
+        posts.description,
         posts.content,
-	posts.format,
+        posts.format,
         posts.category,
         posts.archived,
         posts.publish_at,
@@ -59,6 +60,7 @@ func FetchPost(user *types.User, identifier Identifier, needle interface{}) (typ
 		&post.AuthorID,
 		&post.Slug,
 		&post.Title,
+		&post.Description,
 		&post.Content,
 		&post.Format,
 		&post.Category,
@@ -88,10 +90,11 @@ func CreatePost(post types.Post) (int, error) {
 	var err error
 	// Insert the new post into the database
 	_, err = db.Exec(
-		`INSERT INTO posts (author_id, slug, title, content, format, category, publish_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO posts (author_id, slug, title, description, content, format, category, publish_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		post.AuthorID,
 		post.Slug,
 		post.Title,
+		post.Description,
 		post.Content,
 		post.Format,
 		post.Category,
@@ -137,8 +140,9 @@ func UpdatePost(updatedPost *types.Post) error {
     SET 
         slug = ?,
         title = ?,
+        description = ?,
         content = ?,
-	format = ?,
+        format = ?,
         category = ?,
         archived = ?,
         publish_at = ? 
@@ -146,6 +150,7 @@ func UpdatePost(updatedPost *types.Post) error {
         id = ?`,
 		updatedPost.Slug,
 		updatedPost.Title,
+		updatedPost.Description,
 		updatedPost.Content,
 		updatedPost.Format,
 		updatedPost.Category,
@@ -240,8 +245,9 @@ func GetPosts(user *types.User, category, tag string, limit, offset int) ([]type
         posts.author_id,
         posts.slug, 
         posts.title, 
+		    posts.description,
         posts.content, 
-	posts.format,
+        posts.format,
         posts.category, 
         posts.archived,
         posts.publish_at,
@@ -271,7 +277,7 @@ func GetPosts(user *types.User, category, tag string, limit, offset int) ([]type
 	for rows.Next() {
 		var post types.Post
 		var tags sql.NullString
-		err := rows.Scan(&post.Id, &post.AuthorID, &post.Slug, &post.Title, &post.Content, &post.Format, &post.Category, &post.Archived, &post.PublishAt, &post.CreatedAt, &post.UpdatedAt, &tags)
+		err := rows.Scan(&post.Id, &post.AuthorID, &post.Slug, &post.Title, &post.Description, &post.Content, &post.Format, &post.Category, &post.Archived, &post.PublishAt, &post.CreatedAt, &post.UpdatedAt, &tags)
 
 		if err != nil {
 			return posts, totalPosts, err
@@ -283,7 +289,9 @@ func GetPosts(user *types.User, category, tag string, limit, offset int) ([]type
 			post.Tags = []string{}
 		}
 
-		post.Description = utils.GetDescription(post.Content)
+		if post.Description == "" {
+			post.Description = utils.GetDescription(post.Content)
+		}
 
 		posts = append(posts, post)
 	}
@@ -322,8 +330,9 @@ func GetPostsByTitle(user *types.User, title string) (*types.Post, error) {
         posts.author_id,
         posts.slug, 
         posts.title, 
+        posts.description,
         posts.content, 
-	posts.format,
+        posts.format,
         posts.category, 
         posts.archived,
         posts.publish_at,
@@ -342,6 +351,7 @@ func GetPostsByTitle(user *types.User, title string) (*types.Post, error) {
 		&post.AuthorID,
 		&post.Slug,
 		&post.Title,
+		&post.Description,
 		&post.Content,
 		&post.Format,
 		&post.Category,

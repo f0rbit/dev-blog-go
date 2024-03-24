@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS posts (
     author_id INTEGER NOT NULL,
     slug TEXT NOT NULL UNIQUE,
     title TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT "",
     content TEXT NOT NULL,
     format TEXT NOT NULL DEFAULT "md",
     category TEXT NOT NULL,
