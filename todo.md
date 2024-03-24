@@ -110,9 +110,10 @@
         - [x] Creation working
         - [x] Editing working
     - [ ] Have a 'Preview' section where we can see the content rendered in HTML
-    - [ ] Use tailwind-prose for rendering
-- [ ] Add support for .adoc files
-    - [ ] Have the filetype configurable per-post
+        - [x] Add the preview tab & format selection
+        - [ ] Implement rendering
+- [x] Add support for .adoc files
+    - [x] Have the filetype configurable per-post
 - [ ] Have a section to write the description for the post in plain text
     - [ ] Update description
     - [ ] If left blank, infer description from post
