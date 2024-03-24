@@ -466,4 +466,21 @@ main {
     }
 }
 
+.vertical-tabs {
+    flex-direction: row;
+    display: flex;
+    gap: 5px;
 
+
+    button {
+        padding: unset;
+        border: unset;
+        border-radius: unset;
+        border-bottom: 2px solid var(--border-secondary);
+        color: var(--text-subtlish);
+    }
+
+    button.selected {
+        border-bottom: 2px solid var(--text-subtle);
+    }
+}   

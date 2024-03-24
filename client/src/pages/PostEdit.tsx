@@ -4,13 +4,16 @@ import { PostContext, FunctionResponse } from "../App"
 import CategoryInput from "../components/CategoryInput";
 import { TagEditor } from "./Posts";
 import { Save, X } from "lucide-react";
+import { BuildingPage } from "../components/Building";
 
+type Views = "metadata" | "content" | "preview";
 
 export function PostEdit({ initial, save, cancel }: { initial: PostUpdate, save: (post: PostUpdate) => Promise<FunctionResponse>, cancel: () => void }) {
     const [post, setPost] = useState<PostUpdate>(initial);
+    const [view, setView] = useState<Views>("metadata");
     const [manual_slug, setManualSlug] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const { categories } = useContext(PostContext)
+    const { categories } = useContext(PostContext);
 
     function updateTitle(value: string) {
         const update_post = { ...post, title: value };
@@ -36,23 +39,43 @@ export function PostEdit({ initial, save, cancel }: { initial: PostUpdate, save:
         return <p>No categories found, please create some before posting.</p>
     }
 
-    return <main className="flex-col input-grid">
-        <h3 style={{ gridColumn: "span 4" }}>{post.id ? `Editing Post ${post.title}` : "Creating New Post"}</h3>
+    function Metadata() {
+        return <div className="flex-col input-grid">
+            <h3 style={{ gridColumn: "span 4" }}>{post.id ? `Editing Post ${post.title}` : "Creating New Post"}</h3>
 
-        <label>Title</label><input type="text" value={post.title} onChange={(e) => updateTitle(e.target.value)} />
-        <label>Slug</label><input type="text" value={post.slug} onChange={(e) => updateSlug(e.target.value)} />
-        <label>Category</label><CategoryInput value={post.category} categories={categories.categories} setValue={(c) => setPost({ ...post, category: c })} />
-        <label>Publish</label><input type="datetime-local" value={edit_time} onChange={(e) => setPublishDate(new Date(e.target.value).toISOString())} />
+            <label>Title</label><input type="text" value={post.title} onChange={(e) => updateTitle(e.target.value)} />
+            <label>Slug</label><input type="text" value={post.slug} onChange={(e) => updateSlug(e.target.value)} />
+            <label>Category</label><CategoryInput value={post.category} categories={categories.categories} setValue={(c) => setPost({ ...post, category: c })} />
+            <label>Publish</label><input type="datetime-local" value={edit_time} onChange={(e) => setPublishDate(new Date(e.target.value).toISOString())} />
+            <label>Format</label><select value={post.format} onChange={(e) => setPost({ ...post, format: e.target.value as PostUpdate['format'] })}><option value="md">Markdown</option><option value="adoc">ASCII Doc</option></select>
+            <label>Tags</label><TagEditor tags={post.tags} setTags={(tags) => setPost({ ...post, tags })} />
 
-        <label id="content-label">Content</label>
-        <textarea style={{ gridColumn: "span 4", fontFamily: "monospace", height: "50vh" }} value={post.content} onChange={(e) => setPost({ ...post, content: e.target.value })} />
-        <label>Tags</label><TagEditor tags={post.tags} setTags={(tags) => setPost({ ...post, tags })} />
-
-        {error && <p className="error-message">{error}</p>}
-        <div className="flex-row center" style={{ gridColumn: "span 4"}}>
-            <button onClick={() => save(post).then((res) => setError(res.error))}><SaveContent /></button><button onClick={cancel}><X />Cancel</button>
+            {error && <p className="error-message">{error}</p>}
+            <div className="flex-row center" style={{ gridColumn: "span 4" }}>
+                <button onClick={() => save(post).then((res) => setError(res.error))}><SaveContent /></button><button onClick={cancel}><X />Cancel</button>
+            </div>
         </div>
+    }
 
-    </main>
+    function Content() {
+        return <div className="flex-col input-grid">
+            <textarea style={{ gridColumn: "span 4", fontFamily: "monospace", height: "50vh" }} value={post.content} onChange={(e) => setPost({ ...post, content: e.target.value })} />
+        </div>
+    }
+
+    function Preview() {
+        return <BuildingPage />
+    }
+
+    return <main className="flex-col">
+        <nav className="vertical-tabs">
+            <button onClick={() => setView("metadata")} className={view == "metadata" ? 'selected' : ''}>Metadata</button>
+            <button onClick={() => setView("content")} className={view == "content" ? "selected" : ""}>Content</button>
+            <button onClick={() => setView("preview")} className={view == "preview" ? "selected" : ""}>Preview</button>
+        </nav >
+        {view == "metadata" && <Metadata />}
+        {view == "content" && <Content />}
+        {view == "preview" && <Preview />}
+    </main >
 }
 
