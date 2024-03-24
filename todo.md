@@ -115,7 +115,7 @@
 - [x] Add support for .adoc files
     - [x] Have the filetype configurable per-post
 - [ ] Have a section to write the description for the post in plain text
-    - [ ] Update description
+    - [x] Update description
     - [ ] If left blank, infer description from post
 
 # v1.2
