@@ -105,15 +105,16 @@
 - [x] Proper README document with instructions on how to self-host/deploy & test locally
 
 # v1.1
-- [ ] Post Editor redesign
+- [x] Post Editor redesign
     - [x] Have a dedicated sub-page for editing/creating posts
         - [x] Creation working
         - [x] Editing working
-    - [ ] Have a 'Preview' section where we can see the content rendered in HTML
+    - [x] Have a 'Preview' section where we can see the content rendered in HTML
         - [x] Add the preview tab & format selection
-        - [ ] Implement rendering
+        - [x] Implement rendering
 - [x] Add support for .adoc files
     - [x] Have the filetype configurable per-post
+    - [ ] Add support for preview rendering
 - [ ] Have a section to write the description for the post in plain text
     - [x] Update description
     - [ ] If left blank, infer description from post
