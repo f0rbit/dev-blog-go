@@ -1,10 +1,11 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { PostUpdate, toIsoString } from "../../schema"
 import { PostContext, FunctionResponse } from "../App"
 import CategoryInput from "../components/CategoryInput";
 import { TagEditor } from "./Posts";
 import { Save, X } from "lucide-react";
-import { BuildingPage } from "../components/Building";
+import { remark } from "remark";
+import remarkHtml from "remark-html";
 
 type Views = "metadata" | "content" | "preview";
 
@@ -39,8 +40,21 @@ export function PostEdit({ initial, save, cancel }: { initial: PostUpdate, save:
         return <p>No categories found, please create some before posting.</p>
     }
 
-    function Preview({ content }: { content: string }) {
-        return <BuildingPage />
+    function Preview({ content, format }: { content: string, format: "md" | "adoc" }) {
+        const [parsed, setParsed] = useState<string | null>(null);
+        console.log({ content, parsed });
+
+        useEffect(() => {
+            console.log("running use effect");
+            if (format == "md") {
+                remark().use(remarkHtml).process(content).then((p: any) => setParsed(p));
+            } else {
+                // TODO: format asciidoc
+            }
+        }, []);  
+
+        if (!parsed) return <p>Loading...</p>;
+        return <article dangerouslySetInnerHTML={{ __html: parsed }} ></article>
     }
 
     return <main className="flex-col">
@@ -69,7 +83,7 @@ export function PostEdit({ initial, save, cancel }: { initial: PostUpdate, save:
         {view == "content" && <div className="flex-col input-grid">
             <textarea style={{ gridColumn: "span 4", fontFamily: "monospace", height: "50vh" }} value={post.content} onChange={(e) => setPost({ ...post, content: e.target.value })} />
         </div>}
-        {view == "preview" && <Preview content={post.content} />}
+        {view == "preview" && <Preview content={post.content} format={post.format} />}
     </main >
 }
 
