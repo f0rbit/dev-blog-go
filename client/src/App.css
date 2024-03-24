@@ -99,6 +99,7 @@ input, select, textarea {
     outline: none;
     border-radius: 5px;
     padding: 4px 6px;
+
 }
 input:disabled, select:disabled, textarea:disabled {
     color: var(--text-dark);
@@ -107,6 +108,9 @@ input:disabled, select:disabled, textarea:disabled {
 input:focus, select:focus {
     background: var(--accent-secondary);
     border: 1px solid var(--border-secondary);
+}
+input::placeholder {
+    color: var(--text-dark);
 }
 
 dialog {

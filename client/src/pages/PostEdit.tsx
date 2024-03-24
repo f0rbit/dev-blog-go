@@ -48,6 +48,7 @@ export function PostEdit({ initial, save, cancel }: { initial: PostUpdate, save:
             <label>Category</label><CategoryInput value={post.category} categories={categories.categories} setValue={(c) => setPost({ ...post, category: c })} />
             <label>Publish</label><input type="datetime-local" value={edit_time} onChange={(e) => setPublishDate(new Date(e.target.value).toISOString())} />
             <label>Format</label><select value={post.format} onChange={(e) => setPost({ ...post, format: e.target.value as PostUpdate['format'] })}><option value="md">Markdown</option><option value="adoc">ASCII Doc</option></select>
+            <label>Project</label><input type="text" placeholder="Still Building!" disabled />
             <label>Tags</label><TagEditor tags={post.tags} setTags={(tags) => setPost({ ...post, tags })} />
 
             {error && <p className="error-message">{error}</p>}
