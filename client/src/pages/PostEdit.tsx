@@ -6,6 +6,7 @@ import { TagEditor } from "./Posts";
 import { Save, X } from "lucide-react";
 import { remark } from "remark";
 import remarkHtml from "remark-html";
+import asciidoctor from "asciidoctor";
 
 type Views = "metadata" | "content" | "preview";
 
@@ -42,16 +43,17 @@ export function PostEdit({ initial, save, cancel }: { initial: PostUpdate, save:
 
     function Preview({ content, format }: { content: string, format: "md" | "adoc" }) {
         const [parsed, setParsed] = useState<string | null>(null);
-        console.log({ content, parsed });
 
         useEffect(() => {
-            console.log("running use effect");
             if (format == "md") {
                 remark().use(remarkHtml).process(content).then((p: any) => setParsed(p));
+            } else if (format == "adoc") {
+                const result = asciidoctor().convert(content);
+                setParsed(result.toString());
             } else {
-                // TODO: format asciidoc
+                throw new Error(`unknown content format: ${format}`);
             }
-        }, []);  
+        }, []);
 
         if (!parsed) return <p>Loading...</p>;
         return <article dangerouslySetInnerHTML={{ __html: parsed }} ></article>
