@@ -15,8 +15,8 @@ INSERT OR IGNORE INTO categories (owner_id, name, parent) VALUES
     (1, 'story', 'root'),
     (1, 'advice', 'root');
 
-INSERT OR IGNORE INTO posts (slug, author_id, title, content, category) VALUES
-    ('test-post', 1, 'test', 'this is a test post, first post.', 'coding');
+INSERT OR IGNORE INTO posts (slug, author_id, title, description, content, format, category) VALUES
+    ('test-post', 1, 'test', 'this is a test post, first post.', 'this is a test post, first post', 'md', 'coding');
 
 INSERT OR IGNORE INTO tags (post_id, tag) VALUES
     (1, 'test');

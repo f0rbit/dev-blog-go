@@ -105,15 +105,19 @@
 - [x] Proper README document with instructions on how to self-host/deploy & test locally
 
 # v1.1
-- [ ] Post Editor redesign
-    - [ ] Have a dedicated sub-page for editing/creating posts
-    - [ ] Have a 'Preview' section where we can see the content rendered in HTML
-    - [ ] Use tailwind-prose for rendering
-- [ ] Add support for .adoc files
-    - [ ] Have the filetype configurable per-post
-- [ ] Have a section to write the description for the post in plain text
-    - [ ] Update description
-    - [ ] If left blank, infer description from post
+- [x] Post Editor redesign
+    - [x] Have a dedicated sub-page for editing/creating posts
+        - [x] Creation working
+        - [x] Editing working
+    - [x] Have a 'Preview' section where we can see the content rendered in HTML
+        - [x] Add the preview tab & format selection
+        - [x] Implement rendering
+- [x] Add support for .adoc files
+    - [x] Have the filetype configurable per-post
+    - [x] Add support for preview rendering
+- [x] Have a section to write the description for the post in plain text
+    - [x] Update description
+    - [x] If left blank, infer description from post
 
 # v1.2
 - [ ] Analytics on server

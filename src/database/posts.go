@@ -20,10 +20,10 @@ const (
 
 func FetchPost(user *types.User, identifier Identifier, needle interface{}) (types.Post, error) {
 	var post types.Post
-    if user == nil {
-        return post, errors.New("No user specified")
-    }
-    var where string
+	if user == nil {
+		return post, errors.New("No user specified")
+	}
+	var where string
 	if identifier == "id" {
 		where = "posts.id = ?"
 	} else if identifier == "slug" {
@@ -36,7 +36,9 @@ func FetchPost(user *types.User, identifier Identifier, needle interface{}) (typ
         posts.author_id,
         posts.slug,
         posts.title,
+        posts.description,
         posts.content,
+        posts.format,
         posts.category,
         posts.archived,
         posts.publish_at,
@@ -49,16 +51,18 @@ func FetchPost(user *types.User, identifier Identifier, needle interface{}) (typ
         tags ON posts.id = tags.post_id
     WHERE
         posts.author_id = ? AND
-        `+where+`;
+        ` + where + `;
     `
 	var tags sql.NullString
 
 	err := db.QueryRow(base, user.ID, needle).Scan(
 		&post.Id,
-        &post.AuthorID,
+		&post.AuthorID,
 		&post.Slug,
 		&post.Title,
+		&post.Description,
 		&post.Content,
+		&post.Format,
 		&post.Category,
 		&post.Archived,
 		&post.PublishAt,
@@ -76,7 +80,7 @@ func FetchPost(user *types.User, identifier Identifier, needle interface{}) (typ
 		post.Tags = []string{}
 	}
 
-    post.Description = utils.GetDescription(post.Content)
+	post.Description = utils.GetDescription(post.Content)
 
 	return post, nil
 }
@@ -86,11 +90,13 @@ func CreatePost(post types.Post) (int, error) {
 	var err error
 	// Insert the new post into the database
 	_, err = db.Exec(
-		`INSERT INTO posts (author_id, slug, title, content, category, publish_at) VALUES (?, ?, ?, ?, ?, ?)`,
-        post.AuthorID,
+		`INSERT INTO posts (author_id, slug, title, description, content, format, category, publish_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		post.AuthorID,
 		post.Slug,
 		post.Title,
+		post.Description,
 		post.Content,
+		post.Format,
 		post.Category,
 		post.PublishAt)
 	// get the id & update data structure
@@ -134,7 +140,9 @@ func UpdatePost(updatedPost *types.Post) error {
     SET 
         slug = ?,
         title = ?,
+        description = ?,
         content = ?,
+        format = ?,
         category = ?,
         archived = ?,
         publish_at = ? 
@@ -142,7 +150,9 @@ func UpdatePost(updatedPost *types.Post) error {
         id = ?`,
 		updatedPost.Slug,
 		updatedPost.Title,
+		updatedPost.Description,
 		updatedPost.Content,
+		updatedPost.Format,
 		updatedPost.Category,
 		updatedPost.Archived,
 		updatedPost.PublishAt,
@@ -235,7 +245,9 @@ func GetPosts(user *types.User, category, tag string, limit, offset int) ([]type
         posts.author_id,
         posts.slug, 
         posts.title, 
+		    posts.description,
         posts.content, 
+        posts.format,
         posts.category, 
         posts.archived,
         posts.publish_at,
@@ -265,7 +277,7 @@ func GetPosts(user *types.User, category, tag string, limit, offset int) ([]type
 	for rows.Next() {
 		var post types.Post
 		var tags sql.NullString
-		err := rows.Scan(&post.Id, &post.AuthorID, &post.Slug, &post.Title, &post.Content, &post.Category, &post.Archived, &post.PublishAt, &post.CreatedAt, &post.UpdatedAt, &tags)
+		err := rows.Scan(&post.Id, &post.AuthorID, &post.Slug, &post.Title, &post.Description, &post.Content, &post.Format, &post.Category, &post.Archived, &post.PublishAt, &post.CreatedAt, &post.UpdatedAt, &tags)
 
 		if err != nil {
 			return posts, totalPosts, err
@@ -277,46 +289,50 @@ func GetPosts(user *types.User, category, tag string, limit, offset int) ([]type
 			post.Tags = []string{}
 		}
 
-        post.Description = utils.GetDescription(post.Content)
+		if post.Description == "" {
+			post.Description = utils.GetDescription(post.Content)
+		}
 
 		posts = append(posts, post)
 	}
-    if posts == nil {
-        posts = make([]types.Post, 0)
-    }
+	if posts == nil {
+		posts = make([]types.Post, 0)
+	}
 
 	return posts, totalPosts, nil
 }
 
 func RemoveCategoryFromPosts(user *types.User, cat_list []string) error {
-    params := make([]any, len(cat_list) + 1);
-    params[0] = user.ID;
-    for i, c := range cat_list {
-        params[i + 1] = c;
-    }
-    // Build the IN clause with placeholders
+	params := make([]any, len(cat_list)+1)
+	params[0] = user.ID
+	for i, c := range cat_list {
+		params[i+1] = c
+	}
+	// Build the IN clause with placeholders
 	placeholders := make([]string, len(cat_list))
 	for i := range cat_list {
 		placeholders[i] = "?"
 	}
 	inClause := strings.Join(placeholders, ",")
 
-    query := fmt.Sprintf("UPDATE posts SET category = 'root' WHERE author_id = ? AND category IN (%s)", inClause);
-    log.Info("Removing category from posts", "query", query, "params", params)
-    _, err := db.Exec(query, params...);
-    return err
+	query := fmt.Sprintf("UPDATE posts SET category = 'root' WHERE author_id = ? AND category IN (%s)", inClause)
+	log.Info("Removing category from posts", "query", query, "params", params)
+	_, err := db.Exec(query, params...)
+	return err
 }
 
 func GetPostsByTitle(user *types.User, title string) (*types.Post, error) {
-    var post types.Post
-    var tags sql.NullString
-    err := db.QueryRow(`
+	var post types.Post
+	var tags sql.NullString
+	err := db.QueryRow(`
     SELECT 
         posts.id, 
         posts.author_id,
         posts.slug, 
         posts.title, 
+        posts.description,
         posts.content, 
+        posts.format,
         posts.category, 
         posts.archived,
         posts.publish_at,
@@ -331,32 +347,34 @@ func GetPostsByTitle(user *types.User, title string) (*types.Post, error) {
         posts.author_id = ? AND posts.title = ?
     GROUP BY
         posts.id`, user.ID, title).Scan(
-        &post.Id,
-        &post.AuthorID,
-        &post.Slug,
-        &post.Title,
-        &post.Content,
-        &post.Category,
-        &post.Archived,
-        &post.PublishAt,
-        &post.CreatedAt,
-        &post.UpdatedAt,
-        &tags)
+		&post.Id,
+		&post.AuthorID,
+		&post.Slug,
+		&post.Title,
+		&post.Description,
+		&post.Content,
+		&post.Format,
+		&post.Category,
+		&post.Archived,
+		&post.PublishAt,
+		&post.CreatedAt,
+		&post.UpdatedAt,
+		&tags)
 
-    if err != nil {
-        if errors.Is(err, sql.ErrNoRows) {
-            return nil, nil
-        }
-        return nil, err
-    }
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
 
-    if tags.Valid {
-        post.Tags = strings.Split(tags.String, ",")
-    } else {
-        post.Tags = []string{}
-    }
+	if tags.Valid {
+		post.Tags = strings.Split(tags.String, ",")
+	} else {
+		post.Tags = []string{}
+	}
 
-    post.Description = utils.GetDescription(post.Content)
+	post.Description = utils.GetDescription(post.Content)
 
-    return &post, nil
+	return &post, nil
 }

@@ -57,7 +57,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	id, err := database.CreatePost(newPost)
 	if err != nil {
-		utils.LogError("Error creating new post", err, http.StatusInternalServerError, w)
+	utils.LogError("Error creating new post", err, http.StatusInternalServerError, w)
 		return
 	}
 

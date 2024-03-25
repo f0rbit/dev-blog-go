@@ -2,7 +2,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import './App.css'
 import React from 'react';
 import { FolderTree, Home, LibraryBig, LogOut, Settings, Tags } from 'lucide-react';
-import { Post, PostsResponse, SCHEMA, CategoryResponse } from "../schema";
+import { PostsResponse, SCHEMA, CategoryResponse } from "../schema";
 import { HomePage } from './pages/Home';
 import { PostsPage } from './pages/Posts';
 import { CategoriesPage } from './pages/Categories';
@@ -10,7 +10,6 @@ import { TagsPage } from './pages/Tags';
 import { SettingsPage } from './pages/Settings';
 import { LoginPage } from './pages/Login';
 
-export type PostCreation = Omit<Post, "id" | "created_at" | "updated_at">
 
 export interface PostContext {
     posts: PostsResponse,

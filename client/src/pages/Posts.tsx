@@ -1,18 +1,21 @@
 import { Dispatch, SetStateAction, useContext, useState } from "react";
-import { API_URL, AuthContext, FunctionResponse, PostContext, PostCreation } from "../App";
-import { ArrowDownNarrowWide, Edit, Filter, FolderTree, Plus, RefreshCw, Save, Search, Tags, Trash, X } from "lucide-react";
-import Modal from "../components/Modal";
+import { API_URL, AuthContext, FunctionResponse, PostContext } from "../App";
+import { ArrowDownNarrowWide, Edit, Filter, FolderTree, Plus, RefreshCw, Search, Tags, Trash, X } from "lucide-react";
 import CategoryInput from "../components/CategoryInput";
-import { Post } from "../../schema";
+import { Post, PostUpdate } from "../../schema";
 import { Oval } from "react-loader-spinner";
 import TagInput from "../components/TagInput";
+import { PostEdit } from "./PostEdit";
 
 type PostSort = "created" | "edited" | "published" | "oldest";
-const EMPTY_POST_CREATION: PostCreation = {
+const EMPTY_POST_CREATION: PostUpdate = {
+    id: null,
     author_id: -1,
     slug: "",
     title: "",
+    description: "",
     content: "",
+    format: "md",
     category: "",
     tags: [],
     publish_at: "",
@@ -20,45 +23,68 @@ const EMPTY_POST_CREATION: PostCreation = {
 }
 
 export function PostsPage() {
-    const { posts, setPosts, categories } = useContext(PostContext);
-    const [selected, setSelected] = useState<PostSort>("created");
-    const [openCreatePost, setOpenCreatePost] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [sort, setSort] = useState<PostSort>("created");
+    const [loading, _] = useState(false);
     const [filters, setFilters] = useState<PostFilters>({ category: null, tag: null });
-    const { user } = useContext(AuthContext);
-    const [creatingPost, setCreatingPost] = useState<PostCreation>(EMPTY_POST_CREATION);
+    const [editingPost, setEditingPost] = useState<PostUpdate | null>(null);
+    const { posts, categories, setPosts } = useContext(PostContext)
+    const { user } = useContext(AuthContext)
 
-    if (!posts || !posts.posts) return <p>No Posts Found!</p>;
+    if (editingPost != null) return <PostEdit initial={editingPost} save={save} cancel={() => setEditingPost(null)} />
 
-    async function createPost(): Promise<FunctionResponse> {
+    if (!posts || !posts.posts) return <div className="flex-col">
+        <p>No Posts Found!</p>
+        <button onClick={() => setEditingPost(EMPTY_POST_CREATION)}><Plus /><span>Create</span></button>
+    </div>
+
+    async function save(post: PostUpdate): Promise<FunctionResponse> {
+        if (!post) throw new Error("Called save() without having an updated post");
         // input validation
-        const { slug, category } = creatingPost;
+        const { slug, category } = post;
         if (slug.includes(" ")) return { error: "Invalid Slug!", success: false }
         if (categories == null) return { error: "Not fetched categories", success: false };
         const cat_list = Object.values(categories.categories).map((cat: any) => cat.name);
         if (!(cat_list.includes(category))) return { error: "Invalid Category!", success: false }
-        const new_post: Post & { loading: boolean } = { ...creatingPost, id: -1, created_at: toIsoString(new Date()), updated_at: toIsoString(new Date()), loading: true };
 
-        setPosts({ ...posts, posts: [...posts.posts, new_post] });
-        // send request
-        const response = await fetch(`${API_URL}/post/new`, { method: "POST", body: JSON.stringify({ ...creatingPost, author_id: user.user_id }), credentials: "include" });
-        const result = await response.json();
-        // update state?
-        setLoading(false);
-        setPosts({ ...posts, posts: [...posts.posts, { ...result, loading: false } as Post] });
-        return { error: null, success: true }
+        if (post.id == null || post.id < 0) post.id = -1;
+        if (post.id < 0) post.author_id = user.user_id;
+
+        const url = API_URL + (post.id < 0 ? "/post/new" : "/post/edit");
+        const method = post.id < 0 ? "POST" : "PUT";
+        const response = await fetch(url, { method, body: JSON.stringify(post), credentials: "include" });
+
+        try {
+            if (!post.id || post.id < 0) {
+                const result = await response.json();
+                setPosts({ ...posts, posts: [...posts.posts, { ...result } as Post] });
+            } else {
+                const update_post = post as (Omit<PostUpdate, "id"> & { id: number });
+                if (!response || !response.ok) return { error: "Invalid Response", success: false };
+
+                setPosts({
+                    ...posts, posts: posts.posts.map((p) => {
+                        if (p.id != post.id) return p;
+                        return { ...p, ...update_post };
+                    })
+                });
+            }
+            return { error: null, success: true }
+        } catch (err) {
+            console.error(err);
+            return { error: "Failed to decode response", success: false };
+        }
     }
 
     // sort posts
     let sorted_posts = structuredClone(posts.posts);
-    switch (selected) {
+    switch (sort) {
         case "edited":
             sorted_posts = sorted_posts.sort((a, b) => (new Date(b.updated_at).getTime()) - (new Date(a.updated_at).getTime()));
             break;
         case "created":
         case "oldest":
             sorted_posts = sorted_posts.sort((a, b) => (new Date(b.updated_at).getTime()) - (new Date(a.updated_at).getTime()));
-            if (selected == "oldest") sorted_posts.reverse();
+            if (sort == "oldest") sorted_posts.reverse();
             break;
         case "published":
             break;
@@ -77,105 +103,26 @@ export function PostsPage() {
         return true;
     });
 
-    function closeEditor() {
-        setOpenCreatePost(false);
-        setCreatingPost(EMPTY_POST_CREATION);
-    }
 
     return <main>
         <section id="post-filters">
             <label htmlFor='post-search'><Search /></label>
             <input type="text" id='post-search' />
-            <SortControl selected={selected} setSelected={setSelected} />
+            <SortControl selected={sort} setSelected={setSort} />
             <FilterControl filters={filters} setFilters={setFilters} />
             <div style={{ marginLeft: "auto" }} className="flex-row" >
                 {loading && <Oval height={20} width={20} strokeWidth={8} />}
-                <button style={{ marginLeft: "auto" }} onClick={() => setOpenCreatePost(true)}><Plus /><span>Create</span></button>
+                <button style={{ marginLeft: "auto" }} onClick={() => setEditingPost(EMPTY_POST_CREATION)}><Plus /><span>Create</span></button>
             </div>
         </section>
         <section id='post-grid'>
-            {filtered_posts.map((p: any) => <PostCard key={p.id} post={p} />)}
+            {filtered_posts.map((p: any) => <PostCard key={p.id} post={p} edit={() => setEditingPost(p)} save={save} />)}
         </section>
-        <Modal openModal={openCreatePost} closeModal={closeEditor}>
-            <PostEditor post={creatingPost} setPost={setCreatingPost} save={createPost} type={"create"} cancel={closeEditor} />
-        </Modal>
     </main>
 }
 
 
-interface PostEditorProps {
-    post: PostCreation,
-    setPost: Dispatch<SetStateAction<PostCreation>>,
-    save: () => Promise<FunctionResponse>,
-    type: "create" | "edit",
-    cancel: () => void
-}
-
-function PostEditor({ post, setPost, save, type, cancel }: PostEditorProps) {
-    const [manualSlug, setManualSlug] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
-    const { categories } = useContext(PostContext);
-
-    function updateTitle(value: string) {
-        const update_post = { ...post, title: value };
-        if (!manualSlug) update_post['slug'] = value.replaceAll(" ", "-").toLowerCase();
-        setPost(update_post);
-    }
-
-    function updateSlug(value: string) {
-        if (manualSlug == false) setManualSlug(true);
-        setPost({ ...post, slug: value });
-    }
-
-    function SaveContent() {
-        switch (type) {
-            case "create": return <><Save />Create</>
-            case "edit": return <><Save />Save</>
-        }
-    }
-
-    function setPublishDate(value: any) {
-        setPost({ ...post, publish_at: value });
-    }
-
-    const edit_time = post.publish_at?.length > 1 ? toIsoString(new Date(post.publish_at)) : "";
-
-    if (categories == null) {
-        return <p>No Categories!</p>
-    }
-
-    return <div className="flex-col">
-        <h3 style={{ textTransform: "capitalize" }}>{type} Post</h3>
-        <div className="input-grid">
-            <label>Title</label><input type="text" value={post.title} onChange={(e) => updateTitle(e.target.value)} />
-            <label>Slug</label><input type="text" value={post.slug} onChange={(e) => updateSlug(e.target.value)} />
-            <label>Category</label><CategoryInput value={post.category} categories={categories.categories} setValue={(c) => setPost({ ...post, category: c })} />
-            <label>Publish</label><input type="datetime-local" value={edit_time} onChange={(e) => setPublishDate(new Date(e.target.value).toISOString())} />
-            <label style={{ placeSelf: "stretch" }}>Content</label><textarea style={{ gridColumn: "span 3", fontFamily: "monospace" }} rows={10} value={post.content} onChange={(e) => setPost({ ...post, content: e.target.value })} />
-            <label>Tags</label><TagEditor tags={post.tags} setTags={(tags) => setPost({ ...post, tags })} />
-        </div>
-        {error && <p className="error-message">{error}</p>}
-        <div className="flex-row center">
-            <button onClick={() => save().then((res) => setError(res.error))}><SaveContent /></button><button onClick={cancel}><X />Cancel</button>
-        </div>
-    </div>
-}
-
-function toIsoString(date: Date) {
-    const pad = function(num: number) {
-        return (num < 10 ? '0' : '') + num;
-    };
-
-    return date.getFullYear() +
-        '-' + pad(date.getMonth() + 1) +
-        '-' + pad(date.getDate()) +
-        'T' + pad(date.getHours()) +
-        ':' + pad(date.getMinutes()) +
-        ':' + pad(date.getSeconds())
-}
-
-
-function TagEditor({ tags, setTags }: { tags: Post['tags'], setTags: (tags: Post['tags']) => void }) {
+export function TagEditor({ tags, setTags }: { tags: Post['tags'], setTags: (tags: Post['tags']) => void }) {
     const [input, setInput] = useState("");
     const { tags: all_tags } = useContext(PostContext);
 
@@ -193,62 +140,25 @@ function Tag({ tag, remove }: { tag: string, remove: (() => void) | null }) {
     </div>;
 }
 
-function PostCard({ post }: { post: Post }) {
-    const [editorOpen, setEditorOpen] = useState(false);
-    const [editingPost, setEditingPost] = useState<PostCreation>({ ...post });
+function PostCard({ post: initial, edit, save }: { post: Post, edit: () => void, save: (post: PostUpdate) => Promise<FunctionResponse> }) {
+    const [post, setPost] = useState<PostUpdate>({ ...initial });
 
-    const { posts, setPosts } = useContext(PostContext);
-
-    const deletePost = async (): Promise<FunctionResponse> => {
-        editingPost.archived = true;
-        setEditingPost({ ...editingPost });
-        return await savePost();
+    const trash = async (): Promise<FunctionResponse> => {
+        post.archived = true;
+        setPost({ ...post });
+        return await save(post);
     }
 
-    const revivePost = async (): Promise<FunctionResponse> => {
-        editingPost.archived = false;
-        setEditingPost({ ...editingPost });
-        return await savePost();
-    }
-
-    const savePost = async (): Promise<FunctionResponse> => {
-        const id = post.id;
-        const upload_post: PostCreation & { id: number, loading: boolean } = {
-            ...editingPost,
-            id,
-            loading: true,
-        }
-        setPosts({
-            ...posts, posts: posts.posts.map((p) => {
-                if (p.id != id) return p;
-                return { ...p, ...upload_post, loading: true };
-            })
-        });
-        // send upload post to server
-        const response = await fetch(`${API_URL}/post/edit`, { method: "PUT", body: JSON.stringify(upload_post), credentials: "include" });
-        if (!response || !response.ok) return { error: "Invalid Response", success: false };
-        // update state
-        setPosts({
-            ...posts, posts: posts.posts.map((p) => {
-                if (p.id != id) return p;
-                return { ...p, ...upload_post, loading: false };
-            })
-        });
-        return { error: null, success: true };
-    }
-
-    function close() {
-        setEditorOpen(false);
-        setEditingPost({ ...post });
+    const revive = async (): Promise<FunctionResponse> => {
+        post.archived = false;
+        setPost({ ...post });
+        return await save(post);
     }
 
     return <div className='post-card hidden-parent'>
-        <Modal openModal={editorOpen} closeModal={close}>
-            <PostEditor post={editingPost} setPost={setEditingPost} save={savePost} type={"edit"} cancel={close} />
-        </Modal>
         <div className='flex-row center top-right hidden-child'>
-            {post.archived == true ? <button onClick={() => revivePost()}><RefreshCw /></button> : <button onClick={() => deletePost()}><Trash /></button>}
-            <button onClick={() => setEditorOpen(true)}><Edit /></button>
+            {post.archived == true ? <button onClick={revive}><RefreshCw /></button> : <button onClick={trash}><Trash /></button>}
+            <button onClick={edit}><Edit /></button>
         </div>
         <div className="flex-row center bottom-right">
             {(post as any).loading && <Oval width={16} height={16} strokeWidth={8} />}
