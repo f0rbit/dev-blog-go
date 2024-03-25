@@ -13,7 +13,9 @@ const EMPTY_POST_CREATION: PostUpdate = {
     author_id: -1,
     slug: "",
     title: "",
+    description: "",
     content: "",
+    format: "md",
     category: "",
     tags: [],
     publish_at: "",
@@ -110,7 +112,7 @@ export function PostsPage() {
             <FilterControl filters={filters} setFilters={setFilters} />
             <div style={{ marginLeft: "auto" }} className="flex-row" >
                 {loading && <Oval height={20} width={20} strokeWidth={8} />}
-                <button style={{ marginLeft: "auto" }} onClick={() => setEditingPost(null)}><Plus /><span>Create</span></button>
+                <button style={{ marginLeft: "auto" }} onClick={() => setEditingPost(EMPTY_POST_CREATION)}><Plus /><span>Create</span></button>
             </div>
         </section>
         <section id='post-grid'>
