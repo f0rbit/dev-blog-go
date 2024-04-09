@@ -579,11 +579,6 @@ article {
         color: rgb(59 130 246)
     }
 
-    img {
-        width: 100%;
-        height: auto;
-    }
-
     blockquote {
         border-left: 4px solid var(--border-primary);
         padding-left: 0.5rem
