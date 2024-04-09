@@ -566,6 +566,11 @@ article {
         margin-left: 1.5rem;
     }
 
+		.imageblock {
+			display: flex;
+			justify-content: center;
+		}
+
     ul>li::marker,
     ol>li::marker {
         color: var(--text-dark);
@@ -577,11 +582,6 @@ article {
 
     a:hover {
         color: rgb(59 130 246)
-    }
-
-    img {
-        width: 100%;
-        height: auto;
     }
 
     blockquote {

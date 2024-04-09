@@ -120,18 +120,23 @@
     - [x] If left blank, infer description from post
 
 # v1.2
+- [ ] Integrate devpad projects linking
+    - [ ] Specific input for selecting project
+    - [ ] Endpoint for posts by project
+
+# v1.3
 - [ ] Analytics on server
     - [ ] Endpoint for "liking" a post
 - [ ] Build homepage
     - [ ] View analytics
     - [ ] Add 'action' table for when someone requests a post (count each request as a 'view')
 
-# v1.3
+# v1.4
 - [ ] Integrate with media-timeline project
     - [ ] Tightly integrated, not just sharing API keys but full linking workflow that feels natural
     - [ ] Obviously for this, have to finish up media-timeline as well.
 
-# v1.4
+# v1.5
 - [ ] Light mode support & theme switcher
 - [ ] Refactor for support for multiple themes
 
