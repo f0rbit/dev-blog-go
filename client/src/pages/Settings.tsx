@@ -57,26 +57,38 @@ const INTEGRATION_STATES = {
 
 const DEFAULT_INTEGRATIONS_CONTEXT = {
   links: [] as IntegrationLink[],
-  refetch: (() => { })
+  refetch: (() => { }),
+  devpad_key: "",
+  last_cache: {} as any
+}
+
+type LinksResponse = {
+  integrations: IntegrationLink[];
+  devpad_key: string;
+  last_cache: any; // TODO: zod validate the links response
 }
 
 const IntegrationsContext = React.createContext<typeof DEFAULT_INTEGRATIONS_CONTEXT>(DEFAULT_INTEGRATIONS_CONTEXT);
 
 function Integrations() {
   const [links, setLinks] = useState<IntegrationLink[]>([]);
+  const [devpad_key, setDevpadKey] = useState<string>("");
+  const [last_cache, setLastCache] = useState<any>({});
 
   const refetch = async () => {
     const response = await fetch(`${API_URL}/links`, { method: "GET", credentials: "include" });
     if (!response.ok) throw new Error("Couldn't fetch integrations");
-    const result = ((await response.json()) ?? []) as IntegrationLink[];
-    setLinks(result);
+    const result = ((await response.json()) ?? {}) as LinksResponse;
+    setLinks(result.integrations ?? []);
+    setDevpadKey(result.devpad_key ?? "");
+    setLastCache(result.last_cache ?? {});
   }
 
   useEffect(() => {
     refetch();
   }, []);
 
-  return <IntegrationsContext.Provider value={{ links, refetch }}>
+  return <IntegrationsContext.Provider value={{ links, refetch, devpad_key, last_cache }}>
     <div id="integration-container" className="flex-col">
       <div id="integration-grid">
         {Object.entries(INTEGRATION_STATES).map(([key, data]) => (<IntegrationCard key={key} name={data.name} enabled={data.enabled} link={links.find((l) => l.source == data.name)} refetch={refetch} />))}
@@ -289,86 +301,68 @@ function TokenRow({ token, save, remove }: { token: TokenCreation, save: (token:
 }
 
 function DevpadCard({ refetch }: { refetch: () => Promise<void> }) {
-    const [api_key, setApiKey] = useState("");
-    const [projects, setProjects] = useState<{
-        url: string;
-        last_fetched: string;
-        project_count: number;
-    } | null>(null);
-    const [loading, setLoading] = useState(false);
+  const { devpad_key, last_cache } = useContext(IntegrationsContext);
+  const [api_key, setApiKey] = useState(devpad_key);
 
-    const saveApiKey = async () => {
-        setLoading(true);
-        const response = await fetch(`${API_URL}/project/key`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ api_key }),
-        });
-        if (!response.ok) {
-            setLoading(false);
-            return;
-        }
-        await fetchProjects();
-    };
+  const [loading, setLoading] = useState(false);
 
-    const fetchProjects = async () => {
-        setLoading(true);
-        const response = await fetch(`${API_URL}/projects`, {
-            method: "GET",
-            credentials: "include",
-        });
-        if (!response.ok) {
-            setLoading(false);
-            return;
-        }
-        const data = await response.json();
-        setProjects({
-            url: "https://devpad.dev/api/projects",
-            last_fetched: new Date().toLocaleString(),
-            project_count: data.length,
-        });
-        setLoading(false);
-    };
+  const saveApiKey = async () => {
+    setLoading(true);
+    const response = await fetch(`${API_URL}/project/key`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ api_key }),
+    });
+    if (!response.ok) {
+      setLoading(false);
+      return;
+    }
+    await refetch();
+    setLoading(false);
+  };
 
-    if (loading) return <Oval width={18} height={18} strokeWidth={8} />;
+  const projects = last_cache.data ? JSON.parse(last_cache.data) : null;
+  const last_fetch = last_cache.fetched_at ? new Date(last_cache.fetched_at).toLocaleString() : "Never";
 
-    return (
-        <div className="flex-col" style={{ height: "100%" }}>
-            {!projects ? (
-                <div className="flex-col center" style={{ height: "100%" }}>
-                    <input
-                        type="text"
-                        placeholder="API Key"
-                        value={api_key}
-                        onChange={(e) => setApiKey(e.target.value)}
-                        style={{ width: "100%" }}
-                    />
-                    <button onClick={saveApiKey}>
-                        <Check />
-                        Save API Key
-                    </button>
-                </div>
-            ) : (
-                <div className="flex-col" style={{ height: "100%" }}>
-                    <div className="flex-row">
-                        <span>Last Fetch:</span>
-                        <span>{projects.last_fetched}</span>
-                    </div>
-                    <div className="flex-row">
-                        <span>URL:</span>
-                        <span>{projects.url}</span>
-                    </div>
-                    <div className="flex-row">
-                        <span>Projects:</span>
-                        <span>{projects.project_count}</span>
-                    </div>
-                    <button onClick={fetchProjects}>
-                        <RefreshCw />
-                        Fetch Projects
-                    </button>
-                </div>
-            )}
+  if (loading) return <Oval width={18} height={18} strokeWidth={8} />;
+
+  return (
+    <div className="flex-col" style={{ height: "100%" }}>
+      {!devpad_key ? (
+        <div className="flex-col center" style={{ height: "100%" }}>
+          <input
+            type="text"
+            placeholder="API Key"
+            value={api_key}
+            onChange={(e) => setApiKey(e.target.value)}
+            style={{ width: "100%" }}
+          />
+          <button onClick={saveApiKey}>
+            <Check />
+            Save API Key
+          </button>
         </div>
-    );
+      ) : (
+        <div className="flex-col" style={{ height: "100%" }}>
+          <div className="flex-row">
+            <span>Last Fetch:</span>
+            <span>{last_fetch}</span>
+          </div>
+          <div className="flex-row">
+            <span>URL:</span>
+            <span>{last_cache.url}</span>
+          </div>
+          <div className="flex-row">
+            <span>Projects:</span>
+            <span>{projects.length}</span>
+          </div>
+          <button onClick={refetch}>
+            <RefreshCw />
+            Fetch Projects
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
