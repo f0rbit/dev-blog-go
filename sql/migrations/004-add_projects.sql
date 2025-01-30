@@ -24,5 +24,7 @@ CREATE TABLE IF NOT EXISTS devpad_api_tokens (
     token TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    UNIQUE(user_id)
 );
+
