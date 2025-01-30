@@ -22,13 +22,16 @@ import (
 )
 
 func init() {
+	log.Info("Initializing...")
 	// load .env file
 	if err := godotenv.Load(); err != nil {
 		log.Warn("No .env file found")
 	}
-
+	log.Info("Loaded .env file")
 	routes.LoadAuthConfig()
+	log.Info("Loaded auth config")
 	utils.CreateStore()
+	log.Info("Created session store")
 }
 
 func main() {
@@ -48,8 +51,8 @@ func main() {
 	r.HandleFunc("/post/delete/{id}", routes.DeletePost).Methods("DELETE")
 	// category
 	r.HandleFunc("/categories", routes.GetCategories).Methods("GET")
-    r.HandleFunc("/category/new", routes.CreateCategory).Methods("POST")
-    r.HandleFunc("/category/delete/{name}", routes.DeleteCategory).Methods("DELETE")
+	r.HandleFunc("/category/new", routes.CreateCategory).Methods("POST")
+	r.HandleFunc("/category/delete/{name}", routes.DeleteCategory).Methods("DELETE")
 	// tags
 	r.HandleFunc("/post/tag", routes.AddPostTag).Methods("PUT")
 	r.HandleFunc("/post/tag", routes.DeletePostTag).Methods("DELETE")
@@ -59,20 +62,20 @@ func main() {
 	r.HandleFunc("/auth/github/login", routes.GithubLogin).Methods("GET")
 	r.HandleFunc("/auth/github/callback", routes.GithubCallback).Methods("GET")
 	r.HandleFunc("/auth/logout", routes.Logout).Methods("GET")
-    // api tokens
-    r.HandleFunc("/tokens", routes.GetUserTokens).Methods("GET")
-    r.HandleFunc("/token/new", routes.CreateToken).Methods("POST")
-    r.HandleFunc("/token/edit", routes.EditToken).Methods("PUT")
-    r.HandleFunc("/token/delete/{id}", routes.DeleteToken).Methods("DELETE")
-    // integrations
-    r.HandleFunc("/links", routes.GetUserIntegrations).Methods("GET")
-    r.HandleFunc("/links/upsert", routes.UpsertIntegrations).Methods("PUT")
-    r.HandleFunc("/links/fetch/{source}", routes.FetchIntegration).Methods("GET")
-    r.HandleFunc("/links/delete/{id}", routes.DeleteIntegration).Methods("DELETE")
+	// api tokens
+	r.HandleFunc("/tokens", routes.GetUserTokens).Methods("GET")
+	r.HandleFunc("/token/new", routes.CreateToken).Methods("POST")
+	r.HandleFunc("/token/edit", routes.EditToken).Methods("PUT")
+	r.HandleFunc("/token/delete/{id}", routes.DeleteToken).Methods("DELETE")
+	// integrations
+	r.HandleFunc("/links", routes.GetUserIntegrations).Methods("GET")
+	r.HandleFunc("/links/upsert", routes.UpsertIntegrations).Methods("PUT")
+	r.HandleFunc("/links/fetch/{source}", routes.FetchIntegration).Methods("GET")
+	r.HandleFunc("/links/delete/{id}", routes.DeleteIntegration).Methods("DELETE")
 
 	// modify cors
 	c := cors.New(cors.Options{
-        AllowedOrigins:   []string{"http://localhost:5173", "https://f0rbit.github.io", "https://blog.forbit.dev", "http://blog.forbit.dev", "blog.forbit.dev", "http://forbit.dev", "https://forbit.dev", "http://www.forbit.dev", "https://www.forbit.dev" },
+		AllowedOrigins:   []string{"http://localhost:5173", "https://f0rbit.github.io", "https://blog.forbit.dev", "http://blog.forbit.dev", "blog.forbit.dev", "http://forbit.dev", "https://forbit.dev", "http://www.forbit.dev", "https://www.forbit.dev"},
 		AllowedHeaders:   []string{"Content-Type"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowCredentials: true,
@@ -112,23 +115,23 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var user *types.User
 
-        // first check for an "API_TOKEN" in the headers
-        auth_token := r.Header.Get(routes.AUTH_HEADER)
-        if auth_token != "" {
-            user, err := database.GetUserByToken(auth_token);
-            if err != nil {
-                utils.LogError("Error fetching user by token", err, http.StatusNotFound, w);
-                return;
-            }
-            if user != nil {
-                ctx := context.WithValue(r.Context(), "user", user);
-                next.ServeHTTP(w, r.WithContext(ctx));
-                return;
-            } else {
-                http.Error(w, "Invalid token", http.StatusUnauthorized);
-                return;
-            }
-        } 
+		// first check for an "API_TOKEN" in the headers
+		auth_token := r.Header.Get(routes.AUTH_HEADER)
+		if auth_token != "" {
+			user, err := database.GetUserByToken(auth_token)
+			if err != nil {
+				utils.LogError("Error fetching user by token", err, http.StatusNotFound, w)
+				return
+			}
+			if user != nil {
+				ctx := context.WithValue(r.Context(), "user", user)
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			} else {
+				http.Error(w, "Invalid token", http.StatusUnauthorized)
+				return
+			}
+		}
 
 		// Retrieve the user session
 		session, err := utils.GetStore().Get(r, "user-session")
@@ -154,7 +157,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				}
 			}
 			// otherwise return 401
-            utils.Unauthorized(w);
+			utils.Unauthorized(w)
 			return
 		}
 
