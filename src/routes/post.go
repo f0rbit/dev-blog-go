@@ -49,15 +49,15 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    // verify that author id is the logged in user
-    if newPost.AuthorID != user.ID {
-        utils.LogError("Invalid author ID", errors.New("Create Post authorID doesn't match userID"), http.StatusBadRequest, w);
-        return;
-    }
+	// verify that author id is the logged in user
+	if newPost.AuthorID != user.ID {
+		utils.LogError("Invalid author ID", errors.New("Create Post authorID doesn't match userID"), http.StatusBadRequest, w)
+		return
+	}
 
 	id, err := database.CreatePost(newPost)
 	if err != nil {
-	utils.LogError("Error creating new post", err, http.StatusInternalServerError, w)
+		utils.LogError("Error creating new post", err, http.StatusInternalServerError, w)
 		return
 	}
 
@@ -71,7 +71,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func EditPost(w http.ResponseWriter, r *http.Request) {
-    user := utils.GetUser(r)
+	user := utils.GetUser(r)
 	if user == nil {
 		utils.Unauthorized(w)
 		return
@@ -85,10 +85,10 @@ func EditPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    if updatedPost.AuthorID != user.ID {
-        utils.LogError("Invalid author ID", errors.New("Update Post authorID doesn't match userID"), http.StatusBadRequest, w);
-        return;
-    }
+	if updatedPost.AuthorID != user.ID {
+		utils.LogError("Invalid author ID", errors.New("Update Post authorID doesn't match userID"), http.StatusBadRequest, w)
+		return
+	}
 
 	// Update the post in the database
 	err = database.UpdatePost(&updatedPost)
@@ -101,7 +101,7 @@ func EditPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeletePost(w http.ResponseWriter, r *http.Request) {
-    user := utils.GetUser(r)
+	user := utils.GetUser(r)
 	if user == nil {
 		utils.Unauthorized(w)
 		return
@@ -115,16 +115,16 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    post, err := database.FetchPost(user, database.ID, postID);
-    if err != nil {
-        utils.LogError("Error fetching post", err, http.StatusInternalServerError, w);
-        return;
-    }
+	post, err := database.FetchPost(user, database.ID, postID)
+	if err != nil {
+		utils.LogError("Error fetching post", err, http.StatusInternalServerError, w)
+		return
+	}
 
-    if post.AuthorID != user.ID {
-        utils.LogError("Invalid author ID", errors.New("Delete post authorID doesn't match userID"), http.StatusBadRequest, w);
-        return;
-    }
+	if post.AuthorID != user.ID {
+		utils.LogError("Invalid author ID", errors.New("Delete post authorID doesn't match userID"), http.StatusBadRequest, w)
+		return
+	}
 
 	// Delete the post by ID
 	err = database.DeletePost(postID)

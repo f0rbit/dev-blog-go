@@ -1,6 +1,9 @@
 package types
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
 type Category struct {
 	Name    string `json:"name"`
@@ -25,6 +28,7 @@ type Post struct {
 	Tags        []string  `json:"tags"`
 	Archived    bool      `json:"archived"`
 	Description string    `json:"description"`
+	ProjectID   string    `json:"project_id"`
 	PublishAt   time.Time `json:"publish_at" time_format:"sql_datetime"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
@@ -84,4 +88,42 @@ type FetchLink struct {
 	Identifier  string    `json:"identifier"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+type Project struct {
+	ID             string    `json:"id"`
+	ProjectID      string    `json:"project_id"`
+	OwnerID        string    `json:"owner_id"`
+	Name           string    `json:"name"`
+	Description    string    `json:"description"`
+	Specification  string    `json:"specification"`
+	RepoURL        string    `json:"repo_url"`
+	RepoID         string    `json:"repo_id"`
+	IconURL        string    `json:"icon_url"`
+	Status         string    `json:"status"`
+	Deleted        bool      `json:"deleted"`
+	LinkURL        string    `json:"link_url"`
+	LinkText       string    `json:"link_text"`
+	Visibility     string    `json:"visibility"`
+	CurrentVersion string    `json:"current_version"`
+	ScanBranch     string    `json:"scan_branch"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+type ProjectCache struct {
+	ID        int            `json:"id"`
+	UserID    int            `json:"user_id"`
+	Status    string         `json:"status"`
+	URL       string         `json:"url"`
+	Data      sql.NullString `json:"data"`
+	FetchedAt time.Time      `json:"fetched_at"`
+}
+
+type ProjectLink struct {
+	ID          int       `json:"id"`
+	PostID      int       `json:"post_id"`
+	ProjectUUID string    `json:"project_uuid"`
+	ProjectID   string    `json:"project_id"`
+	CreatedAt   time.Time `json:"created_at"`
 }

@@ -72,6 +72,10 @@ func main() {
 	r.HandleFunc("/links/upsert", routes.UpsertIntegrations).Methods("PUT")
 	r.HandleFunc("/links/fetch/{source}", routes.FetchIntegration).Methods("GET")
 	r.HandleFunc("/links/delete/{id}", routes.DeleteIntegration).Methods("DELETE")
+    // devpad functions
+    r.HandleFunc("/projects", routes.GetProjects).Methods("GET")
+    r.HandleFunc("/project/key", routes.SetProjectKey).Methods("PUT")
+    
 
 	// modify cors
 	c := cors.New(cors.Options{
