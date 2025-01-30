@@ -88,7 +88,18 @@ func DeleteToken(tokenID int) error {
 
 func GetProjectCache(cacheID int) (types.ProjectCache, error) {
 	var cache types.ProjectCache
-	err := db.QueryRow("SELECT * FROM projects_cache WHERE id = ?", cacheID).Scan(&cache)
+	err := db.QueryRow(`
+      SELECT
+        projects_cache.id,
+        projects_cache.user_id,
+        projects_cache.status,
+        projects_cache.url,
+        projects_cache.data,
+        projects_cache.fetched_at
+      FROM 
+        projects_cache
+      WHERE id = ?
+    `, cacheID).Scan(&cache.ID, &cache.UserID, &cache.Status, &cache.URL, &cache.Data, &cache.FetchedAt)
 	if err != nil {
 		return cache, err
 	}
@@ -97,7 +108,20 @@ func GetProjectCache(cacheID int) (types.ProjectCache, error) {
 
 func GetLatestProjectCache(userID int) (types.ProjectCache, error) {
 	var cache types.ProjectCache
-	err := db.QueryRow("SELECT * FROM projects_cache WHERE user_id = ? ORDER BY fetched_at DESC LIMIT 1", userID).Scan(&cache)
+	err := db.QueryRow(`
+      SELECT
+        projects_cache.id,
+        projects_cache.user_id,
+        projects_cache.status,
+        projects_cache.url,
+        projects_cache.data,
+        projects_cache.fetched_at
+      FROM 
+        projects_cache 
+      WHERE user_id = ? 
+      ORDER BY fetched_at DESC 
+      LIMIT 1
+    `, userID).Scan(&cache.ID, &cache.UserID, &cache.Status, &cache.URL, &cache.Data, &cache.FetchedAt)
 	if err != nil {
 		return cache, err
 	}
@@ -105,8 +129,13 @@ func GetLatestProjectCache(userID int) (types.ProjectCache, error) {
 }
 
 func InsertProjectCache(cache types.ProjectCache) (int, error) {
+	_, err := db.Exec("INSERT INTO projects_cache (user_id, status, url, data, fetched_at) VALUES (?, ?, ?, ?, ?)", cache.UserID, cache.Status, cache.URL, cache.Data, cache.FetchedAt)
+	if err != nil {
+		return -1, err
+	}
 	var id int
-	err := db.QueryRow("INSERT INTO projects_cache (user_id, status, url, data, fetched_at) VALUES (?, ?, ?, ?, ?)", cache.UserID, cache.Status, cache.URL, cache.Data, cache.FetchedAt).Scan(&id)
+	row := db.QueryRow("SELECT last_insert_rowid()")
+	err = row.Scan(&id)
 	if err != nil {
 		return -1, err
 	}
@@ -120,8 +149,8 @@ func FailProjectCache(id int) {
 	}
 }
 
-func UpdateProjectCacheData(id int, data []byte) error {
-	_, err := db.Exec("UPDATE projects_cache SET status = 'fetched' data = ? WHERE id = ?", data, id)
+func UpdateProjectCacheData(id int, data string) error {
+	_, err := db.Exec("UPDATE projects_cache SET status = 'fetched', data = ? WHERE id = ?", data, id)
 	if err != nil {
 		return err
 	}
@@ -138,10 +167,12 @@ func GetProject(userID int, projectID string) (types.Project, error) {
 }
 
 func SetProjectKey(userID int, key string) error {
-	_, err := db.Exec("UPDATE devpad_api_tokens SET token = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?", key, userID)
+	// we need to an insert, and then on conflict do an update
+	_, err := db.Exec("INSERT INTO devpad_api_tokens (user_id, token) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET token = ?, updated_at = CURRENT_TIMESTAMP", userID, key, key)
 	if err != nil {
 		return err
 	}
+	log.Debug("Set project key", "user_id", userID, "key", key)
 	return nil
 }
 

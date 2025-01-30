@@ -1,9 +1,6 @@
 package types
 
-import (
-	"database/sql"
-	"time"
-)
+import "time"
 
 type Category struct {
 	Name    string `json:"name"`
@@ -112,12 +109,12 @@ type Project struct {
 }
 
 type ProjectCache struct {
-	ID        int            `json:"id"`
-	UserID    int            `json:"user_id"`
-	Status    string         `json:"status"`
-	URL       string         `json:"url"`
-	Data      sql.NullString `json:"data"`
-	FetchedAt time.Time      `json:"fetched_at"`
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
+	Status    string    `json:"status"`
+	URL       string    `json:"url"`
+	Data      string    `json:"data"`
+	FetchedAt time.Time `json:"fetched_at"`
 }
 
 type ProjectLink struct {

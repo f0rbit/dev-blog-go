@@ -150,14 +150,14 @@ func GetProjects(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if cache_row.Data.Valid == false {
-		utils.LogError("Error fetching projects", errors.New("No projects found"), http.StatusInternalServerError, w)
+	if cache_row.Data == "" {
+		utils.LogError("Error fetching projects", errors.New("No data found"), http.StatusInternalServerError, w)
 		return
 	}
 
 	// unmarshal the JSON array into the Projects slice
 	var projects []types.Project
-	err = json.Unmarshal([]byte(cache_row.Data.String), &projects)
+	err = json.Unmarshal([]byte(cache_row.Data), &projects)
 	if err != nil {
 		utils.LogError("Error unmarshalling projects", err, http.StatusInternalServerError, w)
 		return
@@ -173,13 +173,18 @@ func SetProjectKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	key := mux.Vars(r)["api_key"]
-	if key == "" {
-		utils.LogError("Error parsing project ID", errors.New("No API key provided"), http.StatusBadRequest, w)
+	type Body struct {
+		APIKey string `json:"api_key"`
+	}
+
+	var body Body
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		utils.LogError("Error decoding body", err, http.StatusBadRequest, w)
 		return
 	}
 
-	err := database.SetProjectKey(user.ID, key)
+	err = database.SetProjectKey(user.ID, body.APIKey)
 	if err != nil {
 		utils.LogError("Error setting project key", err, http.StatusInternalServerError, w)
 		return
@@ -188,7 +193,7 @@ func SetProjectKey(w http.ResponseWriter, r *http.Request) {
 	// after we set the key, run a new fetch
 	_, err = actions.FetchProjects(user.ID)
 	if err != nil {
-        log.Error("Error fetching projects", "err", err)
+		log.Error("Error fetching projects", "err", err)
 	}
 
 	w.WriteHeader(http.StatusOK)
