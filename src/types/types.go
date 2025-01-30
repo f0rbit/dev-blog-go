@@ -90,22 +90,8 @@ type FetchLink struct {
 type Project struct {
 	ID             string    `json:"id"`
 	ProjectID      string    `json:"project_id"`
-	OwnerID        string    `json:"owner_id"`
 	Name           string    `json:"name"`
-	Description    string    `json:"description"`
-	Specification  string    `json:"specification"`
-	RepoURL        string    `json:"repo_url"`
-	RepoID         string    `json:"repo_id"`
-	IconURL        string    `json:"icon_url"`
-	Status         string    `json:"status"`
-	Deleted        bool      `json:"deleted"`
-	LinkURL        string    `json:"link_url"`
-	LinkText       string    `json:"link_text"`
 	Visibility     string    `json:"visibility"`
-	CurrentVersion string    `json:"current_version"`
-	ScanBranch     string    `json:"scan_branch"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 type ProjectCache struct {

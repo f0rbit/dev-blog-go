@@ -52,7 +52,6 @@ function Profile() {
 const INTEGRATION_STATES = {
   devto: { name: "devto", enabled: true },
   medium: { name: "medium", enabled: false },
-  substack: { name: "substack", enabled: false },
   devpad: { name: "devpad", enabled: true }
 } as const;
 
@@ -310,7 +309,7 @@ function DevpadCard({ refetch }: { refetch: () => Promise<void> }) {
             setLoading(false);
             return;
         }
-        //await fetchProjects();
+        await fetchProjects();
     };
 
     const fetchProjects = async () => {
@@ -331,10 +330,6 @@ function DevpadCard({ refetch }: { refetch: () => Promise<void> }) {
         });
         setLoading(false);
     };
-
-    useEffect(() => {
-        //fetchProjects();
-    }, []);
 
     if (loading) return <Oval width={18} height={18} strokeWidth={8} />;
 
