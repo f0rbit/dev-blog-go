@@ -16,3 +16,13 @@ CREATE TABLE IF NOT EXISTS posts_projects (
     project_id INTEGER NOT NULL,
     FOREIGN KEY (post_id) REFERENCES posts(id)
 );
+
+-- and we need a table to store user_id and devpad_api_tokens
+CREATE TABLE IF NOT EXISTS devpad_api_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
