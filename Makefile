@@ -15,6 +15,9 @@ build:
 
 build-coverage:
 	@cd src && go build -o ${BINARY_NAME} -cover && mv ${BINARY_NAME} ../
+	# code sign it (this is for macos) (would be fixed with docker?)
+	@codesign --sign - ./${BINARY_NAME}
+	@codesign --verify --verbose ./${BINARY_NAME}
 	@echo "Built binary with coverage"
 
 clean:
