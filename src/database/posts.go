@@ -82,6 +82,9 @@ func FetchPost(user *types.User, identifier Identifier, needle interface{}) (typ
 
 	post.Description = utils.GetDescription(post.Content)
 
+	// check for project_id link
+	post.ProjectID = GetPostProjectID(post.Id)
+
 	return post, nil
 }
 
@@ -119,6 +122,13 @@ func CreatePost(post types.Post) (int, error) {
 			return -1, err
 		}
 	}
+	// insert project_id link
+	if post.ProjectID != "" {
+		_, err = db.Exec("INSERT INTO posts_projects (post_id, project_id) VALUES (?, ?)", post.Id, post.ProjectID)
+		if err != nil {
+			return -1, err
+		}
+	}
 	log.Info("Inserted new post", "slug", post.Slug, "id", post.Id)
 	return post.Id, err
 }
@@ -127,6 +137,11 @@ func DeletePost(id int) error {
 	_, err := db.Exec("DELETE FROM posts WHERE id = ?", id)
 	if err == nil {
 		log.Info("Deleted Post", "id", id)
+	}
+	// delete project_id link
+	_, err = db.Exec("DELETE FROM posts_projects WHERE post_id = ?", id)
+	if err != nil {
+		return err
 	}
 	return err
 }
@@ -175,6 +190,9 @@ func UpdatePost(updatedPost *types.Post) error {
 			return err
 		}
 	}
+
+	// update project_id link
+	err = UpdatePostProjectID(updatedPost.Id, updatedPost.ProjectID)
 	log.Info("Updated Post", "id", updatedPost.Id)
 	return err
 }
@@ -293,6 +311,9 @@ func GetPosts(user *types.User, category, tag string, limit, offset int) ([]type
 			post.Description = utils.GetDescription(post.Content)
 		}
 
+		// check for project_id link
+		post.ProjectID = GetPostProjectID(post.Id)
+
 		posts = append(posts, post)
 	}
 	if posts == nil {
@@ -376,5 +397,36 @@ func GetPostsByTitle(user *types.User, title string) (*types.Post, error) {
 
 	post.Description = utils.GetDescription(post.Content)
 
+	// check for project_id link
+	post.ProjectID = GetPostProjectID(post.Id)
+
 	return &post, nil
+}
+
+func GetPostProjectID(postID int) string {
+	var projectID string
+	err := db.QueryRow("SELECT project_uuid FROM posts_projects WHERE post_id = ?", postID).Scan(&projectID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ""
+		} else {
+			log.Error("Error fetching post to project ID", "err", err)
+			return ""
+		}
+	}
+	return projectID
+}
+
+func UpdatePostProjectID(postID int, projectID string) error {
+	_, err := db.Exec("DELETE FROM posts_projects WHERE post_id = ?", postID)
+	if err != nil {
+		return err
+	}
+	if projectID != "" {
+		_, err = db.Exec("INSERT INTO posts_projects (post_id, project_uuid) VALUES (?, ?)", postID, projectID)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

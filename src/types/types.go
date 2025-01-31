@@ -25,6 +25,7 @@ type Post struct {
 	Tags        []string  `json:"tags"`
 	Archived    bool      `json:"archived"`
 	Description string    `json:"description"`
+	ProjectID   string    `json:"project_id"`
 	PublishAt   time.Time `json:"publish_at" time_format:"sql_datetime"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
@@ -84,4 +85,28 @@ type FetchLink struct {
 	Identifier  string    `json:"identifier"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+type Project struct {
+	ID             string    `json:"id"`
+	ProjectID      string    `json:"project_id"`
+	Name           string    `json:"name"`
+	Visibility     string    `json:"visibility"`
+}
+
+type ProjectCache struct {
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
+	Status    string    `json:"status"`
+	URL       string    `json:"url"`
+	Data      string    `json:"data"`
+	FetchedAt time.Time `json:"fetched_at"`
+}
+
+type ProjectLink struct {
+	ID          int       `json:"id"`
+	PostID      int       `json:"post_id"`
+	ProjectUUID string    `json:"project_uuid"`
+	ProjectID   string    `json:"project_id"`
+	CreatedAt   time.Time `json:"created_at"`
 }

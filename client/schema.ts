@@ -13,7 +13,8 @@ const post_schema = z.object({
     archived: z.boolean(),
     publish_at: z.string(),
     created_at: z.string(),
-    updated_at: z.string()
+    updated_at: z.string(),
+    project_id: z.string().optional().nullable(),
 });
 
 
@@ -24,6 +25,13 @@ const posts_response_schema = z.object({
     per_page: z.number(),
     current_page: z.number(),
 })
+
+const projects_response_schema = z.array(z.object({
+    id: z.string(),
+    project_id: z.string(),
+    name: z.string(),
+    visibility: z.string(),
+}));
 
 const category_schema = z.object({
     name: z.string(),
@@ -67,13 +75,15 @@ export type Post = z.infer<typeof post_schema>;
 
 export type PostsResponse = z.infer<typeof posts_response_schema>;
 
+export type ProjectsResponse = z.infer<typeof projects_response_schema>;
+
 export type AccessKey = z.infer<typeof access_key>;
 
 export type Category = z.infer<typeof category_schema>;
 
 export type IntegrationLink = z.infer<typeof integration_link>;
 
-// i don't think there's a way for zod to do self-recursive types yet.
+// i don't think there's a way for zod to gmo self-recursive types yet.
 export type CategoryNode = { name: string, children: CategoryNode[] };
 
 export type CategoryResponse = {
@@ -88,7 +98,8 @@ export const SCHEMA = {
     CATEGORY: category_schema,
     CATEGORY_NODE: category_node_schema,
     CATEGORY_RESPONSE: category_response,
-    ACCESS_KEY: access_key
+    ACCESS_KEY: access_key,
+    PROJECTS_RESPONSE: projects_response_schema
 }
 
 export type PostCreation = Omit<Post, "id" | "created_at" | "updated_at">

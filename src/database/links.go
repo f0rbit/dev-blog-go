@@ -142,3 +142,16 @@ func SetIntegrationLastFetched(linkID int) error {
 	_, err := db.Exec("UPDATE fetch_queue SET last_fetch = CURRENT_TIMESTAMP WHERE id = ?", linkID)
 	return err
 }
+
+func SetIntegrationFailed(linkID int) error {
+    // append status: 'failed' into the data json field
+    _, err := db.Exec(`
+        UPDATE fetch_queue 
+        SET data = json_set(COALESCE(data, '{}'), '$.status', 'failed') 
+        WHERE id = ?`, linkID)
+    if err != nil {
+        log.Error("Failed to set integration as failed", "id", linkID)
+        return err
+    }
+    return nil
+}
