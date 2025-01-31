@@ -127,8 +127,9 @@ function IntegrationCard({ name, enabled, link, refetch }: { name: string, enabl
     if (!enabled) return <BuildingPage />;
     if (name == "devpad") return <DevpadCard refetch={refetch} />
     if (!link) return <LinkingInterface name={name as "devto" | "medium" | "substack"} />;
-    const last_fetch = link.last_fetch ? new Date(link.last_fetch).toLocaleString() : "Never";
 
+    const last_fetch = link.last_fetch ? new Date(link.last_fetch).toLocaleString() : "Never";
+    const fetch_failed = link.data && JSON.parse(link.data)?.status === "failed";
 
     return <div className="flex-col" style={{ height: "100%" }}>
       <div style={{ height: "100%" }} className="flex-col">
@@ -142,7 +143,11 @@ function IntegrationCard({ name, enabled, link, refetch }: { name: string, enabl
         </div>
         <div className="flex-row">
           <span>Posts:</span>
-          <span>{link.fetch_links?.length ?? "0"}</span>
+          {fetch_failed ? (
+            <span style={{ color: "#ff7676", fontStyle: "italic" }}>Fetch failed</span>
+          ) : (
+            <span>{link.fetch_links?.length ?? "0"}</span>
+          )}
         </div>
       </div>
       <div className="flex-row center">
@@ -358,6 +363,7 @@ function DevpadCard({ refetch }: { refetch: () => Promise<void> }) {
 
   const projects = last_cache.data ? JSON.parse(last_cache.data ?? "[]") : [];
   const last_fetch = last_cache.fetched_at ? new Date(last_cache.fetched_at).toLocaleString() : "Never";
+  const fetch_failed = last_cache.status === "failed";
 
   if (!devpad_key) return <Linker />;
 
@@ -374,7 +380,11 @@ function DevpadCard({ refetch }: { refetch: () => Promise<void> }) {
         </div>
         <div className="flex-row">
           <span>Projects:</span>
-          <span>{projects.length}</span>
+          {fetch_failed ? (
+            <span style={{ color: "#ff7676", fontStyle: "italic" }}>Fetch failed</span>
+          ) : (
+            <span>{projects.length}</span>
+          )}
         </div>
       </div>
       <div className="flex-row center">
