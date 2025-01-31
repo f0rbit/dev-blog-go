@@ -302,17 +302,17 @@ function TokenRow({ token, save, remove }: { token: TokenCreation, save: (token:
 
 function DevpadCard({ refetch }: { refetch: () => Promise<void> }) {
   const { devpad_key, last_cache } = useContext(IntegrationsContext);
-  const [api_key, setApiKey] = useState(devpad_key);
+  const [open, setOpen] = useState(false);
 
   const [loading, setLoading] = useState(false);
 
-  const saveApiKey = async () => {
+  const saveApiKey = async (key = devpad_key) => {
     setLoading(true);
     const response = await fetch(`${API_URL}/project/key`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ api_key }),
+      body: JSON.stringify({ api_key: key }),
     });
     if (!response.ok) {
       setLoading(false);
@@ -322,47 +322,65 @@ function DevpadCard({ refetch }: { refetch: () => Promise<void> }) {
     setLoading(false);
   };
 
-  const projects = last_cache.data ? JSON.parse(last_cache.data) : null;
+  const sync = async () => {
+    // TODO: make a request to force refetch
+    await refetch();
+  }
+
+  const unlink = async () => {
+    await saveApiKey("");
+  }
+
+  const Linker = () => {
+    const [token, setToken] = useState("");
+
+    async function upload() {
+      await saveApiKey(token);
+    }
+
+
+    return open ?
+      <div className="flex-col center" style={{ justifyContent: "space-between", height: "100%" }}>
+        <input type="text" placeholder="API Key" value={token} onChange={(e) => setToken(e.target.value)} style={{ width: "100%" }} />
+        <div className="flex-row center">
+          {loading ? <button disabled><Oval width={18} height={18} strokeWidth={8} />Confirm</button> : <button onClick={upload}><Check />Confirm</button>}
+          <button onClick={() => setOpen(false)}><X />Cancel</button>
+        </div>
+      </div>
+      :
+      <div className="flex-row center" style={{ height: "100%" }}>
+        <button onClick={() => setOpen(true)}>
+          <Link />
+          <span>Link</span>
+        </button>
+      </div>;
+  }
+
+  const projects = last_cache.data ? JSON.parse(last_cache.data ?? "[]") : [];
   const last_fetch = last_cache.fetched_at ? new Date(last_cache.fetched_at).toLocaleString() : "Never";
 
-  if (loading) return <Oval width={18} height={18} strokeWidth={8} />;
+  if (!devpad_key) return <Linker />;
 
   return (
     <div className="flex-col" style={{ height: "100%" }}>
-      {!devpad_key ? (
-        <div className="flex-col center" style={{ height: "100%" }}>
-          <input
-            type="text"
-            placeholder="API Key"
-            value={api_key}
-            onChange={(e) => setApiKey(e.target.value)}
-            style={{ width: "100%" }}
-          />
-          <button onClick={saveApiKey}>
-            <Check />
-            Save API Key
-          </button>
+      <div style={{ height: "100%" }} className="flex-col">
+        <div className="flex-row">
+          <span>Last Fetch:</span>
+          <span>{last_fetch}</span>
         </div>
-      ) : (
-        <div className="flex-col" style={{ height: "100%" }}>
-          <div className="flex-row">
-            <span>Last Fetch:</span>
-            <span>{last_fetch}</span>
-          </div>
-          <div className="flex-row">
-            <span>URL:</span>
-            <span>{last_cache.url}</span>
-          </div>
-          <div className="flex-row">
-            <span>Projects:</span>
-            <span>{projects.length}</span>
-          </div>
-          <button onClick={refetch}>
-            <RefreshCw />
-            Fetch Projects
-          </button>
+        <div className="flex-row">
+          <span>URL:</span>
+          <span>{last_cache.url}</span>
         </div>
-      )}
+        <div className="flex-row">
+          <span>Projects:</span>
+          <span>{projects.length}</span>
+        </div>
+      </div>
+      <div className="flex-row center">
+        <button onClick={sync}><RefreshCw />Fetch</button>
+        <button onClick={unlink}><Unlink /><span>Unlink</span></button>
+      </div>
     </div>
   );
 }
