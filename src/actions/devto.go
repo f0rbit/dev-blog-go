@@ -46,6 +46,7 @@ func SyncUserDevTo(userID int) error {
 
 	result, err := fetchDevToAPI(url, token)
 	if err != nil {
+		database.SetIntegrationFailed(link.ID)
 		return err
 	}
 
