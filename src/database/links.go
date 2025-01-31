@@ -41,10 +41,17 @@ type IntegrationWithLinks struct {
 
 func GetUserIntegrations(userID int) ([]IntegrationWithLinks, error) {
 	var integrations []IntegrationWithLinks
-    // fetch integrations include aggregated fetch_links
+	// fetch integrations include aggregated fetch_links
 	rows, err := db.Query(`
     SELECT 
-        fetch_queue.*,
+        fetch_queue.id,
+        fetch_queue.user_id,
+        fetch_queue.last_fetch,
+        fetch_queue.location,
+        fetch_queue.source,
+        fetch_queue.data,
+        fetch_queue.created_at,
+        fetch_queue.updated_at,
         IFNULL(
             (SELECT json_group_array(json_object('post_id', fetch_links.post_id, 'identifier', fetch_links.identifier))
             FROM fetch_links 
@@ -57,31 +64,30 @@ func GetUserIntegrations(userID int) ([]IntegrationWithLinks, error) {
     GROUP BY 
         fetch_queue.id;`, userID)
 
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	for rows.Next() {
+		var integration IntegrationWithLinks
+		var aggregatedLinks string // This will store the JSON array of fetch_links
 
-    for rows.Next() {
-        var integration IntegrationWithLinks
-        var aggregatedLinks string // This will store the JSON array of fetch_links
+		// Update scanning according to your fetch_queue structure
+		err := rows.Scan(&integration.ID, &integration.UserID, &integration.LastFetch, &integration.Location, &integration.Source, &integration.Data, &integration.CreatedAt, &integration.UpdatedAt, &aggregatedLinks)
+		if err != nil {
+			return nil, err
+		}
 
-        // Update scanning according to your fetch_queue structure
-        err := rows.Scan(&integration.ID, &integration.UserID, &integration.LastFetch, &integration.Location, &integration.Source, &integration.Data, &integration.CreatedAt, &integration.UpdatedAt, &aggregatedLinks)
-        if err != nil {
-            return nil, err
-        }
+		// Unmarshal the JSON array into the FetchLinks slice
+		if err := json.Unmarshal([]byte(aggregatedLinks), &integration.FetchLinks); err != nil {
+			log.Printf("Error unmarshalling fetch links: %v", err)
+			// Depending on your error handling policy, you might want to continue or abort
+			continue // For example, but make sure this aligns with how you want to handle errors
+		}
 
-        // Unmarshal the JSON array into the FetchLinks slice
-        if err := json.Unmarshal([]byte(aggregatedLinks), &integration.FetchLinks); err != nil {
-            log.Printf("Error unmarshalling fetch links: %v", err)
-            // Depending on your error handling policy, you might want to continue or abort
-            continue // For example, but make sure this aligns with how you want to handle errors
-        }
-
-        integrations = append(integrations, integration)
-    }
+		integrations = append(integrations, integration)
+	}
 
 	return integrations, nil
 }
@@ -144,14 +150,14 @@ func SetIntegrationLastFetched(linkID int) error {
 }
 
 func SetIntegrationFailed(linkID int) error {
-    // append status: 'failed' into the data json field
-    _, err := db.Exec(`
+	// append status: 'failed' into the data json field
+	_, err := db.Exec(`
         UPDATE fetch_queue 
         SET data = json_set(COALESCE(data, '{}'), '$.status', 'failed') 
         WHERE id = ?`, linkID)
-    if err != nil {
-        log.Error("Failed to set integration as failed", "id", linkID)
-        return err
-    }
-    return nil
+	if err != nil {
+		log.Error("Failed to set integration as failed", "id", linkID)
+		return err
+	}
+	return nil
 }
