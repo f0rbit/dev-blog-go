@@ -3,7 +3,9 @@ package database
 import (
 	"blog-server/types"
 	"crypto/rand"
+	"database/sql"
 	"encoding/hex"
+	"errors"
 
 	"github.com/charmbracelet/log"
 )
@@ -180,6 +182,9 @@ func GetProjectKey(userID int) (string, error) {
 	var key string
 	err := db.QueryRow("SELECT token FROM devpad_api_tokens WHERE user_id = ?", userID).Scan(&key)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", nil
+		}
 		return "", err
 	}
 	return key, nil
