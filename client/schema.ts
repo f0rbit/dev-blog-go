@@ -13,7 +13,8 @@ const post_schema = z.object({
     archived: z.boolean(),
     publish_at: z.string(),
     created_at: z.string(),
-    updated_at: z.string()
+    updated_at: z.string(),
+    project_id: z.string().optional().nullable(),
 });
 
 
