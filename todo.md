@@ -120,9 +120,9 @@
     - [x] If left blank, infer description from post
 
 # v1.2
-- [ ] Integrate devpad projects linking
-    - [ ] Specific input for selecting project
-    - [ ] Endpoint for posts by project
+- [x] Integrate devpad projects linking
+    - [x] Specific input for selecting project
+    - [x] Endpoint for posts by project
 
 # v1.3
 - [ ] Analytics on server

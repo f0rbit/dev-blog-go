@@ -150,13 +150,15 @@ func GetProjects(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if cache_row.Data == "" {
-		utils.LogError("Error fetching projects", errors.New("No data found"), http.StatusInternalServerError, w)
-		return
+	var projects []types.Project
+  
+	if cache_row == nil || cache_row.Data == "" {
+      projects = []types.Project{}
+      utils.ResponseJSON(projects, w)
+      return
 	}
 
 	// unmarshal the JSON array into the Projects slice
-	var projects []types.Project
 	err = json.Unmarshal([]byte(cache_row.Data), &projects)
 	if err != nil {
 		utils.LogError("Error unmarshalling projects", err, http.StatusInternalServerError, w)

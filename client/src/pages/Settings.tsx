@@ -1,6 +1,6 @@
 import { Check, Edit, Link, Palette, Plus, RefreshCw, Save, Search, Shield, Trash, Unlink, User, X } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
-import { API_URL, AuthContext } from "../App";
+import { API_URL, AuthContext, PostContext } from "../App";
 import { AccessKey } from "../../schema";
 import { Oval } from "react-loader-spinner";
 import { BuildingPage } from "../components/Building";
@@ -306,6 +306,7 @@ function TokenRow({ token, save, remove }: { token: TokenCreation, save: (token:
 }
 
 function DevpadCard({ refetch }: { refetch: () => Promise<void> }) {
+  const { refetchProjects } = useContext(PostContext);
   const { devpad_key, last_cache } = useContext(IntegrationsContext);
   const [open, setOpen] = useState(false);
 
@@ -324,6 +325,7 @@ function DevpadCard({ refetch }: { refetch: () => Promise<void> }) {
       return;
     }
     await refetch();
+    await refetchProjects();
     setLoading(false);
   };
 
