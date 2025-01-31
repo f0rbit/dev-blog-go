@@ -38,6 +38,11 @@ func FetchProjects(userID int, force bool) (*types.ProjectCache, error) {
 	if err != nil {
 		return nil, errors.Join(fmt.Errorf("Error getting project key"), err)
 	}
+    // NOTE: we don't want to refetch if the key is empty, but we do want to refetch if force is true, to clear the cache.
+    if force == false && key == "" {
+        return nil, nil
+    }
+
 	log.Debug("Fetching projects", "url", devpad_url+"/projects", "key", key)
 	// insert 'pending' row
 	cache = types.ProjectCache{
@@ -53,6 +58,11 @@ func FetchProjects(userID int, force bool) (*types.ProjectCache, error) {
 		return nil, errors.Join(fmt.Errorf("Error inserting project cache"), err)
 	}
 	log.Debug("Inserted project cache", "id", id)
+
+    if key == "" {
+        database.FailProjectCache(id)
+        return nil, nil
+    }
 
 	// make the request to the devpad api
 	// put the key in the header "Authorization: Bearer <key>"
