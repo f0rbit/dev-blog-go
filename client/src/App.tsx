@@ -19,6 +19,7 @@ export interface PostContext {
   tags: string[],
   setTags: Dispatch<SetStateAction<string[]>>,
   projects: ProjectsResponse,
+  refetchProjects: () => Promise<void>
 }
 export interface AuthContext {
   user: any | null,
@@ -33,7 +34,7 @@ export const API_URL: string = import.meta.env.VITE_API_URL;
 const VERSION = "v0.5.0";
 console.log("Version: " + VERSION);
 
-export const PostContext = React.createContext<PostContext>({ posts: {} as PostsResponse, setPosts: () => { }, categories: {} as CategoryResponse, setCategories: () => { }, tags: [], setTags: () => { }, projects: []});
+export const PostContext = React.createContext<PostContext>({ posts: {} as PostsResponse, setPosts: () => { }, categories: {} as CategoryResponse, setCategories: () => { }, tags: [], setTags: () => { }, projects: [], refetchProjects: async () => { } });
 export const AuthContext = React.createContext<AuthContext>({ user: null });
 
 function App() {
@@ -76,6 +77,14 @@ function MainContent() {
   const [projects, setProjects] = useState({} as ProjectsResponse);
   const [loading, setLoading] = useState(true);
 
+  const refetchProjects = async () => {
+    setProjects([]);
+    const project_res = await fetch(`${API_URL}/projects`, { credentials: "include" });
+    if (!project_res.ok) throw new Error("Couldn't fetch projects");
+    setProjects(SCHEMA.PROJECTS_RESPONSE.parse(await project_res.json()));
+  }
+
+
   useEffect(() => {
     (async () => {
       const response = await fetch(`${API_URL}/posts?limit=-1`, { credentials: "include" });
@@ -90,10 +99,8 @@ function MainContent() {
       const tag_res = await fetch(`${API_URL}/tags`, { credentials: "include" });
       const tag_result = await tag_res.json();
       setTags(tag_result);
-
-      const project_res = await fetch(`${API_URL}/projects`, { credentials: "include" });
-      if (!project_res.ok) throw new Error("Couldn't fetch projects");
-      setProjects(SCHEMA.PROJECTS_RESPONSE.parse(await project_res.json()));
+    
+      await refetchProjects();
 
       setLoading(false);
     })();
@@ -102,7 +109,7 @@ function MainContent() {
   if (loading) return <LoadingPage />
 
   return (
-    <PostContext.Provider value={{ posts, setPosts, categories, setCategories, tags, setTags, projects }}>
+    <PostContext.Provider value={{ posts, setPosts, categories, setCategories, tags, setTags, projects, refetchProjects }}>
       <nav>
         <Sidebar page={page} setPage={setPage} />
       </nav>
