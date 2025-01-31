@@ -13,7 +13,6 @@ CREATE TABLE IF NOT EXISTS posts_projects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     post_id INTEGER NOT NULL,
     project_uuid TEXT NOT NULL,
-    project_id TEXT NOT NULL,
     FOREIGN KEY (post_id) REFERENCES posts(id)
 );
 
