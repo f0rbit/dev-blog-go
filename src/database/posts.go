@@ -405,7 +405,7 @@ func GetPostsByTitle(user *types.User, title string) (*types.Post, error) {
 
 func GetPostProjectID(postID int) string {
 	var projectID string
-	err := db.QueryRow("SELECT project_id FROM posts_projects WHERE post_id = ?", postID).Scan(&projectID)
+	err := db.QueryRow("SELECT project_uuid FROM posts_projects WHERE post_id = ?", postID).Scan(&projectID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return ""
@@ -423,7 +423,7 @@ func UpdatePostProjectID(postID int, projectID string) error {
 		return err
 	}
 	if projectID != "" {
-		_, err = db.Exec("INSERT INTO posts_projects (post_id, project_id) VALUES (?, ?)", postID, projectID)
+		_, err = db.Exec("INSERT INTO posts_projects (post_id, project_uuid) VALUES (?, ?)", postID, projectID)
 		if err != nil {
 			return err
 		}
