@@ -14,18 +14,21 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-func FetchProjects(userID int) (*types.ProjectCache, error) {
+func FetchProjects(userID int, force bool) (*types.ProjectCache, error) {
 	// if we have a cached version of the projects (in recent 24 hours) with a status of 'fetched', then we can return that row. otherwise, we must fetch via the api & cache this result, which requires us to INSERT a 'pending' row, make the fetch, then either update the status to 'fetched' or 'failed' depending on the response, and then we return the updated cached row
-	cache, err := database.GetLatestProjectCache(userID)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			err = nil
-		} else {
-			return nil, errors.Join(fmt.Errorf("Error getting latest project cache"), err)
+	var cache types.ProjectCache
+	if !force {
+		cache, err := database.GetLatestProjectCache(userID)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				err = nil
+			} else {
+				return nil, errors.Join(fmt.Errorf("Error getting latest project cache"), err)
+			}
 		}
-	}
-	if cache.Status == "fetched" {
-		return &cache, nil
+		if cache.Status == "fetched" {
+			return &cache, nil
+		}
 	}
 
 	devpad_url := os.Getenv("DEVPAD_API")
@@ -80,7 +83,6 @@ func FetchProjects(userID int) (*types.ProjectCache, error) {
 		database.FailProjectCache(id)
 		return nil, errors.Join(fmt.Errorf("Error reading body"), err)
 	}
-
 
 	if db_err := database.UpdateProjectCacheData(id, string(body)); db_err != nil {
 		return nil, errors.Join(fmt.Errorf("Error updating project cache data"), db_err)

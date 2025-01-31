@@ -144,7 +144,7 @@ func GetProjects(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cache_row, err := actions.FetchProjects(user.ID)
+	cache_row, err := actions.FetchProjects(user.ID, false)
 	if err != nil {
 		utils.LogError("Error fetching projects", err, http.StatusInternalServerError, w)
 		return
@@ -191,7 +191,7 @@ func SetProjectKey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// after we set the key, run a new fetch
-	_, err = actions.FetchProjects(user.ID)
+	_, err = actions.FetchProjects(user.ID, true)
 	if err != nil {
 		log.Error("Error fetching projects", "err", err)
 	}
