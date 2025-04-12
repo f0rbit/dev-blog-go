@@ -286,12 +286,10 @@ func getTotalPostsCount(where string, params []any, tag string) (int, error) {
 	var query string
 
 	if tag == "" {
-		query = "SELECT COUNT(*) FROM posts WHERE " + where
+		query = "SELECT COUNT(*) FROM posts LEFT JOIN posts_projects ON posts.id = posts_projects.post_id WHERE " + where
 	} else {
-		query = "SELECT COUNT(*) FROM posts LEFT JOIN tags ON tags.post_id = posts.id WHERE " + where
+		query = "SELECT COUNT(*) FROM posts LEFT JOIN tags ON tags.post_id = posts.id LEFT JOIN posts_projects ON posts.id = posts_projects.post_id WHERE " + where
 	}
-
-	log.Info("Counting posts", "query", query, "params", params)
 
 	err := db.QueryRow(query, params...).Scan(&total)
 	if err != nil {
