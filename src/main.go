@@ -75,6 +75,7 @@ func main() {
     // devpad functions
     r.HandleFunc("/projects", routes.GetProjects).Methods("GET")
     r.HandleFunc("/project/key", routes.SetProjectKey).Methods("PUT")
+    r.HandleFunc("/project/posts/{project_id}", routes.FetchPosts).Methods("GET")
     
 
 	// modify cors
