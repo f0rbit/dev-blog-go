@@ -197,108 +197,155 @@ func UpdatePost(updatedPost *types.Post) error {
 	return err
 }
 
-func GetPosts(user *types.User, category, tag string, limit, offset int) ([]types.Post, int, error) {
+func GetPosts(user *types.User, category, tag string, limit, offset int, project_uuid string) ([]types.Post, int, error) {
 	var posts []types.Post
 	var totalPosts int
-	log.Info("Searching for posts", "category", category, "tag", tag)
 
-	// given a category, we want to get all the children category and include those in our select post query as an 'IN (<array of categories>)'
+	log.Info("Searching for posts", "category", category, "tag", tag, "project_uuid", project_uuid)
+
+	// Step 1: Get search categories
+	search_categories, err := getSearchCategories(user, category)
+	if err != nil {
+		return posts, totalPosts, errors.Join(errors.New("error getting categories"), err)
+	}
+
+	log.Info("Searching through categories", "searchCategories", search_categories)
+
+	// Step 2: Build WHERE clause and parameters
+	where_clause, params := buildWhereClause(user.ID, search_categories, tag, project_uuid)
+
+	// Step 3: Get total post count
+	totalPosts, err = getTotalPostsCount(where_clause, params, tag)
+	if err != nil {
+		return posts, totalPosts, errors.Join(errors.New("error getting total posts"), err)
+	}
+
+	log.Infof("Found %d posts", totalPosts)
+
+	// Step 4: Fetch paginated posts
+	posts, err = fetchPaginatedPosts(where_clause, params, limit, offset)
+	if err != nil {
+		return posts, totalPosts, errors.Join(errors.New("error fetching posts"), err)
+	}
+
+	return posts, totalPosts, nil
+}
+
+func getSearchCategories(user *types.User, category string) ([]string, error) {
 	var search_categories []string
 	categories, err := GetCategories(user)
 	if err != nil {
-		return posts, totalPosts, err
+		return nil, err
 	}
 
 	search_categories = append(search_categories, category)
 	if category == "root" || category == "" {
-		// if we are searching at root, we can just append all the categories
-		/** @todo in this case, remove the WHERE category from the search clause */
-		for i := 0; i < len(categories); i++ {
-			search_categories = append(search_categories, categories[i].Name)
+		for _, cat := range categories {
+			search_categories = append(search_categories, cat.Name)
 		}
 	} else {
-		// go through categories here (they have properties .name and .parent)
 		children := utils.GetChildrenCategories(categories, category)
-		for i := 0; i < len(children); i++ {
-			search_categories = append(search_categories, children[i].Name)
+		for _, child := range children {
+			search_categories = append(search_categories, child.Name)
 		}
 	}
-	log.Info("Searching through categories", "search_categories", search_categories)
 
-	// Build the IN clause with placeholders
-	placeholders := make([]string, len(search_categories))
-	for i := range search_categories {
+	return search_categories, nil
+}
+
+func buildWhereClause(authorID int, categories []string, tag, project_uuid string) (string, []any) {
+	placeholders := make([]string, len(categories))
+	for i := range categories {
 		placeholders[i] = "?"
 	}
 	inClause := strings.Join(placeholders, ",")
 
 	var params []any
-	params = append(params, user.ID)
-
-	for _, s := range search_categories {
-		params = append(params, s)
+	params = append(params, authorID)
+	for _, c := range categories {
+		params = append(params, c)
 	}
 
-	// get the count of total posts
-	if tag == "" {
-		err = db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM posts WHERE posts.author_id = ? AND category IN (%s)", inClause), params...).Scan(&totalPosts)
-	} else {
-		params = append(params, tag)
-		err = db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM posts LEFT JOIN tags ON tags.post_id = posts.id WHERE posts.author_id = ? AND posts.category IN (%s) AND tags.tag = ?", inClause), params...).Scan(&totalPosts)
-	}
-	if err != nil {
-		return posts, totalPosts, err
-	}
-	log.Infof("Found %d posts", totalPosts)
+	where := "posts.author_id = ? AND posts.category IN (" + inClause + ")"
 
-	where := " posts.author_id = ? AND posts.category IN (%s) "
 	if tag != "" {
-		where += " AND tags.tag = ? "
+		where += " AND tags.tag = ?"
+		params = append(params, tag)
 	}
 
-	// Query to fetch paginated posts for the given category
-	query := fmt.Sprintf(`
-    SELECT 
-        posts.id, 
-        posts.author_id,
-        posts.slug, 
-        posts.title, 
-		    posts.description,
-        posts.content, 
-        posts.format,
-        posts.category, 
-        posts.archived,
-        posts.publish_at,
-        posts.created_at, 
-        posts.updated_at,
-        GROUP_CONCAT(tags.tag) AS tags
-    FROM 
-        posts 
-    LEFT JOIN
-        tags ON posts.id = tags.post_id
-    WHERE 
-        `+where+`
-    GROUP BY
-        posts.id
-    LIMIT ? 
-    OFFSET ?`, inClause)
+	if project_uuid != "" {
+		where += " AND posts_projects.project_uuid = ?"
+		params = append(params, project_uuid)
+	}
 
-	params = append(params, limit)
-	params = append(params, offset)
-	log.Info("Searching with parameters", "author_id", params[0], "search_categories", search_categories, "tag", tag, "limit", limit, "offset", offset)
+	return where, params
+}
+
+func getTotalPostsCount(where string, params []any, tag string) (int, error) {
+	var total int
+	var query string
+
+	if tag == "" {
+		query = "SELECT COUNT(*) FROM posts LEFT JOIN posts_projects ON posts.id = posts_projects.post_id WHERE " + where
+	} else {
+		query = "SELECT COUNT(*) FROM posts LEFT JOIN tags ON tags.post_id = posts.id LEFT JOIN posts_projects ON posts.id = posts_projects.post_id WHERE " + where
+	}
+
+	err := db.QueryRow(query, params...).Scan(&total)
+	if err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
+func fetchPaginatedPosts(where string, params []any, limit, offset int) ([]types.Post, error) {
+	var posts []types.Post
+
+	query := `SELECT 
+		posts.id, 
+		posts.author_id,
+		posts.slug, 
+		posts.title, 
+		posts.description,
+		posts.content, 
+		posts.format,
+		posts.category, 
+		posts.archived,
+		posts.publish_at,
+		posts.created_at, 
+		posts.updated_at,
+		GROUP_CONCAT(tags.tag) AS tags,
+		IFNULL(posts_projects.project_uuid, '') AS project_uuid
+	FROM 
+		posts 
+	LEFT JOIN
+		tags ON posts.id = tags.post_id
+	LEFT JOIN
+		posts_projects ON posts.id = posts_projects.post_id
+	WHERE 
+		` + where + `
+	GROUP BY
+		posts.id
+	LIMIT ? 
+	OFFSET ?`
+
+	params = append(params, limit, offset)
 
 	rows, err := db.Query(query, params...)
 	if err != nil {
-		return posts, totalPosts, err
+		return nil, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var post types.Post
 		var tags sql.NullString
-		err := rows.Scan(&post.Id, &post.AuthorID, &post.Slug, &post.Title, &post.Description, &post.Content, &post.Format, &post.Category, &post.Archived, &post.PublishAt, &post.CreatedAt, &post.UpdatedAt, &tags)
+		var project_uuid string
 
+		err := rows.Scan(&post.Id, &post.AuthorID, &post.Slug, &post.Title, &post.Description, &post.Content, &post.Format, &post.Category, &post.Archived, &post.PublishAt, &post.CreatedAt, &post.UpdatedAt, &tags, &project_uuid)
 		if err != nil {
-			return posts, totalPosts, err
+			return nil, err
 		}
 
 		if tags.Valid {
@@ -311,16 +358,15 @@ func GetPosts(user *types.User, category, tag string, limit, offset int) ([]type
 			post.Description = utils.GetDescription(post.Content)
 		}
 
-		// check for project_id link
-		post.ProjectID = GetPostProjectID(post.Id)
-
+		post.ProjectID = project_uuid
 		posts = append(posts, post)
 	}
+
 	if posts == nil {
 		posts = make([]types.Post, 0)
 	}
 
-	return posts, totalPosts, nil
+	return posts, nil
 }
 
 func RemoveCategoryFromPosts(user *types.User, cat_list []string) error {

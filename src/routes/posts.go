@@ -15,7 +15,7 @@ import (
 func FetchPosts(w http.ResponseWriter, r *http.Request) {
 	limit, offset, err := parsePaginationParams(r)
 	if err != nil {
-        utils.LogError("Error parsing params", err, http.StatusBadRequest, w);
+		utils.LogError("Error parsing params", err, http.StatusBadRequest, w)
 		return
 	}
 
@@ -26,16 +26,18 @@ func FetchPosts(w http.ResponseWriter, r *http.Request) {
 	}
 	tag := r.URL.Query().Get("tag")
 
-    user := utils.GetUser(r);
+    project_id := mux.Vars(r)["project_id"]
 
-    if user == nil {
-        utils.Unauthorized(w);
-        return;
-    }
+	user := utils.GetUser(r)
 
-	posts, totalPosts, err := database.GetPosts(user, category, tag, limit, offset)
+	if user == nil {
+		utils.Unauthorized(w)
+		return
+	}
+
+	posts, totalPosts, err := database.GetPosts(user, category, tag, limit, offset, project_id)
 	if err != nil {
-        utils.LogError("Error fetching posts by category", err, http.StatusInternalServerError, w);
+		utils.LogError("Error fetching posts by category", err, http.StatusInternalServerError, w)
 		return
 	}
 
@@ -52,7 +54,7 @@ func FetchPosts(w http.ResponseWriter, r *http.Request) {
 		CurrentPage: currentPage,
 	}
 
-    utils.ResponseJSON(response, w);
+	utils.ResponseJSON(response, w)
 }
 
 func buildPreparedParams(length int) string {
